@@ -16,7 +16,7 @@ class _TabsState extends State<Tabs> {
   late final PageController _pageController;
   final GlobalKey<CartPageState> _cartKey = GlobalKey<CartPageState>();
   late final List<Widget> _pageList;
-  final List<String> _titles = const ['首页', '分类', '购物车', '我的'];
+  final List<String> _titles = const ['首页', '分类','AI助理', '学习', '我的'];
 
   @override
   void initState() {
@@ -75,19 +75,23 @@ class _TabsState extends State<Tabs> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.dashboard_outlined),
             label: '首页',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.category),
+            icon: Icon(Icons.grid_view_outlined),
             label: '分类',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: '购物车',
+            icon: Icon(Icons.auto_awesome_outlined),
+            label: 'AI助理',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
+            icon: Icon(Icons.menu_book_outlined),
+            label: '学习',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
             label: '我的',
           ),
         ],

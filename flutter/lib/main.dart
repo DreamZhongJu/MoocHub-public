@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
           ChangeNotifierProvider(create: (_) => AppState()),
         ],
         child: MaterialApp(
-          title: "Next Shop",
+          title: "MoocHub",
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF1B9AAA),
