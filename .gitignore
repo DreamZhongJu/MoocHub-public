@@ -1,0 +1,11 @@
+client/shop/.git_disabled/*
+server/uploads/*
+AI/item_desc_model_epoch_1.pth
+AI/item_desc_model_epoch_2.pth
+AI/item_desc_model_epoch_3.pth
+AI/item_desc_model_epoch_4.pth
+AI/item_desc_model_epoch_5.pth
+AI/item_desc_model_final.pth
+AI/__pycache__/*
+flutter/docs/*
+server/logs/*
