@@ -59,19 +59,19 @@
 - TODO(@you): 定义首页推荐模块（轮播、继续观看、热门、为你推荐）
 - TODO(@me): 给出页面信息架构与组件拆分建议
 
-#### 主要页面流程（已确认）
+#### done 主要页面流程（已确认）
 - TODO(@you): 底部导航：`首页 / 分类 / 我的`（后续可扩展更多 Tab）
 - TODO(@you): 首页 -> 视频卡片 -> 进入“课程详情 / 视频播放”
 - TODO(@you): 播放页结构参照 B 站：上方视频播放器，下方课程详情 + 评论列表
 - TODO(@you): 分类页：按课程分类浏览（一级/二级分类）
 - TODO(@you): 我的页：登录入口、收藏、学习记录、个人信息
 
-### 2. 数据模型与数据库
+### 2. done 数据模型与数据库
 - TODO(@me): 输出精简模型（见下方表结构与外键）
 - TODO(@you): 根据实际业务调整字段与索引，确认最终版本
 - TODO(@you): 建库与初始化脚本（或迁移方案）
 
-#### MySQL（MVP，结构化）
+#### done MySQL（MVP，结构化）
 1) `users`
    - `id` (PK)
    - `username`, `password_hash`, `role` (student/admin)
@@ -114,7 +114,7 @@
    - `updated_at`
    - UNIQUE(`user_id`, `video_id`)
 
-#### 外键依赖（MySQL）
+#### done 外键依赖（MySQL）
 - `course_categories.parent_id` -> `course_categories.id`
 - `courses.category_id` -> `course_categories.id`
 - `videos.course_id` -> `courses.id`
@@ -125,7 +125,7 @@
 - `learning_progress.user_id` -> `users.id`
 - `learning_progress.video_id` -> `videos.id`
 
-#### MongoDB（文档型）
+#### done MongoDB（文档型）
 1) `comments`
    - `target_type` (course/video), `target_id` (MySQL ID)
    - `user_id` (MySQL users.id), `content`
@@ -140,12 +140,12 @@
    - `user_id`, `video_id`, `event_type`(exposure/click/play), `created_at`
    - 索引：`(user_id, created_at)`，`(video_id, created_at)`
 
-#### 对象存储字段约定（视频/缩略图）
+#### done 对象存储字段约定（视频/缩略图）
 - `video_url`: 对象存储可访问地址（或保存 `storage_key`，由后端生成签名 URL）
 - `thumb_url`: 对象存储缩略图地址（MongoDB 仅存 URL + 元数据）
 - 跨库关联为“软关联”：MongoDB 通过 `video_id/user_id` 与 MySQL 对应
 
-### 3. 后端基础框架
+### TODO 3. 后端基础框架
 - TODO(@me): 搭建 Gin 路由骨架与中间件（日志、错误处理、CORS）
 - TODO(@me): 搭建 MySQL 与 MongoDB 连接层
 - TODO(@you): 按接口清单实现模块（课程/播放/评论/进度）
