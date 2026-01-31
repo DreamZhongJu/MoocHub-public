@@ -26,16 +26,124 @@
 - TODO(@you): 确认数据库分工设计（哪些表在 MySQL，哪些集合在 MongoDB）
 - TODO(@me): 输出最小可行架构草图与目录结构建议
 
+#### MVP 需求范围（已确认）
+- TODO(@you): 首页视频卡片流（无个性化推荐，仅按热度/最新）
+- TODO(@you): 视频详情页 + 播放页
+- TODO(@you): 收藏功能（课程/视频）
+- TODO(@you): 评论功能（列表 + 发布）
+- TODO(@you): 用户中心（个人信息、收藏列表、学习记录入口）
+- TODO(@you): 管理员后台（内容管理：课程/视频/评论）
+- TODO(@you): 登录/注册与基础鉴权
+
+#### 后期扩展（已确认）
+- TODO(@you): AI 问答
+- TODO(@you): 首页个性化推荐
+
+#### 数据库存储分工（建议）
+- TODO(@me): MySQL（强一致、结构化）
+  - users, course_categories, courses, videos, favorites, learning_progress
+- TODO(@me): MongoDB（高写入、文档/日志）
+  - comments, comment_likes, report_logs
+  - recommend_events（曝光/点击日志，后期推荐用）
+  - video_thumbnails（只存 URL + 元数据）
+- TODO(@you): 已确认缩略图放对象存储，MongoDB 只存 URL 与元数据
+
+#### 视频存储方案（现有主流方案参考）
+- TODO(@me): 推荐方案（易上线）
+  - 视频文件存对象存储（如 MinIO / COS / OSS / S3），服务端保存 URL
+  - 本地开发可先放 `server/uploads/videos/`，生产再切对象存储
+- TODO(@you): 选择一种方案并确定路径与鉴权策略
+
 ### 1. 产品与交互设计
 - TODO(@you): 画出主要页面流程图（首页/课程详情/播放页/评论/我的）
 - TODO(@you): 定义首页推荐模块（轮播、继续观看、热门、为你推荐）
 - TODO(@me): 给出页面信息架构与组件拆分建议
 
+#### 主要页面流程（已确认）
+- TODO(@you): 底部导航：`首页 / 分类 / 我的`（后续可扩展更多 Tab）
+- TODO(@you): 首页 -> 视频卡片 -> 进入“课程详情 / 视频播放”
+- TODO(@you): 播放页结构参照 B 站：上方视频播放器，下方课程详情 + 评论列表
+- TODO(@you): 分类页：按课程分类浏览（一级/二级分类）
+- TODO(@you): 我的页：登录入口、收藏、学习记录、个人信息
+
 ### 2. 数据模型与数据库
-- TODO(@me): 设计 MySQL 表结构草案（users/courses/chapters/lessons/enrollments/points）
-- TODO(@me): 设计 MongoDB 集合草案（comments/logs/recommend_events）
-- TODO(@you): 根据草案调整字段与索引，确认最终版本
+- TODO(@me): 输出精简模型（见下方表结构与外键）
+- TODO(@you): 根据实际业务调整字段与索引，确认最终版本
 - TODO(@you): 建库与初始化脚本（或迁移方案）
+
+#### MySQL（MVP，结构化）
+1) `users`
+   - `id` (PK)
+   - `username`, `password_hash`, `role` (student/admin)
+   - `nickname`, `avatar_url`
+   - `created_at`, `updated_at`
+2) `course_categories`
+   - `id` (PK)
+   - `name`, `parent_id` (FK -> course_categories.id, 可空)
+   - `sort_order`
+3) `courses`
+   - `id` (PK)
+   - `category_id` (FK -> course_categories.id)
+   - `title`, `summary`, `cover_url`
+   - `instructor_name`, `level`, `status` (draft/published)
+   - `view_count`, `favorite_count`
+   - `created_at`, `updated_at`
+4) `videos`
+   - `id` (PK)
+   - `course_id` (FK -> courses.id)
+   - `title`, `description`, `duration_sec`
+   - `video_url`, `thumb_url`（对象存储 URL）
+   - `sort_order`, `created_at`
+5) `favorite_courses`
+   - `id` (PK)
+   - `user_id` (FK -> users.id)
+   - `course_id` (FK -> courses.id)
+   - `created_at`
+   - UNIQUE(`user_id`, `course_id`)
+6) `favorite_videos`
+   - `id` (PK)
+   - `user_id` (FK -> users.id)
+   - `video_id` (FK -> videos.id)
+   - `created_at`
+   - UNIQUE(`user_id`, `video_id`)
+7) `learning_progress`（MVP 可保留但不强依赖）
+   - `id` (PK)
+   - `user_id` (FK -> users.id)
+   - `video_id` (FK -> videos.id)
+   - `last_position_sec`, `progress_percent`
+   - `updated_at`
+   - UNIQUE(`user_id`, `video_id`)
+
+#### 外键依赖（MySQL）
+- `course_categories.parent_id` -> `course_categories.id`
+- `courses.category_id` -> `course_categories.id`
+- `videos.course_id` -> `courses.id`
+- `favorite_courses.user_id` -> `users.id`
+- `favorite_courses.course_id` -> `courses.id`
+- `favorite_videos.user_id` -> `users.id`
+- `favorite_videos.video_id` -> `videos.id`
+- `learning_progress.user_id` -> `users.id`
+- `learning_progress.video_id` -> `videos.id`
+
+#### MongoDB（文档型）
+1) `comments`
+   - `target_type` (course/video), `target_id` (MySQL ID)
+   - `user_id` (MySQL users.id), `content`
+   - `like_count`, `status`, `created_at`
+   - `parent_id`（可空，用于回复，MVP 可不启用）
+   - 索引：`(target_type, target_id, created_at)`，`user_id`
+2) `video_thumbnails`
+   - `video_id` (MySQL videos.id)
+   - `url`, `width`, `height`, `format`, `size_bytes`, `created_at`
+   - 索引：`video_id` 唯一
+3) `recommend_events`（后期扩展）
+   - `user_id`, `video_id`, `event_type`(exposure/click/play), `created_at`
+   - 索引：`(user_id, created_at)`，`(video_id, created_at)`
+
+#### 对象存储字段约定（视频/缩略图）
+- `video_url`: 对象存储可访问地址（或保存 `storage_key`，由后端生成签名 URL）
+- `thumb_url`: 对象存储缩略图地址（MongoDB 仅存 URL + 元数据）
+- 跨库关联为“软关联”：MongoDB 通过 `video_id/user_id` 与 MySQL 对应
 
 ### 3. 后端基础框架
 - TODO(@me): 搭建 Gin 路由骨架与中间件（日志、错误处理、CORS）
