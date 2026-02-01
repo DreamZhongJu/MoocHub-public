@@ -52,6 +52,7 @@ func Router() *gin.Engine {
 		user.GET("/ping", func(c *gin.Context) {
 			c.String(http.StatusOK, "pong")
 		})
+		// user.POST("/getUserTest", controllers.UserController{}.GetUserTest)
 		// user.POST("/login", controllers.UserControllers{}.Login)
 		// user.POST("/sign", controllers.UserControllers{}.Sign)
 	}
