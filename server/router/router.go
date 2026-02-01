@@ -52,6 +52,8 @@ func Router() *gin.Engine {
 		user.GET("/ping", func(c *gin.Context) {
 			c.String(http.StatusOK, "pong")
 		})
+		// user.GET("/test/comments10", controllers.CommentController{}.GetComments10)
+		// user.GET("/comments", controllers.CommentController{}.GetCommentsPaginated) // 可选
 		// user.POST("/getUserTest", controllers.UserController{}.GetUserTest)
 		// user.POST("/login", controllers.UserControllers{}.Login)
 		// user.POST("/sign", controllers.UserControllers{}.Sign)
