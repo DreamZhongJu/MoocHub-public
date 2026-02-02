@@ -98,3 +98,17 @@ func DeleteFavoriteCourse(userID int, courseID int64) error {
 		Update("is_deleted", 1).Error
 	return err
 }
+
+func GetFavoriteCourses(userID int) ([]Courses, error) {
+	var courses []Courses
+	err := db.GetDB().Table("favorite_courses AS fc").
+		Select("c.*").
+		Joins("JOIN courses c ON c.id = fc.course_id").
+		Where("fc.user_id = ? AND fc.is_deleted = ?", userID, 0).
+		Order("fc.created_at DESC").
+		Scan(&courses).Error
+	if err != nil {
+		return nil, err
+	}
+	return courses, nil
+}

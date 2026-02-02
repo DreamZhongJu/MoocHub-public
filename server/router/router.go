@@ -70,6 +70,9 @@ func Router() *gin.Engine {
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)
 			favorite.DELETE("/courses/:id", controllers.FavoriteController{}.DeleteFavorite)
+			favorite.POST("/videos", controllers.FavoriteController{}.ToggleFavoriteVideo)
+			favorite.DELETE("/videos/:id", controllers.FavoriteController{}.DeleteFavoriteVideo)
+			favorite.GET("", controllers.FavoriteController{}.GetFavorites)
 		}
 	}
 

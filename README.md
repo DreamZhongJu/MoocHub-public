@@ -187,12 +187,12 @@ Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`
 
 //done **DELETE** `/favorites/courses/{course_id}`（需登录）
 
-**POST** `/favorites/videos`（需登录）  
+//done **POST** `/favorites/videos`（需登录）  
 请求：`video_id`
 
-**DELETE** `/favorites/videos/{video_id}`（需登录）
+//done **DELETE** `/favorites/videos/{video_id}`（需登录）
 
-**GET** `/favorites`（需登录）  
+//done **GET** `/favorites`（需登录）  
 响应：收藏课程与收藏视频列表
 
 #### 5) 评论（MongoDB）
