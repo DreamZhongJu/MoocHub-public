@@ -9,30 +9,28 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	db  *gorm.DB
-	err error
-)
+var db *gorm.DB
 
-func init() {
-	dsn := config.Mysqldb
+func InitMySQL() error {
+	dsn := config.MysqlDSN()
 
 	// 使用 = 而不是 :=
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("数据库连接失败:", err)
-		return
+		return fmt.Errorf("mysql connect failed: %w", err)
 	}
 
-	sqlDB, err := db.DB()
+	sqlDB, err := conn.DB()
 	if err != nil {
-		fmt.Println("数据库启动失败:", err)
-		return
+		return fmt.Errorf("mysql db init failed: %w", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	db = conn
+	return nil
 }
 
 func GetDB() *gorm.DB {
