@@ -1,6 +1,7 @@
 package router
 
 import (
+	"MOOCHUB-server/controllers"
 	"MOOCHUB-server/middleware"
 	"net/http"
 	"strings"
@@ -49,9 +50,11 @@ func Router() *gin.Engine {
 
 	user := r.Group("/api/v1")
 	{
-		user.GET("/ping", func(c *gin.Context) {
-			c.String(http.StatusOK, "pong")
-		})
+		user.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
+		auth := user.Group("/auth")
+		{
+			auth.POST("/register", controllers.UserController{}.Register)
+		}
 		// user.GET("/test/comments10", controllers.CommentController{}.GetComments10)
 		// user.GET("/comments", controllers.CommentController{}.GetCommentsPaginated) // 可选
 		// user.POST("/getUserTest", controllers.UserController{}.GetUserTest)

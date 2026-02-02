@@ -1,7 +1,11 @@
 package model
 
 import (
+	"MOOCHUB-server/db"
+	"errors"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // 数据库的全表，最好不要直接使用这个结构，可能会泄露消息
@@ -27,6 +31,28 @@ type Users struct {
 // 		return nil, 0, result.Error
 // 	}
 
-// 	db.GetDB().Model(&Users{}).Count(&total)
-// 	return users, total, nil
-// }
+//		db.GetDB().Model(&Users{}).Count(&total)
+//		return users, total, nil
+//	}
+func UsersRegister(username, password, nickname, role string) (Users, error) {
+	var existing Users
+	err := db.GetDB().Where("username = ?", username).First(&existing).Error
+	if err == nil {
+		return Users{}, errors.New("用户名已存在")
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return Users{}, err
+	}
+
+	user := Users{
+		Username:     username,
+		PasswordHash: password,
+		Nickname:     nickname,
+		Role:         role,
+	}
+	result := db.GetDB().Create(&user)
+	if result.Error != nil {
+		return Users{}, result.Error
+	}
+	return user, nil
+}

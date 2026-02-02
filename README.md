@@ -155,7 +155,7 @@
 接口统一前缀：`/api/v1`
 
 #### 1) 认证与用户
-**POST** `/auth/register`  
+//done **POST** `/auth/register`  
 请求：`username`, `password`, `nickname`  
 响应：`user` + `token`
 
