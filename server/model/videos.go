@@ -38,3 +38,18 @@ func GetVideoDetails(videoID int64) (Video, error) {
 	}
 	return video, nil
 }
+
+func CreateVideo(video *Video) error {
+	return db.GetDB().Create(video).Error
+}
+
+func UpdateVideo(id int64, updates map[string]any) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	return db.GetDB().Model(&Video{}).Where("id = ?", id).Updates(updates).Error
+}
+
+func DeleteVideo(id int64) error {
+	return db.GetDB().Where("id = ?", id).Delete(&Video{}).Error
+}

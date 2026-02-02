@@ -112,3 +112,20 @@ func IncrementLike(commentID string) (int64, error) {
 	}
 	return updated.LikeCount, nil
 }
+
+func SoftDeleteComment(commentID string) error {
+	coll := db.GetCollection("comments")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	oid, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return err
+	}
+	_, err = coll.UpdateOne(
+		ctx,
+		bson.D{{Key: "_id", Value: oid}},
+		bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: "deleted"}}}},
+	)
+	return err
+}

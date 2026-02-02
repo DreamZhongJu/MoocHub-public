@@ -206,13 +206,13 @@ Query：`target_type`(course/video), `target_id`, `page`, `page_size`
 响应：`like_count`
 
 #### 6) 学习进度
-**POST** `/progress`（需登录）  
+//done **POST** `/progress`（需登录）  
 请求：`video_id`, `last_position_sec`, `progress_percent`
 
-**GET** `/progress/{video_id}`（需登录）  
+//done **GET** `/progress/{video_id}`（需登录）  
 响应：`last_position_sec`, `progress_percent`
 
-#### 7) 管理员后台（MVP）
+#### done 7) 管理员后台（MVP）
 **POST** `/admin/courses`（管理员）  
 **PUT** `/admin/courses/{id}`（管理员）  
 **DELETE** `/admin/courses/{id}`（管理员）

@@ -59,3 +59,18 @@ func GetCoursesDetails(ID int64) ([]Courses, error) {
 	}
 	return courses, nil
 }
+
+func CreateCourse(course *Courses) error {
+	return db.GetDB().Create(course).Error
+}
+
+func UpdateCourse(id int64, updates map[string]any) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	return db.GetDB().Model(&Courses{}).Where("id = ?", id).Updates(updates).Error
+}
+
+func DeleteCourse(id int64) error {
+	return db.GetDB().Where("id = ?", id).Delete(&Courses{}).Error
+}

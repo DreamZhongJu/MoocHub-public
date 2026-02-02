@@ -69,6 +69,8 @@ func Router() *gin.Engine {
 		user.GET("/comments", controllers.CommentController{}.GetComments)
 		user.POST("/comments", middleware.AuthMiddleware(), controllers.CommentController{}.CreateComment)
 		user.POST("/comments/:id/like", middleware.AuthMiddleware(), controllers.CommentController{}.LikeComment)
+		user.POST("/progress", middleware.AuthMiddleware(), controllers.ProgressController{}.UpsertProgress)
+		user.GET("/progress/:video_id", middleware.AuthMiddleware(), controllers.ProgressController{}.GetProgress)
 		favorite := user.Group("/favorites", middleware.AuthMiddleware())
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)
@@ -76,6 +78,16 @@ func Router() *gin.Engine {
 			favorite.POST("/videos", controllers.FavoriteController{}.ToggleFavoriteVideo)
 			favorite.DELETE("/videos/:id", controllers.FavoriteController{}.DeleteFavoriteVideo)
 			favorite.GET("", controllers.FavoriteController{}.GetFavorites)
+		}
+		admin := user.Group("/admin", middleware.AdminMiddleware())
+		{
+			admin.POST("/courses", controllers.AdminController{}.CreateCourse)
+			admin.PUT("/courses/:id", controllers.AdminController{}.UpdateCourse)
+			admin.DELETE("/courses/:id", controllers.AdminController{}.DeleteCourse)
+			admin.POST("/videos", controllers.AdminController{}.CreateVideo)
+			admin.PUT("/videos/:id", controllers.AdminController{}.UpdateVideo)
+			admin.DELETE("/videos/:id", controllers.AdminController{}.DeleteVideo)
+			admin.DELETE("/comments/:id", controllers.AdminController{}.DeleteComment)
 		}
 	}
 
