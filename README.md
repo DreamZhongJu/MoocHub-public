@@ -152,13 +152,76 @@
 - TODO(@you): 配置环境变量与本地运行说明
 
 ### 4. 接口清单（MVP）
-- TODO(@me): 输出接口列表与字段说明（REST 风格）
-- TODO(@you): 实现接口并自测
-  - 课程列表/详情
-  - 章节与小节
-  - 视频播放地址
-  - 评论列表/发布/点赞
-  - 学习进度上报/获取
+接口统一前缀：`/api/v1`
+
+#### 1) 认证与用户
+**POST** `/auth/register`  
+请求：`username`, `password`, `nickname`  
+响应：`user` + `token`
+
+**POST** `/auth/login`  
+请求：`username`, `password`  
+响应：`user` + `token`
+
+**GET** `/me`（需登录）  
+响应：`id`, `username`, `nickname`, `avatar_url`, `role`
+
+#### 2) 分类与课程
+**GET** `/categories`  
+响应：分类树（含 `id`, `name`, `parent_id`）
+
+**GET** `/courses`  
+Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`  
+响应：课程列表（含 `id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`）
+
+**GET** `/courses/{id}`  
+响应：课程详情 + 关联视频列表（`videos`）
+
+#### 3) 视频与播放
+**GET** `/videos/{id}`  
+响应：`id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`
+
+#### 4) 收藏
+**POST** `/favorites/courses`（需登录）  
+请求：`course_id`
+
+**DELETE** `/favorites/courses/{course_id}`（需登录）
+
+**POST** `/favorites/videos`（需登录）  
+请求：`video_id`
+
+**DELETE** `/favorites/videos/{video_id}`（需登录）
+
+**GET** `/favorites`（需登录）  
+响应：收藏课程与收藏视频列表
+
+#### 5) 评论（MongoDB）
+**GET** `/comments`  
+Query：`target_type`(course/video), `target_id`, `page`, `page_size`
+
+**POST** `/comments`（需登录）  
+请求：`target_type`, `target_id`, `content`
+
+**POST** `/comments/{id}/like`（需登录）  
+响应：`like_count`
+
+#### 6) 学习进度
+**POST** `/progress`（需登录）  
+请求：`video_id`, `last_position_sec`, `progress_percent`
+
+**GET** `/progress/{video_id}`（需登录）  
+响应：`last_position_sec`, `progress_percent`
+
+#### 7) 管理员后台（MVP）
+**POST** `/admin/courses`（管理员）  
+**PUT** `/admin/courses/{id}`（管理员）  
+**DELETE** `/admin/courses/{id}`（管理员）
+
+**POST** `/admin/videos`（管理员）  
+**PUT** `/admin/videos/{id}`（管理员）  
+**DELETE** `/admin/videos/{id}`（管理员）
+
+**DELETE** `/admin/comments/{id}`（管理员）
 
 ### 5. Flutter 客户端骨架
 - TODO(@me): 设计路由结构与 Tab 规划（首页/课程/社区/我的）
