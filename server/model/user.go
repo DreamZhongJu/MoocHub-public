@@ -65,3 +65,9 @@ func GetUserByUsername(username string) (Users, error) {
 	}
 	return user, nil
 }
+
+func GetUserByID(id uint) (Users, error) {
+	var user Users
+	err := db.GetDB().First(&user, id).Error
+	return user, err
+}

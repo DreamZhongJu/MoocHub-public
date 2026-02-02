@@ -159,22 +159,22 @@
 请求：`username`, `password`, `nickname`  
 响应：`user` + `token`
 
-**POST** `/auth/login`  
+//done **POST** `/auth/login`  
 请求：`username`, `password`  
 响应：`user` + `token`
 
-**GET** `/me`（需登录）  
+//done **GET** `/me`（需登录）  
 响应：`id`, `username`, `nickname`, `avatar_url`, `role`
 
 #### 2) 分类与课程
-**GET** `/categories`  
+//done **GET** `/categories`  
 响应：分类树（含 `id`, `name`, `parent_id`）
 
-**GET** `/courses`  
+//done **GET** `/courses`  
 Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`  
 响应：课程列表（含 `id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`）
 
-**GET** `/courses/{id}`  
+//done **GET** `/courses/{id}`  
 响应：课程详情 + 关联视频列表（`videos`）
 
 #### 3) 视频与播放

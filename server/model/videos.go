@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"MOOCHUB-server/db"
+	"time"
+)
 
 type Video struct {
 	ID          int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
@@ -16,4 +19,13 @@ type Video struct {
 
 func (Video) TableName() string {
 	return "videos"
+}
+
+func GetVideosByCourseID(courseID int64) ([]Video, error) {
+	var videos []Video
+	result := db.GetDB().Where("course_id = ?", courseID).Order("sort_order ASC").Find(&videos)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return videos, nil
 }

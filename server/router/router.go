@@ -51,16 +51,20 @@ func Router() *gin.Engine {
 	user := r.Group("/api/v1")
 	{
 		user.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
-		auth := user.Group("/auth")
-		{
-			auth.POST("/register", controllers.UserController{}.Register)
-			auth.POST("/login", controllers.UserController{}.Login)
-		}
 		// user.GET("/test/comments10", controllers.CommentController{}.GetComments10)
 		// user.GET("/comments", controllers.CommentController{}.GetCommentsPaginated) // 可选
 		// user.POST("/getUserTest", controllers.UserController{}.GetUserTest)
 		// user.POST("/login", controllers.UserControllers{}.Login)
 		// user.POST("/sign", controllers.UserControllers{}.Sign)
+		auth := user.Group("/auth")
+		{
+			auth.POST("/register", controllers.UserController{}.Register)
+			auth.POST("/login", controllers.UserController{}.Login)
+			auth.GET("/me", middleware.AuthMiddleware(), controllers.UserController{}.Me)
+		}
+		user.GET("/categories", controllers.CourseCategoriesController{}.GetCategories)
+		user.GET("/courses", controllers.CoursesController{}.GetCourses)
+		user.GET("/courses/:id", controllers.CoursesController{}.GetCourseDetails)
 	}
 
 	return r

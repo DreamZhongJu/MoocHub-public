@@ -81,3 +81,32 @@ func (u UserController) Login(c *gin.Context) {
 		"token": token,
 	}, 0)
 }
+
+func (u UserController) Me(c *gin.Context) {
+	userIDVal, ok := c.Get("user_id")
+	if !ok {
+		ReturnError(c, 401, "未登录")
+		return
+	}
+
+	userID, ok := userIDVal.(int)
+	if !ok {
+		ReturnError(c, 500, "用户ID类型错误")
+		return
+	}
+
+	user, err := model.GetUserByID(uint(userID))
+	if err != nil {
+		ReturnError(c, 404, "用户不存在")
+		return
+	}
+
+	// 注意：不要返回 PasswordHash
+	ReturnSuccess(c, 200, "ok", gin.H{
+		"id":         user.ID,
+		"username":   user.Username,
+		"nickname":   user.Nickname,
+		"avatar_url": user.AvatarURL,
+		"role":       user.Role,
+	}, 0)
+}
