@@ -1,9 +1,13 @@
 package model
 
 import (
+	"MOOCHUB-server/db"
+	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Comment struct {
@@ -18,69 +22,93 @@ type Comment struct {
 	ParentID   *primitive.ObjectID `bson:"parent_id,omitempty" json:"parent_id,omitempty"`
 }
 
-//测试接口
-// // GetCommentsLatestN 获取最新 N 条评论（你的“获取10个评论测试接口”就调用它）
-// func GetCommentsLatestN(n int64) ([]Comment, error) {
-// 	coll := db.GetCollection("comments")
+func GetCommentsPaginated(targetType string, targetID int64, page int64, pageSize int64) ([]Comment, int64, error) {
+	coll := db.GetCollection("comments")
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-// 	defer cancel()
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
 
-// 	opts := options.Find().
-// 		SetLimit(n).
-// 		SetSort(bson.D{{Key: "created_at", Value: -1}})
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
 
-// 	cur, err := coll.Find(ctx, bson.D{}, opts)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer cur.Close(ctx)
+	filter := bson.D{
+		{Key: "target_type", Value: targetType},
+		{Key: "target_id", Value: targetID},
+	}
 
-// 	res := make([]Comment, 0, n)
-// 	if err := cur.All(ctx, &res); err != nil {
-// 		return nil, err
-// 	}
-// 	return res, nil
-// }
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
 
-// // GetCommentsPaginated 获取分页评论列表 + 总数
-// // page 从 1 开始；pageSize 建议 10/20/50
-// func GetCommentsPaginated(page int64, pageSize int64) ([]Comment, int64, error) {
-// 	coll := db.GetCollection("comments")
+	skip := (page - 1) * pageSize
+	opts := options.Find().
+		SetSkip(skip).
+		SetLimit(pageSize).
+		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-// 	if page < 1 {
-// 		page = 1
-// 	}
-// 	if pageSize < 1 {
-// 		pageSize = 10
-// 	}
+	cur, err := coll.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cur.Close(ctx)
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-// 	defer cancel()
+	res := make([]Comment, 0, pageSize)
+	if err := cur.All(ctx, &res); err != nil {
+		return nil, 0, err
+	}
 
-// 	filter := bson.D{} // 如需加过滤条件可在这里扩展
+	return res, total, nil
+}
 
-// 	total, err := coll.CountDocuments(ctx, filter)
-// 	if err != nil {
-// 		return nil, 0, err
-// 	}
+func CreateComment(targetType string, targetID int64, userID int64, content string) (Comment, error) {
+	coll := db.GetCollection("comments")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-// 	skip := (page - 1) * pageSize
-// 	opts := options.Find().
-// 		SetSkip(skip).
-// 		SetLimit(pageSize).
-// 		SetSort(bson.D{{Key: "created_at", Value: -1}})
+	comment := Comment{
+		ID:         primitive.NewObjectID(),
+		TargetType: targetType,
+		TargetID:   targetID,
+		UserID:     userID,
+		Content:    content,
+		LikeCount:  0,
+		Status:     "normal",
+		CreatedAt:  time.Now(),
+		ParentID:   nil,
+	}
 
-// 	cur, err := coll.Find(ctx, filter, opts)
-// 	if err != nil {
-// 		return nil, 0, err
-// 	}
-// 	defer cur.Close(ctx)
+	_, err := coll.InsertOne(ctx, comment)
+	if err != nil {
+		return Comment{}, err
+	}
+	return comment, nil
+}
 
-// 	res := make([]Comment, 0, pageSize)
-// 	if err := cur.All(ctx, &res); err != nil {
-// 		return nil, 0, err
-// 	}
+func IncrementLike(commentID string) (int64, error) {
+	coll := db.GetCollection("comments")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-// 	return res, total, nil
-// }
+	oid, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return 0, err
+	}
+
+	res := coll.FindOneAndUpdate(
+		ctx,
+		bson.D{{Key: "_id", Value: oid}},
+		bson.D{{Key: "$inc", Value: bson.D{{Key: "like_count", Value: 1}}}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	)
+
+	var updated Comment
+	if err := res.Decode(&updated); err != nil {
+		return 0, err
+	}
+	return updated.LikeCount, nil
+}

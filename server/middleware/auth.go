@@ -20,7 +20,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims.UserID)
+		c.Set("user_id", int64(claims.UserID))
 		c.Next()
 	}
 }
@@ -44,7 +44,7 @@ func AdminMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims.UserID)
+		c.Set("user_id", int64(claims.UserID))
 		c.Next()
 	}
 }

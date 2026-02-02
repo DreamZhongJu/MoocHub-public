@@ -196,13 +196,13 @@ Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`
 响应：收藏课程与收藏视频列表
 
 #### 5) 评论（MongoDB）
-**GET** `/comments`  
+//done **GET** `/comments`  
 Query：`target_type`(course/video), `target_id`, `page`, `page_size`
 
-**POST** `/comments`（需登录）  
+//done **POST** `/comments`（需登录）  
 请求：`target_type`, `target_id`, `content`
 
-**POST** `/comments/{id}/like`（需登录）  
+//done **POST** `/comments/{id}/like`（需登录）  
 响应：`like_count`
 
 #### 6) 学习进度

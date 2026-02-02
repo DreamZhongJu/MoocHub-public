@@ -66,6 +66,9 @@ func Router() *gin.Engine {
 		user.GET("/courses", controllers.CoursesController{}.GetCourses)
 		user.GET("/courses/:id", controllers.CoursesController{}.GetCourseDetails)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)
+		user.GET("/comments", controllers.CommentController{}.GetComments)
+		user.POST("/comments", middleware.AuthMiddleware(), controllers.CommentController{}.CreateComment)
+		user.POST("/comments/:id/like", middleware.AuthMiddleware(), controllers.CommentController{}.LikeComment)
 		favorite := user.Group("/favorites", middleware.AuthMiddleware())
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)
