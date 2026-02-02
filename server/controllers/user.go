@@ -53,3 +53,31 @@ func (u UserController) Register(c *gin.Context) {
 	}, 0)
 	return
 }
+
+func (u UserController) Login(c *gin.Context) {
+	userName := c.DefaultPostForm("username", "")
+	password := c.DefaultPostForm("password", "")
+	if userName == "" || password == "" {
+		ReturnError(c, 400, "参数不能为空")
+		return
+	}
+	user, err := model.GetUserByUsername(userName)
+	if err != nil {
+		ReturnError(c, 400, "用户不存在")
+		return
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		ReturnError(c, 400, "密码错误")
+		return
+	}
+	token, err := utils.GenerateToken(int(user.ID), user.Role)
+	if err != nil {
+		ReturnError(c, 500, "生成token失败")
+		return
+	}
+	ReturnSuccess(c, 200, "登录成功", gin.H{
+		"user":  user,
+		"token": token,
+	}, 0)
+}

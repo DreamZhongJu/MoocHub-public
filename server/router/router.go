@@ -54,6 +54,7 @@ func Router() *gin.Engine {
 		auth := user.Group("/auth")
 		{
 			auth.POST("/register", controllers.UserController{}.Register)
+			auth.POST("/login", controllers.UserController{}.Login)
 		}
 		// user.GET("/test/comments10", controllers.CommentController{}.GetComments10)
 		// user.GET("/comments", controllers.CommentController{}.GetCommentsPaginated) // 可选

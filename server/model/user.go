@@ -56,3 +56,12 @@ func UsersRegister(username, password, nickname, role string) (Users, error) {
 	}
 	return user, nil
 }
+
+func GetUserByUsername(username string) (Users, error) {
+	var user Users
+	result := db.GetDB().Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		return Users{}, result.Error
+	}
+	return user, nil
+}
