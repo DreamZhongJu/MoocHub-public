@@ -178,14 +178,14 @@ Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`
 响应：课程详情 + 关联视频列表（`videos`）
 
 #### 3) 视频与播放
-**GET** `/videos/{id}`  
+//done **GET** `/videos/{id}`  
 响应：`id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`
 
 #### 4) 收藏
-**POST** `/favorites/courses`（需登录）  
+//done **POST** `/favorites/courses`（需登录）  
 请求：`course_id`
 
-**DELETE** `/favorites/courses/{course_id}`（需登录）
+//done **DELETE** `/favorites/courses/{course_id}`（需登录）
 
 **POST** `/favorites/videos`（需登录）  
 请求：`video_id`

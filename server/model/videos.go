@@ -29,3 +29,12 @@ func GetVideosByCourseID(courseID int64) ([]Video, error) {
 	}
 	return videos, nil
 }
+
+func GetVideoDetails(videoID int64) (Video, error) {
+	var video Video
+	result := db.GetDB().Where("id = ?", videoID).First(&video)
+	if result.Error != nil {
+		return Video{}, result.Error
+	}
+	return video, nil
+}
