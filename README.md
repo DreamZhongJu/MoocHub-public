@@ -155,79 +155,143 @@
 接口统一前缀：`/api/v1`
 
 #### 1) 认证与用户
-//done **POST** `/auth/register`  
-请求：`username`, `password`, `nickname`  
-响应：`user` + `token`
-
-//done **POST** `/auth/login`  
-请求：`username`, `password`  
-响应：`user` + `token`
-
-//done **GET** `/me`（需登录）  
-响应：`id`, `username`, `nickname`, `avatar_url`, `role`
+| 方法 | 路径             | 权限 | 请求参数                           | 响应                                               |
+| ---- | ---------------- | ---- | ---------------------------------- | -------------------------------------------------- |
+| POST | `/auth/register` | 无   | `username`, `password`, `nickname` | `user`, `token`                                    |
+| POST | `/auth/login`    | 无   | `username`, `password`             | `user`, `token`                                    |
+| GET  | `/me`            | 登录 | -                                  | `id`, `username`, `nickname`, `avatar_url`, `role` |
 
 #### 2) 分类与课程
-//done **GET** `/categories`  
-响应：分类树（含 `id`, `name`, `parent_id`）
-
-//done **GET** `/courses`  
-Query：`category_id?`, `sort?`(hot/new), `page`, `page_size`  
-响应：课程列表（含 `id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`）
-
-//done **GET** `/courses/{id}`  
-响应：课程详情 + 关联视频列表（`videos`）
+| 方法 | 路径            | 权限 | 请求参数                                     | 响应                                                                                      |
+| ---- | --------------- | ---- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| GET  | `/categories`   | 无   | -                                            | 分类树（`id`, `name`, `parent_id`）                                                       |
+| GET  | `/courses`      | 无   | `category_id?`, `sort?`, `page`, `page_size` | 课程列表（`id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`） |
+| GET  | `/courses/{id}` | 无   | -                                            | 课程详情 + `videos`                                                                       |
 
 #### 3) 视频与播放
-//done **GET** `/videos/{id}`  
-响应：`id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`
+| 方法 | 路径           | 权限 | 请求参数 | 响应                                                                                |
+| ---- | -------------- | ---- | -------- | ----------------------------------------------------------------------------------- |
+| GET  | `/videos/{id}` | 无   | -        | `id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url` |
 
 #### 4) 收藏
-//done **POST** `/favorites/courses`（需登录）  
-请求：`course_id`
+| 方法   | 路径                             | 权限 | 请求参数    | 响应                   |
+| ------ | -------------------------------- | ---- | ----------- | ---------------------- |
+| POST   | `/favorites/courses`             | 登录 | `course_id` | -                      |
+| DELETE | `/favorites/courses/{course_id}` | 登录 | -           | -                      |
+| POST   | `/favorites/videos`              | 登录 | `video_id`  | -                      |
+| DELETE | `/favorites/videos/{video_id}`   | 登录 | -           | -                      |
+| GET    | `/favorites`                     | 登录 | -           | 收藏课程与收藏视频列表 |
 
-//done **DELETE** `/favorites/courses/{course_id}`（需登录）
+#### TODO 4.5) 本地视频接入（开发阶段）
+目标：在本地快速跑通“视频播放 + 缩略图展示 + 数据入库”。
 
-//done **POST** `/favorites/videos`（需登录）  
-请求：`video_id`
+**A. 本地存储路径（开发）**
+- 视频：`server/uploads/videos/`
+- 缩略图：`server/uploads/thumbs/`
+- 访问：通过 Nginx 或 Gin 静态路由暴露（示例：`/uploads/videos/xxx.mp4`）
 
-//done **DELETE** `/favorites/videos/{video_id}`（需登录）
+**B. 将视频与缩略图写入数据库（MySQL + MongoDB）**
+1) 上传视频文件与缩略图到本地目录（手动拷贝即可）
+2) 在 MySQL `videos` 表插入一条记录：
+   - `course_id`：关联课程 ID
+   - `title`、`description`、`duration_sec`
+   - `video_url`：例如 `http://127.0.0.1:3000/uploads/videos/xxx.mp4`
+   - `thumb_url`：例如 `http://127.0.0.1:3000/uploads/thumbs/xxx.jpg`
+   - `sort_order`：播放顺序
+3) 在 MongoDB `video_thumbnails` 中插入元数据（可选）：
+   - `video_id`：MySQL 的视频 ID
+   - `url`、`width`、`height`、`format`、`size_bytes`
 
-//done **GET** `/favorites`（需登录）  
-响应：收藏课程与收藏视频列表
+**C. 示例 SQL（MySQL）**
+```sql
+INSERT INTO videos
+(course_id, title, description, duration_sec, video_url, thumb_url, sort_order, created_at)
+VALUES
+(1, '示例视频', '本地上传测试', 120,
+ 'http://127.0.0.1:3000/uploads/videos/demo.mp4',
+ 'http://127.0.0.1:3000/uploads/thumbs/demo.jpg',
+ 1, NOW());
+```
+
+**D. 示例 MongoDB 文档**
+```js
+db.video_thumbnails.insertOne({
+  video_id: 1,
+  url: "http://127.0.0.1:3000/uploads/thumbs/demo.jpg",
+  width: 1280,
+  height: 720,
+  format: "jpg",
+  size_bytes: 34567,
+  created_at: new Date()
+});
+```
 
 #### 5) 评论（MongoDB）
-//done **GET** `/comments`  
-Query：`target_type`(course/video), `target_id`, `page`, `page_size`
-
-//done **POST** `/comments`（需登录）  
-请求：`target_type`, `target_id`, `content`
-
-//done **POST** `/comments/{id}/like`（需登录）  
-响应：`like_count`
+| 方法 | 路径                  | 权限 | 请求参数                                        | 响应         |
+| ---- | --------------------- | ---- | ----------------------------------------------- | ------------ |
+| GET  | `/comments`           | 无   | `target_type`, `target_id`, `page`, `page_size` | 评论列表     |
+| POST | `/comments`           | 登录 | `target_type`, `target_id`, `content`           | `comment`    |
+| POST | `/comments/{id}/like` | 登录 | -                                               | `like_count` |
 
 #### 6) 学习进度
-//done **POST** `/progress`（需登录）  
-请求：`video_id`, `last_position_sec`, `progress_percent`
+| 方法 | 路径                   | 权限 | 请求参数                                            | 响应                                    |
+| ---- | ---------------------- | ---- | --------------------------------------------------- | --------------------------------------- |
+| POST | `/progress`            | 登录 | `video_id`, `last_position_sec`, `progress_percent` | -                                       |
+| GET  | `/progress/{video_id}` | 登录 | -                                                   | `last_position_sec`, `progress_percent` |
 
-//done **GET** `/progress/{video_id}`（需登录）  
-响应：`last_position_sec`, `progress_percent`
+#### 7) 管理员后台（MVP）
+| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |
+| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | -------- |
+| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course` |
+| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -        |
+| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -        |
+| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`  |
+| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -        |
+| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -        |
+| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -        |
 
-#### done 7) 管理员后台（MVP）
-**POST** `/admin/courses`（管理员）  
-**PUT** `/admin/courses/{id}`（管理员）  
-**DELETE** `/admin/courses/{id}`（管理员）
-
-**POST** `/admin/videos`（管理员）  
-**PUT** `/admin/videos/{id}`（管理员）  
-**DELETE** `/admin/videos/{id}`（管理员）
-
-**DELETE** `/admin/comments/{id}`（管理员）
-
-### 5. Flutter 客户端骨架
-- TODO(@me): 设计路由结构与 Tab 规划（首页/课程/社区/我的）
+### TODO 5. Flutter 客户端骨架
+- TODO(@me): 设计路由结构与 Tab 规划（首页/分类/我的）
 - TODO(@me): 提供推荐流 UI 结构示例（卡片/瀑布流/横滑模块）
 - TODO(@you): 完成基础页面搭建与路由接入
 - TODO(@you): 接入 API（课程列表、详情、播放、评论）
+
+#### Flutter 骨架（小目标拆分）
+1) 项目初始化
+   - TODO(@you): 新建 Flutter 项目并确认运行（Android/iOS 至少一端）
+   - TODO(@you): 添加必要依赖（dio/riverpod或provider/route管理/视频播放器）
+   - TODO(@you): 配置基础主题与字体
+
+2) 路由与导航
+   - TODO(@you): 配置路由表（首页、分类、我的、课程详情、视频播放）
+   - TODO(@you): 底部导航 Tab（首页/分类/我的）
+
+3) 首页（视频推荐流）
+   - TODO(@you): 主页布局：顶部搜索/轮播（可后置）+ 推荐卡片列表
+   - TODO(@you): 卡片样式包含：封面图、标题、讲师、观看数/收藏数
+   - TODO(@you): 点击卡片进入课程详情/播放页
+
+4) 分类页
+   - TODO(@you): 分类列表 + 课程列表（按分类过滤）
+
+5) 课程详情页
+   - TODO(@you): 展示课程信息 + 课程视频列表
+   - TODO(@you): 点击视频跳转到播放页
+
+6) 播放页
+   - TODO(@you): 视频播放器组件 + 基本控制
+   - TODO(@you): 评论列表入口（先做展示，不做发布也行）
+
+7) 我的页
+   - TODO(@you): 登录入口 + 用户信息卡片
+   - TODO(@you): 收藏列表入口、学习记录入口（先做空页面）
+
+8) API 接入顺序建议
+   - TODO(@you): /auth/login & /auth/register（先打通登录）
+   - TODO(@you): /courses & /courses/{id}
+   - TODO(@you): /videos/{id}
+   - TODO(@you): /comments（列表）
+   - TODO(@you): /favorites（课程/视频）
 
 ### 6. 播放与学习进度
 - TODO(@me): 播放页交互规范（倍速/续播/进度保存）
