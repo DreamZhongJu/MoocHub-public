@@ -9,3 +9,6 @@ AI/item_desc_model_final.pth
 AI/__pycache__/*
 flutter/docs/*
 server/logs/*
+
+server/uploads/thumbs/*
+server/uploads/videos/*

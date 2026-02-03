@@ -47,7 +47,7 @@ func Router() *gin.Engine {
 
 	// 添加日志和恢复中间件
 	r.Use(middleware.GinLogger(), middleware.GinRecovery(true))
-
+	r.Static("/uploads", "./uploads")
 	user := r.Group("/api/v1")
 	{
 		user.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
