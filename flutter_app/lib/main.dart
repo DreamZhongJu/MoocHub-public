@@ -1,4 +1,6 @@
+import 'package:MoocHub/routers/router.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,24 +15,75 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MoocHub',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1B9AAA),
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
+        fontFamily: GoogleFonts.manrope().fontFamily,
+        appBarTheme: AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          titleTextStyle: GoogleFonts.manrope(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+          surfaceTintColor: Colors.white,
+        ),
+        textTheme: GoogleFonts.manropeTextTheme(),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF1B9AAA), width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          margin: EdgeInsets.zero,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFF1B9AAA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            textStyle: GoogleFonts.manrope(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFF1B9AAA),
+          unselectedItemColor: Colors.black45,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
-      home: const MyHomePage(title: 'MoocHub Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/',
+      onGenerateRoute: onGenerateRoute,
     );
   }
 }

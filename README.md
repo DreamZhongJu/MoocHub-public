@@ -182,7 +182,30 @@
 | DELETE | `/favorites/videos/{video_id}`   | 登录 | -           | -                      |
 | GET    | `/favorites`                     | 登录 | -           | 收藏课程与收藏视频列表 |
 
-#### TODO 4.5) 本地视频接入（开发阶段）
+#### 5) 评论（MongoDB）
+| 方法 | 路径                  | 权限 | 请求参数                                        | 响应         |
+| ---- | --------------------- | ---- | ----------------------------------------------- | ------------ |
+| GET  | `/comments`           | 无   | `target_type`, `target_id`, `page`, `page_size` | 评论列表     |
+| POST | `/comments`           | 登录 | `target_type`, `target_id`, `content`           | `comment`    |
+| POST | `/comments/{id}/like` | 登录 | -                                               | `like_count` |
+
+#### 6) 学习进度
+| 方法 | 路径                   | 权限 | 请求参数                                            | 响应                                    |
+| ---- | ---------------------- | ---- | --------------------------------------------------- | --------------------------------------- |
+| POST | `/progress`            | 登录 | `video_id`, `last_position_sec`, `progress_percent` | -                                       |
+| GET  | `/progress/{video_id}` | 登录 | -                                                   | `last_position_sec`, `progress_percent` |
+
+#### 7) 管理员后台（MVP）
+| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |
+| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | -------- |
+| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course` |
+| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -        |
+| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -        |
+| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`  |
+| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -        |
+| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -        |
+| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -        |
+### done 4.5) 本地视频接入（开发阶段）
 目标：在本地快速跑通“视频播放 + 缩略图展示 + 数据入库”。
 
 **A. 本地存储路径（开发）**
@@ -226,30 +249,6 @@ db.video_thumbnails.insertOne({
 });
 ```
 
-#### 5) 评论（MongoDB）
-| 方法 | 路径                  | 权限 | 请求参数                                        | 响应         |
-| ---- | --------------------- | ---- | ----------------------------------------------- | ------------ |
-| GET  | `/comments`           | 无   | `target_type`, `target_id`, `page`, `page_size` | 评论列表     |
-| POST | `/comments`           | 登录 | `target_type`, `target_id`, `content`           | `comment`    |
-| POST | `/comments/{id}/like` | 登录 | -                                               | `like_count` |
-
-#### 6) 学习进度
-| 方法 | 路径                   | 权限 | 请求参数                                            | 响应                                    |
-| ---- | ---------------------- | ---- | --------------------------------------------------- | --------------------------------------- |
-| POST | `/progress`            | 登录 | `video_id`, `last_position_sec`, `progress_percent` | -                                       |
-| GET  | `/progress/{video_id}` | 登录 | -                                                   | `last_position_sec`, `progress_percent` |
-
-#### 7) 管理员后台（MVP）
-| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |
-| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | -------- |
-| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course` |
-| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -        |
-| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -        |
-| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`  |
-| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -        |
-| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -        |
-| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -        |
-
 ### TODO 5. Flutter 客户端骨架
 - TODO(@me): 设计路由结构与 Tab 规划（首页/分类/我的）
 - TODO(@me): 提供推荐流 UI 结构示例（卡片/瀑布流/横滑模块）
@@ -257,12 +256,12 @@ db.video_thumbnails.insertOne({
 - TODO(@you): 接入 API（课程列表、详情、播放、评论）
 
 #### Flutter 骨架（小目标拆分）
-1) 项目初始化
+1)  项目初始化 // done
    - TODO(@you): 新建 Flutter 项目并确认运行（Android/iOS 至少一端）
    - TODO(@you): 添加必要依赖（dio/riverpod或provider/route管理/视频播放器）
    - TODO(@you): 配置基础主题与字体
 
-2) 路由与导航
+2) 路由与导航 // done
    - TODO(@you): 配置路由表（首页、分类、我的、课程详情、视频播放）
    - TODO(@you): 底部导航 Tab（首页/分类/我的）
 
