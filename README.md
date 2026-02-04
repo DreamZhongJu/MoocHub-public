@@ -286,7 +286,7 @@ db.video_thumbnails.insertOne({
    - TODO(@you): 登录入口 + 用户信息卡片
    - TODO(@you): 收藏列表入口、学习记录入口（先做空页面）
 
-8) API 接入顺序建议
+8) API 接入顺序建议 // done
    - TODO(@you): /auth/login & /auth/register（先打通登录）
    - TODO(@you): /courses & /courses/{id}
    - TODO(@you): /videos/{id}
