@@ -12,3 +12,4 @@ server/logs/*
 
 server/uploads/thumbs/*
 server/uploads/videos/*
+build/*
