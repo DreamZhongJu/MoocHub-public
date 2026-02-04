@@ -151,7 +151,13 @@ class _HomePageState extends State<HomePage>
           coverUrl: product.coverUrl,
           viewCount: product.viewCount,
           favoriteCount: product.favoriteCount,
-          onTap: () {},
+          onTap: () {
+            final id = int.tryParse(product.id);
+            if (id == null) {
+              return;
+            }
+            Navigator.pushNamed(context, '/courseDetail', arguments: id);
+          },
         );
       },
     );

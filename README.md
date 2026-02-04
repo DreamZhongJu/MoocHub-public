@@ -268,7 +268,7 @@ db.video_thumbnails.insertOne({
 3) 首页（视频推荐流）
    - TODO(@you): 主页布局：顶部搜索/轮播（可后置）+ 推荐卡片列表  // done
    - TODO(@you): 卡片样式包含：封面图、标题、讲师、观看数/收藏数 // done
-   - TODO(@you): 点击卡片进入课程详情/播放页 // TODO
+   - TODO(@you): 点击卡片进入课程详情/播放页 // done
 
 4) 分类页
    - TODO(@you): 分类列表 + 课程列表（按分类过滤）
