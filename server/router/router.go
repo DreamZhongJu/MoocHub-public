@@ -63,6 +63,7 @@ func Router() *gin.Engine {
 			auth.GET("/me", middleware.AuthMiddleware(), controllers.UserController{}.Me)
 		}
 		user.GET("/categories", controllers.CourseCategoriesController{}.GetCategories)
+		user.GET("/categories/:id/courses", controllers.CoursesController{}.GetCoursesByCategoryID)
 		user.GET("/courses", controllers.CoursesController{}.GetCourses)
 		user.GET("/courses/:id", controllers.CoursesController{}.GetCourseDetails)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)

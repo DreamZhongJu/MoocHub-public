@@ -53,3 +53,25 @@ func (cc CoursesController) GetCourseDetails(c *gin.Context) {
 		"videos":  videos,
 	}, 0)
 }
+
+func (cc CoursesController) GetCoursesByCategoryID(c *gin.Context) {
+	categoryIDStr := c.Param("id")
+	sort := c.DefaultQuery("sort", "default")
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("page_size", "10")
+
+	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
+	if err != nil {
+		ReturnError(c, 400, "invalid category id")
+		return
+	}
+
+	courses, err := model.GetCoursesByCategory(categoryID, sort, page, pageSize)
+	if err != nil {
+		ReturnError(c, 500, "获取课程详情失败："+err.Error())
+		return
+	}
+	ReturnSuccess(c, 200, "获取成功", gin.H{
+		"courses": courses,
+	}, 0)
+}

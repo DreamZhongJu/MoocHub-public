@@ -226,7 +226,11 @@ class _CategoryPageState extends State<CategoryPage>
             final item = _rightCateList[index];
             return InkWell(
               onTap: () {
-                // TODO: 接入课程列表页
+                Navigator.pushNamed(
+                  context,
+                  '/courseList',
+                  arguments: {'categoryId': item.id},
+                );
               },
               child: Container(
                 padding: EdgeInsets.all(10.w),

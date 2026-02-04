@@ -165,6 +165,7 @@
 | 方法 | 路径            | 权限 | 请求参数                                     | 响应                                                                                      |
 | ---- | --------------- | ---- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | GET  | `/categories`   | 无   | -                                            | 分类树（`id`, `name`, `parent_id`）                                                       |
+| GET  | `/categories/{id}/courses` | 无 | `sort?`, `page`, `page_size` | 课程列表（按分类筛选） |
 | GET  | `/courses`      | 无   | `category_id?`, `sort?`, `page`, `page_size` | 课程列表（`id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`） |
 | GET  | `/courses/{id}` | 无   | -                                            | 课程详情 + `videos`                                                                       |
 
