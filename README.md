@@ -296,7 +296,7 @@ db.video_thumbnails.insertOne({
 ### 6. 播放与学习进度
 - TODO(@me): 播放页交互规范（倍速/续播/进度保存）
 - TODO(@you): 集成视频播放器与进度上报
-- TODO(@you): 本地缓存与“继续观看”模块
+- TODO(@you): “继续观看”模块
 
 ### 7. 评论与社区
 - TODO(@me): 评论数据结构与接口规范

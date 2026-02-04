@@ -1,4 +1,5 @@
 import 'package:MoocHub/routers/router.dart';
+import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/services/ScreenAdaper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -92,6 +93,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       onGenerateRoute: onGenerateRoute,
+      navigatorObservers: [routeObserver],
     );
   }
 }

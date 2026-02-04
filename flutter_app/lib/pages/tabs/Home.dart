@@ -1,25 +1,55 @@
 import 'package:MoocHub/model/CoursesModel.dart';
+import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:MoocHub/routers/route_observer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with AutomaticKeepAliveClientMixin {
+class HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin, RouteAware {
   List<CoursesModel> _recommendedProducts = [];
   bool _isLoading = true;
+  bool _continueLoading = false;
+  bool _showContinue = true;
+  VideoModel? _continueVideo;
+  int _continuePositionSec = 0;
+  double _continuePercent = 0;
+  final StorageService _storageService = StorageService();
 
   @override
   void initState() {
     super.initState();
     _loadRecommendedProducts();
+    _loadContinueWatching();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _loadContinueWatching();
   }
 
   String _stringify(dynamic value) => value?.toString() ?? '';
@@ -49,6 +79,188 @@ class _HomePageState extends State<HomePage>
           ? now
           : _stringify(json['updated_at']),
     };
+  }
+
+  Future<void> _loadContinueWatching() async {
+    final token = await _storageService.getUserToken();
+    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    if (!loggedIn) {
+      if (mounted) {
+        setState(() {
+          _continueVideo = null;
+          _showContinue = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _continueLoading = true;
+        _showContinue = true;
+      });
+    }
+
+    try {
+      final response = await ApiService().get<Map<String, dynamic>>(
+        '/progress/latest',
+        fromJson: (raw) => raw as Map<String, dynamic>,
+      );
+
+      final data = response.data;
+      final videoRaw = data['video'];
+      final progressRaw = data['progress'];
+      if (videoRaw is Map<String, dynamic> && progressRaw is Map<String, dynamic>) {
+        final video = VideoModel.fromJson(videoRaw);
+        int pos = 0;
+        final lastPos = progressRaw['last_position_sec'];
+        if (lastPos is num) {
+          pos = lastPos.toInt();
+        } else if (lastPos is String) {
+          pos = int.tryParse(lastPos) ?? 0;
+        }
+        double percent = 0;
+        final rawPercent = progressRaw['progress_percent'];
+        if (rawPercent is num) {
+          percent = rawPercent.toDouble();
+        } else if (rawPercent is String) {
+          percent = double.tryParse(rawPercent) ?? 0;
+        }
+        if (mounted) {
+          setState(() {
+            _continueVideo = video;
+            _continuePositionSec = pos;
+            _continuePercent = percent;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _continueVideo = null;
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _continueVideo = null;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _continueLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds <= 0) return '00:00';
+    final minutes = seconds ~/ 60;
+    final remaining = seconds % 60;
+    final m = minutes.toString().padLeft(2, '0');
+    final s = remaining.toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Widget _buildContinueWatching() {
+    if (!_showContinue) {
+      return const SizedBox.shrink();
+    }
+    if (_continueLoading) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    final video = _continueVideo;
+    if (video == null) {
+      return const SizedBox.shrink();
+    }
+    final percentText = _continuePercent <= 0
+        ? '未开始'
+        : '${_continuePercent.toStringAsFixed(1)}%';
+
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F7F6),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: video.thumbUrl.isNotEmpty
+                ? Image.network(
+                    video.thumbUrl,
+                    width: 88,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 88,
+                    height: 50,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.play_arrow),
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '继续观看',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  video.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${_formatDuration(_continuePositionSec)} · $percentText',
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () {
+                  setState(() {
+                    _showContinue = false;
+                  });
+                },
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final id = int.tryParse(video.id);
+                  if (id == null) return;
+                  Navigator.pushNamed(context, '/videoDetail', arguments: id);
+                },
+                child: const Text('继续'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadRecommendedProducts() async {
@@ -166,37 +378,48 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return SmartRefresher(
-      enablePullDown: true,
-      header: const WaterDropHeader(
-        complete: Icon(Icons.done, color: Colors.grey),
-        waterDropColor: Colors.blue,
-      ),
-      controller: RefreshController(),
-      onRefresh: () async {
-        await Future.delayed(const Duration(milliseconds: 1000));
-        if (mounted) {
-          setState(() {});
-        }
-      },
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Home Page Content',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
+    return Stack(
+      children: [
+        SmartRefresher(
+          enablePullDown: true,
+          header: const WaterDropHeader(
+            complete: Icon(Icons.done, color: Colors.grey),
+            waterDropColor: Colors.blue,
+          ),
+          controller: RefreshController(),
+          onRefresh: () async {
+            await Future.delayed(const Duration(milliseconds: 1000));
+            if (mounted) {
+              setState(() {});
+            }
+          },
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Home',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                _buildRecommendedProducts(),
+                const SizedBox(height: 800), // Added space to enable scrolling
+              ],
             ),
-            const SizedBox(height: 10),
-            _buildRecommendedProducts(),
-            const SizedBox(height: 800), // Added space to enable scrolling
-          ],
+          ),
         ),
-      ),
+        if (_showContinue && !_continueLoading && _continueVideo != null)
+          Positioned(
+            left: 16,
+            bottom: 16,
+            child: _buildContinueWatching(),
+          ),
+      ],
     );
   }
 

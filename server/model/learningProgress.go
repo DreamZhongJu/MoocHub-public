@@ -45,3 +45,22 @@ func GetLearningProgress(userID int64, videoID int64) (LearningProgress, error) 
 	}
 	return progress, nil
 }
+
+func GetLatestLearningProgress(userID int64) (*LearningProgress, *Video, error) {
+	var progress LearningProgress
+	err := db.GetDB().
+		Where("user_id = ?", userID).
+		Order("updated_at DESC").
+		First(&progress).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+	video, err := GetVideoDetails(progress.VideoID)
+	if err != nil {
+		return &progress, nil, err
+	}
+	return &progress, &video, nil
+}
