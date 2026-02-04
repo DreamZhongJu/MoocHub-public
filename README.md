@@ -271,7 +271,7 @@ db.video_thumbnails.insertOne({
    - TODO(@you): 点击卡片进入课程详情/播放页 // done
 
 4) 分类页
-   - TODO(@you): 分类列表 + 课程列表（按分类过滤）
+   - TODO(@you): 分类列表 + 课程列表（按分类过滤） 
 
 5) 课程详情页
    - TODO(@you): 展示课程信息 + 课程视频列表

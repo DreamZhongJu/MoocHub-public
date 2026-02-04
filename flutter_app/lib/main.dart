@@ -1,4 +1,5 @@
 import 'package:MoocHub/routers/router.dart';
+import 'package:MoocHub/services/ScreenAdaper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,7 +7,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "assets/.env");
-  runApp(const MyApp());
+  runApp(
+    ScreenAdapter.init(
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
