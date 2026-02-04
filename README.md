@@ -162,12 +162,12 @@
 | GET  | `/me`            | 登录 | -                                  | `id`, `username`, `nickname`, `avatar_url`, `role` |
 
 #### 2) 分类与课程
-| 方法 | 路径            | 权限 | 请求参数                                     | 响应                                                                                      |
-| ---- | --------------- | ---- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| GET  | `/categories`   | 无   | -                                            | 分类树（`id`, `name`, `parent_id`）                                                       |
-| GET  | `/categories/{id}/courses` | 无 | `sort?`, `page`, `page_size` | 课程列表（按分类筛选） |
-| GET  | `/courses`      | 无   | `category_id?`, `sort?`, `page`, `page_size` | 课程列表（`id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`） |
-| GET  | `/courses/{id}` | 无   | -                                            | 课程详情 + `videos`                                                                       |
+| 方法 | 路径                       | 权限 | 请求参数                                     | 响应                                                                                      |
+| ---- | -------------------------- | ---- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| GET  | `/categories`              | 无   | -                                            | 分类树（`id`, `name`, `parent_id`）                                                       |
+| GET  | `/categories/{id}/courses` | 无   | `sort?`, `page`, `page_size`                 | 课程列表（按分类筛选）                                                                    |
+| GET  | `/courses`                 | 无   | `category_id?`, `sort?`, `page`, `page_size` | 课程列表（`id`, `title`, `cover_url`, `instructor_name`, `view_count`, `favorite_count`） |
+| GET  | `/courses/{id}`            | 无   | -                                            | 课程详情 + `videos`                                                                       |
 
 #### 3) 视频与播放
 | 方法 | 路径           | 权限 | 请求参数 | 响应                                                                                |
@@ -271,7 +271,7 @@ db.video_thumbnails.insertOne({
    - TODO(@you): 卡片样式包含：封面图、标题、讲师、观看数/收藏数 // done
    - TODO(@you): 点击卡片进入课程详情/播放页 // done
 
-4) 分类页
+4) 分类页 // done
    - TODO(@you): 分类列表 + 课程列表（按分类过滤） 
 
 5) 课程详情页

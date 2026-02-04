@@ -89,11 +89,7 @@ class _ProductListPageState extends State<ProductListPage> {
     try {
       final response = await _apiService.get<Map<String, dynamic>>(
         '/categories/${widget.categoryId}/courses',
-        queryParameters: {
-          'page': _page,
-          'page_size': 10,
-          'sort': _sort,
-        },
+        queryParameters: {'page': _page, 'page_size': 10, 'sort': _sort},
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
 
@@ -235,11 +231,7 @@ class _ProductListPageState extends State<ProductListPage> {
               if (id == null) {
                 return;
               }
-              Navigator.pushNamed(
-                context,
-                '/courseDetail',
-                arguments: id,
-              );
+              Navigator.pushNamed(context, '/courseDetail', arguments: id);
             },
             child: Column(
               children: [
@@ -321,10 +313,7 @@ class _ProductListPageState extends State<ProductListPage> {
       appBar: AppBar(title: const Text('课程列表'), actions: const [Text('')]),
       endDrawer: Drawer(
         child: Center(
-          child: Text(
-            '筛选功能开发中',
-            style: TextStyle(color: Colors.grey.shade600),
-          ),
+          child: Text('筛选功能开发中', style: TextStyle(color: Colors.grey.shade600)),
         ),
       ),
       body: Stack(children: [_productListWidget(), _subHeaderWidget()]),
