@@ -1,5 +1,6 @@
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
+import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage> {
   final ApiService _apiService = ApiService();
   CoursesModel? _product;
+  List<VideoModel> _videos = [];
   bool _isLoading = true;
   bool _loadError = false;
   int _selectedImageIndex = 0;
@@ -79,9 +81,19 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           if (first is Map<String, dynamic>) {
             final product = CoursesModel.fromJson(_normalizeCourseMap(first));
             final resolvedImage = Config.resolveImage(product.coverUrl);
+            final rawVideos = data['videos'];
+            final List<VideoModel> videos = [];
+            if (rawVideos is List) {
+              for (final item in rawVideos) {
+                if (item is Map<String, dynamic>) {
+                  videos.add(VideoModel.fromJson(item));
+                }
+              }
+            }
             setState(() {
               _product = product;
               _imageUrls = resolvedImage.isEmpty ? [] : [resolvedImage];
+              _videos = videos;
               _isLoading = false;
             });
             return;
@@ -354,9 +366,109 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           _buildSpecItem('概述', product.summary),
           _buildSpecItem('老师', product.instructorName),
           _buildSpecItem('级别', product.level),
+          const SizedBox(height: 24),
+          const Text(
+            '视频列表',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildVideoList(),
         ],
       ),
     );
+  }
+
+  Widget _buildVideoList() {
+    if (_videos.isEmpty) {
+      return const Text(
+        '暂无视频',
+        style: TextStyle(color: Colors.grey, fontSize: 14),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _videos.length,
+      separatorBuilder: (_, __) => const Divider(height: 24),
+      itemBuilder: (context, index) {
+        final video = _videos[index];
+        final cover = Config.resolveImage(video.thumbUrl);
+        return InkWell(
+          onTap: () {
+            final id = int.tryParse(video.id);
+            if (id == null) {
+              return;
+            }
+            Navigator.pushNamed(
+              context,
+              '/videoDetail',
+              arguments: id,
+            );
+          },
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CachedNetworkImage(
+                  imageUrl: cover.isEmpty
+                      ? 'https://picsum.photos/seed/v${video.id}/240/135'
+                      : cover,
+                  width: 120,
+                  height: 68,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
+                    width: 120,
+                    height: 68,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.play_circle_outline),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'P${index + 1}  ${video.title}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      video.description.isEmpty ? '暂无描述' : video.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatDuration(video.durationSec),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds <= 0) return '00:00';
+    final minutes = seconds ~/ 60;
+    final remaining = seconds % 60;
+    final m = minutes.toString().padLeft(2, '0');
+    final s = remaining.toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   Widget _pill(String label, String value) {

@@ -274,11 +274,11 @@ db.video_thumbnails.insertOne({
 4) 分类页 // done
    - TODO(@you): 分类列表 + 课程列表（按分类过滤） 
 
-5) 课程详情页
+5) 课程详情页 // done
    - TODO(@you): 展示课程信息 + 课程视频列表
    - TODO(@you): 点击视频跳转到播放页
 
-6) 播放页
+6) 播放页 // done
    - TODO(@you): 视频播放器组件 + 基本控制
    - TODO(@you): 评论列表入口（先做展示，不做发布也行）
 

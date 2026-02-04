@@ -1,5 +1,6 @@
 import 'package:MoocHub/pages/CourseDetailPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
+import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:flutter/material.dart';
 import '../pages/tabs/Tabs.dart';
 
@@ -51,6 +52,29 @@ var onGenerateRoute = (RouteSettings settings) {
       }
       return MaterialPageRoute(
         builder: (_) => ProductListPage(categoryId: categoryId!),
+      );
+    case '/videoDetail':
+      final args = settings.arguments;
+      int? videoId;
+      if (args is int) {
+        videoId = args;
+      } else if (args is Map<String, dynamic>) {
+        final raw = args['videoId'] ?? args['id'];
+        if (raw is int) {
+          videoId = raw;
+        } else if (raw is String) {
+          videoId = int.tryParse(raw);
+        }
+      }
+      if (videoId == null) {
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('视频ID无效')),
+          ),
+        );
+      }
+      return MaterialPageRoute(
+        builder: (_) => VideoDetailPage(videoId: videoId!),
       );
     default:
       return null;
