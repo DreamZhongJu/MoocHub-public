@@ -16,8 +16,13 @@ func (fc FavoriteController) ToggleFavorite(c *gin.Context) {
 		return
 	}
 	courseID, _ := strconv.ParseInt(course_iD, 10, 64)
-	userId := c.GetInt("user_id")
-	err := model.ToggleFavoriteCourse(userId, courseID)
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(int64)
+	if !ok {
+		ReturnError(c, 401, "用户未登录")
+		return
+	}
+	err := model.ToggleFavoriteCourse(int(uid), courseID)
 	if err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
@@ -32,8 +37,13 @@ func (fc FavoriteController) DeleteFavorite(c *gin.Context) {
 		return
 	}
 	courseID, _ := strconv.ParseInt(course_iD, 10, 64)
-	userId := c.GetInt("user_id")
-	err := model.DeleteFavoriteCourse(userId, courseID)
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(int64)
+	if !ok {
+		ReturnError(c, 401, "用户未登录")
+		return
+	}
+	err := model.DeleteFavoriteCourse(int(uid), courseID)
 	if err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
@@ -48,8 +58,13 @@ func (fc FavoriteController) ToggleFavoriteVideo(c *gin.Context) {
 		return
 	}
 	videoID, _ := strconv.ParseInt(videoIDStr, 10, 64)
-	userID := c.GetInt("user_id")
-	err := model.ToggleFavoriteVideo(userID, videoID)
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(int64)
+	if !ok {
+		ReturnError(c, 401, "用户未登录")
+		return
+	}
+	err := model.ToggleFavoriteVideo(int(uid), videoID)
 	if err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
@@ -64,8 +79,13 @@ func (fc FavoriteController) DeleteFavoriteVideo(c *gin.Context) {
 		return
 	}
 	videoID, _ := strconv.ParseInt(videoIDStr, 10, 64)
-	userID := c.GetInt("user_id")
-	err := model.DeleteFavoriteVideo(userID, videoID)
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(int64)
+	if !ok {
+		ReturnError(c, 401, "用户未登录")
+		return
+	}
+	err := model.DeleteFavoriteVideo(int(uid), videoID)
 	if err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
@@ -74,13 +94,18 @@ func (fc FavoriteController) DeleteFavoriteVideo(c *gin.Context) {
 }
 
 func (fc FavoriteController) GetFavorites(c *gin.Context) {
-	userID := c.GetInt("user_id")
-	courses, err := model.GetFavoriteCourses(userID)
+	userID, _ := c.Get("user_id")
+	uid, ok := userID.(int64)
+	if !ok {
+		ReturnError(c, 401, "用户未登录")
+		return
+	}
+	courses, err := model.GetFavoriteCourses(int(uid))
 	if err != nil {
 		ReturnError(c, 500, "获取收藏课程失败："+err.Error())
 		return
 	}
-	videos, err := model.GetFavoriteVideos(userID)
+	videos, err := model.GetFavoriteVideos(int(uid))
 	if err != nil {
 		ReturnError(c, 500, "获取收藏视频失败："+err.Error())
 		return

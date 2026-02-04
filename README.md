@@ -282,7 +282,7 @@ db.video_thumbnails.insertOne({
    - TODO(@you): 视频播放器组件 + 基本控制
    - TODO(@you): 评论列表入口（先做展示，不做发布也行）
 
-7) 我的页
+7) 我的页 // done
    - TODO(@you): 登录入口 + 用户信息卡片
    - TODO(@you): 收藏列表入口、学习记录入口（先做空页面）
 

@@ -1,4 +1,6 @@
-import 'package:MoocHub/pages/CourseDetailPage.dart';
+﻿import 'package:MoocHub/pages/CourseDetailPage.dart';
+import 'package:MoocHub/pages/FavoritesPage.dart';
+import 'package:MoocHub/pages/LoginPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +78,10 @@ var onGenerateRoute = (RouteSettings settings) {
       return MaterialPageRoute(
         builder: (_) => VideoDetailPage(videoId: videoId!),
       );
+    case '/login':
+      return MaterialPageRoute(builder: (_) => const LoginPage());
+    case '/favorites':
+      return MaterialPageRoute(builder: (_) => const FavoritesPage());
     default:
       return null;
   }
