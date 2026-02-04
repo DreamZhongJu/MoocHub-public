@@ -1,6 +1,7 @@
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/widget/CommentsPanel.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
@@ -135,24 +136,40 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     return Column(
       children: [
         Container(
-          height: 360,
+          height: 320,
           width: double.infinity,
-          color: Colors.white,
-          child: CachedNetworkImage(
-            imageUrl: _imageUrls[_selectedImageIndex],
-            fit: BoxFit.contain,
-            placeholder: (context, url) => Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Container(
-                width: double.infinity,
-                height: 360,
-                color: Colors.white,
-              ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueGrey.shade50, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            errorWidget: (context, url, error) => Container(
-              color: Colors.grey.shade200,
-              child: Image.asset(Config.defaultProductAsset, fit: BoxFit.cover),
+          ),
+          child: Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: CachedNetworkImage(
+                imageUrl: _imageUrls[_selectedImageIndex],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 300,
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey.shade300,
+                  highlightColor: Colors.grey.shade100,
+                  child: Container(
+                    width: double.infinity,
+                    height: 300,
+                    color: Colors.white,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey.shade200,
+                  child: Image.asset(
+                    Config.defaultProductAsset,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -169,21 +186,30 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     _selectedImageIndex = index;
                   });
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   width: 70,
                   height: 70,
                   margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _selectedImageIndex == index
-                          ? Colors.blue.shade500
+                          ? const Color(0xFF1B9AAA)
                           : Colors.grey.shade300,
                       width: _selectedImageIndex == index ? 2 : 1,
                     ),
+                    boxShadow: [
+                      if (_selectedImageIndex == index)
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                    ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(
                       imageUrl: _imageUrls[index],
                       fit: BoxFit.cover,
@@ -254,19 +280,25 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
     final product = _product!;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             product.title,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               badges.Badge(
-                badgeStyle: badges.BadgeStyle(badgeColor: Colors.blue.shade500),
+                badgeStyle: const badges.BadgeStyle(
+                  badgeColor: Color(0xFF1B9AAA),
+                ),
                 badgeContent: const Text(
                   '4.8',
                   style: TextStyle(color: Colors.white, fontSize: 12),
@@ -282,7 +314,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               Text(
                 '播放量：${product.viewCount}',
                 style: const TextStyle(
-                  color: Colors.green,
+                  color: Color(0xFF1B9AAA),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -290,13 +322,14 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            '收藏量：${product.favoriteCount}',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.red,
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _pill('级别', product.level),
+              _pill('讲师', product.instructorName),
+              _pill('收藏', product.favoriteCount.toString()),
+            ],
           ),
           const SizedBox(height: 24),
           const Text(
@@ -318,10 +351,24 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          _buildSpecItem('概述', '${product.summary}'),
-          _buildSpecItem('老师', '${product.instructorName}'),
-          _buildSpecItem('级别', '${product.level}'),
+          _buildSpecItem('概述', product.summary),
+          _buildSpecItem('老师', product.instructorName),
+          _buildSpecItem('级别', product.level),
         ],
+      ),
+    );
+  }
+
+  Widget _pill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F7F6),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        '$label: $value',
+        style: const TextStyle(fontSize: 12, color: Colors.black87),
       ),
     );
   }
@@ -359,20 +406,32 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
+      body: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            _buildImageGallery(),
+            const TabBar(
+              tabs: [
+                Tab(text: '课程详情'),
+                Tab(text: '评论'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
                 children: [
-                  _buildImageGallery(),
-                  _buildProductInfo(),
-                  const SizedBox(height: 24),
+                  SingleChildScrollView(
+                    child: _buildProductInfo(),
+                  ),
+                  CommentsPanel(
+                    targetType: 'course',
+                    targetId: widget.courseId,
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
