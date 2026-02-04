@@ -3,6 +3,9 @@ package model
 import (
 	"MOOCHUB-server/db"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type LearningProgress struct {
@@ -19,29 +22,25 @@ func (LearningProgress) TableName() string {
 }
 
 func UpsertLearningProgress(userID int64, videoID int64, lastPositionSec int, progressPercent float64) error {
-	var existing LearningProgress
-	err := db.GetDB().Where("user_id = ? AND video_id = ?", userID, videoID).First(&existing).Error
-	if err == nil {
-		return db.GetDB().Model(&LearningProgress{}).
-			Where("user_id = ? AND video_id = ?", userID, videoID).
-			Updates(map[string]any{
-				"last_position_sec": lastPositionSec,
-				"progress_percent":  progressPercent,
-			}).Error
-	}
 	progress := LearningProgress{
 		UserID:          userID,
 		VideoID:         videoID,
 		LastPositionSec: lastPositionSec,
 		ProgressPercent: progressPercent,
 	}
-	return db.GetDB().Create(&progress).Error
+	return db.GetDB().Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "video_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"last_position_sec", "progress_percent", "updated_at"}),
+	}).Create(&progress).Error
 }
 
 func GetLearningProgress(userID int64, videoID int64) (LearningProgress, error) {
 	var progress LearningProgress
 	err := db.GetDB().Where("user_id = ? AND video_id = ?", userID, videoID).First(&progress).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return LearningProgress{}, nil
+		}
 		return LearningProgress{}, err
 	}
 	return progress, nil
