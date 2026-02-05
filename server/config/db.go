@@ -1,10 +1,13 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 func envOrDefault(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
-		return value
+		return strings.TrimSpace(value)
 	}
 	return fallback
 }
@@ -19,4 +22,47 @@ func MongoURI() string {
 
 func MongoDBName() string {
 	return envOrDefault("MONGODB_DB", "moochub")
+}
+
+func MinioEndpoint() string {
+	return envOrDefault("MINIO_ENDPOINT", "127.0.0.1:9000")
+}
+
+func MinioAccessKey() string {
+	return envOrDefault("MINIO_ACCESS_KEY", "appuser")
+}
+
+func MinioSecretKey() string {
+	return envOrDefault("MINIO_SECRET_KEY", "<your_minio_secret_key>")
+}
+
+func MinioBucket() string {
+	return envOrDefault("MINIO_BUCKET", "moochub-video")
+}
+
+func MinioSecure() bool {
+	return envOrDefault("MINIO_SECURE", "false") == "true"
+}
+
+func MinioPresignExpireSeconds() int64 {
+	if v := envOrDefault("MINIO_PRESIGN_EXPIRE", "3600"); v != "" {
+		var secs int64
+		for _, r := range v {
+			if r < '0' || r > '9' {
+				return 3600
+			}
+		}
+		for _, r := range v {
+			secs = secs*10 + int64(r-'0')
+		}
+		if secs <= 0 {
+			return 3600
+		}
+		return secs
+	}
+	return 3600
+}
+
+func MinioUsePresign() bool {
+	return envOrDefault("MINIO_USE_PRESIGN", "true") == "true"
 }

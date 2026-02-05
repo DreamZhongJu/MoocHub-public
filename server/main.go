@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MOOCHUB-server/config"
 	"MOOCHUB-server/db"
 	"MOOCHUB-server/global"
 	"MOOCHUB-server/router"
@@ -11,14 +12,12 @@ import (
 )
 
 func main() {
-	// 创建logs目录
+	// Create logs directory
 	if err := os.MkdirAll("logs", 0755); err != nil {
 		panic("无法创建logs目录: " + err.Error())
 	}
-	// fmt.Println("当前服务器时间：", time.Now())
-	// fmt.Println("当前时间戳：", time.Now().Unix())
 
-	// 配置日志（按级别拆分）
+	// Logger
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	encoder := zapcore.NewJSONEncoder(encoderConfig)
@@ -51,6 +50,13 @@ func main() {
 
 	global.Log = logger
 	global.Log.Info("日志系统已初始化")
+	global.Log.Info("MinIO config loaded",
+		zap.String("endpoint", config.MinioEndpoint()),
+		zap.String("bucket", config.MinioBucket()),
+		zap.Bool("secure", config.MinioSecure()),
+		zap.Bool("use_presign", config.MinioUsePresign()),
+		zap.Int64("presign_expire", config.MinioPresignExpireSeconds()),
+	)
 
 	if err := db.InitMySQL(); err != nil {
 		global.Log.Fatal("MySQL init failed", zap.Error(err))

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"MOOCHUB-server/model"
+	"MOOCHUB-server/storage"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,12 +11,12 @@ import (
 type CoursesController struct{}
 
 func (cc CoursesController) GetCourses(c *gin.Context) {
-	category_id := c.DefaultQuery("category_id", "0")
+	categoryIDStr := c.DefaultQuery("category_id", "0")
 	sort := c.DefaultQuery("sort", "default")
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("page_size", "10")
 
-	categoryID, err := strconv.ParseInt(category_id, 10, 64)
+	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
 	if err != nil {
 		ReturnError(c, 400, "invalid category_id")
 		return
@@ -23,7 +24,7 @@ func (cc CoursesController) GetCourses(c *gin.Context) {
 
 	courses, err := model.GetCoursesByCategory(categoryID, sort, page, pageSize)
 	if err != nil {
-		ReturnError(c, 500, "获取课程详情失败："+err.Error())
+		ReturnError(c, 500, "获取课程列表失败："+err.Error())
 		return
 	}
 	ReturnSuccess(c, 200, "获取成功", gin.H{
@@ -38,7 +39,7 @@ func (cc CoursesController) GetCourseDetails(c *gin.Context) {
 		ReturnError(c, 400, "invalid course id")
 		return
 	}
-	courses, err := model.GetCoursesDetails(idInt)
+	course, err := model.GetCoursesDetails(idInt)
 	if err != nil {
 		ReturnError(c, 500, "获取课程详情失败："+err.Error())
 		return
@@ -48,8 +49,16 @@ func (cc CoursesController) GetCourseDetails(c *gin.Context) {
 		ReturnError(c, 500, "获取课程视频失败："+err.Error())
 		return
 	}
+	for i := range videos {
+		if url, err := storage.ResolveObjectURL(videos[i].VideoURL); err == nil && url != "" {
+			videos[i].VideoURL = url
+		}
+		if url, err := storage.ResolveObjectURL(videos[i].ThumbURL); err == nil && url != "" {
+			videos[i].ThumbURL = url
+		}
+	}
 	ReturnSuccess(c, 200, "获取成功", gin.H{
-		"courses": courses,
+		"courses": course,
 		"videos":  videos,
 	}, 0)
 }
@@ -68,7 +77,7 @@ func (cc CoursesController) GetCoursesByCategoryID(c *gin.Context) {
 
 	courses, err := model.GetCoursesByCategory(categoryID, sort, page, pageSize)
 	if err != nil {
-		ReturnError(c, 500, "获取课程详情失败："+err.Error())
+		ReturnError(c, 500, "获取课程列表失败："+err.Error())
 		return
 	}
 	ReturnSuccess(c, 200, "获取成功", gin.H{

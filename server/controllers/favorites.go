@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"MOOCHUB-server/model"
+	"MOOCHUB-server/storage"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,20 +11,19 @@ import (
 type FavoriteController struct{}
 
 func (fc FavoriteController) ToggleFavorite(c *gin.Context) {
-	course_iD := c.PostForm("course_id")
-	if course_iD == "" {
+	courseIDStr := c.PostForm("course_id")
+	if courseIDStr == "" {
 		ReturnError(c, 400, "course_id不能为空")
 		return
 	}
-	courseID, _ := strconv.ParseInt(course_iD, 10, 64)
-	userID, _ := c.Get("user_id")
-	uid, ok := userID.(int64)
+	courseID, _ := strconv.ParseInt(courseIDStr, 10, 64)
+	userIDVal, _ := c.Get("user_id")
+	uid, ok := userIDVal.(int64)
 	if !ok {
 		ReturnError(c, 401, "用户未登录")
 		return
 	}
-	err := model.ToggleFavoriteCourse(int(uid), courseID)
-	if err != nil {
+	if err := model.ToggleFavoriteCourse(int(uid), courseID); err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
 	}
@@ -31,20 +31,19 @@ func (fc FavoriteController) ToggleFavorite(c *gin.Context) {
 }
 
 func (fc FavoriteController) DeleteFavorite(c *gin.Context) {
-	course_iD := c.Param("id")
-	if course_iD == "" {
+	courseIDStr := c.Param("id")
+	if courseIDStr == "" {
 		ReturnError(c, 400, "course_id不能为空")
 		return
 	}
-	courseID, _ := strconv.ParseInt(course_iD, 10, 64)
-	userID, _ := c.Get("user_id")
-	uid, ok := userID.(int64)
+	courseID, _ := strconv.ParseInt(courseIDStr, 10, 64)
+	userIDVal, _ := c.Get("user_id")
+	uid, ok := userIDVal.(int64)
 	if !ok {
 		ReturnError(c, 401, "用户未登录")
 		return
 	}
-	err := model.DeleteFavoriteCourse(int(uid), courseID)
-	if err != nil {
+	if err := model.DeleteFavoriteCourse(int(uid), courseID); err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
 	}
@@ -58,14 +57,13 @@ func (fc FavoriteController) ToggleFavoriteVideo(c *gin.Context) {
 		return
 	}
 	videoID, _ := strconv.ParseInt(videoIDStr, 10, 64)
-	userID, _ := c.Get("user_id")
-	uid, ok := userID.(int64)
+	userIDVal, _ := c.Get("user_id")
+	uid, ok := userIDVal.(int64)
 	if !ok {
 		ReturnError(c, 401, "用户未登录")
 		return
 	}
-	err := model.ToggleFavoriteVideo(int(uid), videoID)
-	if err != nil {
+	if err := model.ToggleFavoriteVideo(int(uid), videoID); err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
 	}
@@ -79,14 +77,13 @@ func (fc FavoriteController) DeleteFavoriteVideo(c *gin.Context) {
 		return
 	}
 	videoID, _ := strconv.ParseInt(videoIDStr, 10, 64)
-	userID, _ := c.Get("user_id")
-	uid, ok := userID.(int64)
+	userIDVal, _ := c.Get("user_id")
+	uid, ok := userIDVal.(int64)
 	if !ok {
 		ReturnError(c, 401, "用户未登录")
 		return
 	}
-	err := model.DeleteFavoriteVideo(int(uid), videoID)
-	if err != nil {
+	if err := model.DeleteFavoriteVideo(int(uid), videoID); err != nil {
 		ReturnError(c, 500, "操作失败："+err.Error())
 		return
 	}
@@ -94,8 +91,8 @@ func (fc FavoriteController) DeleteFavoriteVideo(c *gin.Context) {
 }
 
 func (fc FavoriteController) GetFavorites(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	uid, ok := userID.(int64)
+	userIDVal, _ := c.Get("user_id")
+	uid, ok := userIDVal.(int64)
 	if !ok {
 		ReturnError(c, 401, "用户未登录")
 		return
@@ -109,6 +106,14 @@ func (fc FavoriteController) GetFavorites(c *gin.Context) {
 	if err != nil {
 		ReturnError(c, 500, "获取收藏视频失败："+err.Error())
 		return
+	}
+	for i := range videos {
+		if url, err := storage.ResolveObjectURL(videos[i].VideoURL); err == nil && url != "" {
+			videos[i].VideoURL = url
+		}
+		if url, err := storage.ResolveObjectURL(videos[i].ThumbURL); err == nil && url != "" {
+			videos[i].ThumbURL = url
+		}
 	}
 	ReturnSuccess(c, 200, "获取成功", gin.H{
 		"courses": courses,
