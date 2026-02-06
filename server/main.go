@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MOOCHUB-server/cache"
 	"MOOCHUB-server/config"
 	"MOOCHUB-server/db"
 	"MOOCHUB-server/global"
@@ -12,12 +13,10 @@ import (
 )
 
 func main() {
-	// Create logs directory
 	if err := os.MkdirAll("logs", 0755); err != nil {
 		panic("无法创建logs目录: " + err.Error())
 	}
 
-	// Logger
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	encoder := zapcore.NewJSONEncoder(encoderConfig)
@@ -57,6 +56,10 @@ func main() {
 		zap.Bool("use_presign", config.MinioUsePresign()),
 		zap.Int64("presign_expire", config.MinioPresignExpireSeconds()),
 	)
+	global.Log.Info("Redis config loaded",
+		zap.String("addr", config.RedisAddr()),
+		zap.Int("db", config.RedisDB()),
+	)
 
 	if err := db.InitMySQL(); err != nil {
 		global.Log.Fatal("MySQL init failed", zap.Error(err))
@@ -65,6 +68,11 @@ func main() {
 		global.Log.Fatal("MongoDB init failed", zap.Error(err))
 	}
 	defer db.CloseMongo()
+
+	if err := cache.InitRedis(); err != nil {
+		global.Log.Fatal("Redis init failed", zap.Error(err))
+	}
+	defer cache.CloseRedis()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")

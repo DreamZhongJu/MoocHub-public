@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -91,6 +93,16 @@ func (ac AdminController) UpdateCourse(c *gin.Context) {
 		ReturnError(c, 500, "更新课程失败："+err.Error())
 		return
 	}
+
+	if client := cache.Client(); client != nil {
+		ctx := context.Background()
+		_ = client.Del(ctx, "courses:detail:"+idStr).Err()
+		iter := client.Scan(ctx, 0, "courses:list:*", 100).Iterator()
+		for iter.Next(ctx) {
+			_ = client.Del(ctx, iter.Val()).Err()
+		}
+	}
+
 	ReturnSuccess(c, 200, "更新成功", nil, 0)
 }
 

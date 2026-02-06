@@ -66,3 +66,23 @@ func MinioPresignExpireSeconds() int64 {
 func MinioUsePresign() bool {
 	return envOrDefault("MINIO_USE_PRESIGN", "true") == "true"
 }
+
+func RedisAddr() string {
+	return envOrDefault("REDIS_ADDR", "127.0.0.1:16379")
+}
+
+func RedisPassword() string {
+	return envOrDefault("REDIS_PASSWORD", "")
+}
+
+func RedisDB() int {
+	v := envOrDefault("REDIS_DB", "0")
+	var n int
+	for _, r := range v {
+		if r < '0' || r > '9' {
+			return 0
+		}
+		n = n*10 + int(r-'0')
+	}
+	return n
+}
