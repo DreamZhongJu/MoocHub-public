@@ -13,6 +13,8 @@
 - 后端：Go (Gin/Gorm)
 - 数据库：MySQL + MongoDB
 - 文件/对象存储：MinIO（本地部署，S3 兼容）
+- 缓存：Redis（课程列表/课程详情/继续观看）
+- 消息队列：RabbitMQ（进度事件异步处理）
 
 ## 目录结构
 - `flutter_app/`：Flutter 客户端
@@ -46,6 +48,10 @@ flutter run
 - `MINIO_SECURE`：是否 https（`true/false`）
 - `MINIO_USE_PRESIGN`：是否启用签名 URL（`true/false`）
 - `MINIO_PRESIGN_EXPIRE`：签名 URL 有效期（秒）
+- `REDIS_ADDR`：Redis 地址（示例：`127.0.0.1:16379`）
+- `REDIS_PASSWORD`：Redis 密码（如无可空）
+- `REDIS_DB`：Redis DB（默认 0）
+- `RABBITMQ_URL`：RabbitMQ 连接（示例：`amqp://guest:guest@127.0.0.1:5672/`）
 - `BACKEND_HOST`：Flutter 端后端地址（assets/.env）
 
 ## 对象存储（MinIO，方案 B：私有桶 + 签名 URL）
