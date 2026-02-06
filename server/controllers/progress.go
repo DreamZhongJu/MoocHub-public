@@ -1,8 +1,14 @@
-﻿package controllers
+package controllers
 
 import (
+	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
+	"MOOCHUB-server/mq"
+	"MOOCHUB-server/storage"
+	"context"
+	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,6 +44,20 @@ func (pc ProgressController) UpsertProgress(c *gin.Context) {
 		ReturnError(c, 500, "更新失败："+err.Error())
 		return
 	}
+
+	// async event
+	payload := map[string]any{
+		"event":                "progress.updated",
+		"user_id":              userID,
+		"video_id":             videoID,
+		"last_position_sec":    lastPos,
+		"progress_percent":     progress,
+		"occurred_at_unix_sec": time.Now().Unix(),
+	}
+	if data, err := json.Marshal(payload); err == nil {
+		_ = mq.Publish("progress.updated", data)
+	}
+
 	ReturnSuccess(c, 200, "更新成功", nil, 0)
 }
 
@@ -66,6 +86,37 @@ func (pc ProgressController) GetProgress(c *gin.Context) {
 
 func (pc ProgressController) GetLatestProgress(c *gin.Context) {
 	userID := c.GetInt64("user_id")
+	cacheKey := "user:last_watch:" + strconv.FormatInt(userID, 10)
+	if client := cache.Client(); client != nil {
+		if cached, err := client.Get(context.Background(), cacheKey).Result(); err == nil && cached != "" {
+			var payload struct {
+				VideoID           int64   `json:"video_id"`
+				LastPositionSec   int     `json:"last_position_sec"`
+				ProgressPercent   float64 `json:"progress_percent"`
+				OccurredAtUnixSec int64   `json:"occurred_at_unix_sec"`
+			}
+			if jsonErr := json.Unmarshal([]byte(cached), &payload); jsonErr == nil && payload.VideoID != 0 {
+				video, err := model.GetVideoDetails(payload.VideoID)
+				if err == nil {
+					if url, err := storage.ResolveObjectURL(video.VideoURL); err == nil && url != "" {
+						video.VideoURL = url
+					}
+					if url, err := storage.ResolveObjectURL(video.ThumbURL); err == nil && url != "" {
+						video.ThumbURL = url
+					}
+					ReturnSuccess(c, 200, "获取成功", gin.H{
+						"progress": gin.H{
+							"last_position_sec": payload.LastPositionSec,
+							"progress_percent":  payload.ProgressPercent,
+						},
+						"video": video,
+					}, 0)
+					return
+				}
+			}
+		}
+	}
+
 	progress, video, err := model.GetLatestLearningProgress(userID)
 	if err != nil {
 		ReturnError(c, 500, "获取失败："+err.Error())
@@ -75,6 +126,23 @@ func (pc ProgressController) GetLatestProgress(c *gin.Context) {
 		ReturnSuccess(c, 200, "暂无进度", gin.H{}, 0)
 		return
 	}
+	if url, err := storage.ResolveObjectURL(video.VideoURL); err == nil && url != "" {
+		video.VideoURL = url
+	}
+	if url, err := storage.ResolveObjectURL(video.ThumbURL); err == nil && url != "" {
+		video.ThumbURL = url
+	}
+
+	if client := cache.Client(); client != nil {
+		payload, _ := json.Marshal(map[string]any{
+			"video_id":             video.ID,
+			"last_position_sec":    progress.LastPositionSec,
+			"progress_percent":     progress.ProgressPercent,
+			"occurred_at_unix_sec": time.Now().Unix(),
+		})
+		_ = client.Set(context.Background(), cacheKey, payload, 7*24*time.Hour).Err()
+	}
+
 	ReturnSuccess(c, 200, "获取成功", gin.H{
 		"progress": gin.H{
 			"last_position_sec": progress.LastPositionSec,

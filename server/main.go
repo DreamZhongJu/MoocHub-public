@@ -5,7 +5,9 @@ import (
 	"MOOCHUB-server/config"
 	"MOOCHUB-server/db"
 	"MOOCHUB-server/global"
+	"MOOCHUB-server/mq"
 	"MOOCHUB-server/router"
+	"MOOCHUB-server/workers"
 	"os"
 
 	"go.uber.org/zap"
@@ -60,6 +62,9 @@ func main() {
 		zap.String("addr", config.RedisAddr()),
 		zap.Int("db", config.RedisDB()),
 	)
+	global.Log.Info("RabbitMQ config loaded",
+		zap.String("url", config.RabbitMQURL()),
+	)
 
 	if err := db.InitMySQL(); err != nil {
 		global.Log.Fatal("MySQL init failed", zap.Error(err))
@@ -73,6 +78,13 @@ func main() {
 		global.Log.Fatal("Redis init failed", zap.Error(err))
 	}
 	defer cache.CloseRedis()
+
+	if err := mq.InitRabbitMQ(); err != nil {
+		global.Log.Fatal("RabbitMQ init failed", zap.Error(err))
+	}
+	defer mq.CloseRabbitMQ()
+
+	workers.StartProgressWorker()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")

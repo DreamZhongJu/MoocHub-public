@@ -1,4 +1,4 @@
-package config
+﻿package config
 
 import (
 	"os"
@@ -85,4 +85,8 @@ func RedisDB() int {
 		n = n*10 + int(r-'0')
 	}
 	return n
+}
+
+func RabbitMQURL() string {
+	return envOrDefault("RABBITMQ_URL", "amqp://guest:guest@127.0.0.1:5672/")
 }
