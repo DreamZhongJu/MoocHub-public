@@ -39,14 +39,53 @@ class CoursesCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              coverUrl,
-              width: double.infinity,
-              height: 150,
-              fit: BoxFit.cover,
+            Stack(
+              children: [
+                Image.network(
+                  coverUrl,
+                  width: double.infinity,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+                Positioned(
+                  left: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.remove_red_eye, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          formatCount(viewCount),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.favorite, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          formatCount(favoriteCount),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -58,31 +97,14 @@ class CoursesCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     summary,
                     style: theme.textTheme.bodyMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(Icons.remove_red_eye, size: 16, color: accent),
-                      const SizedBox(width: 4),
-                      Text(
-                        formatCount(viewCount),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.favorite, size: 16, color: accent),
-                      const SizedBox(width: 4),
-                      Text(
-                        formatCount(favoriteCount),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
