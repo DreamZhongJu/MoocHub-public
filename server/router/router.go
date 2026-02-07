@@ -73,6 +73,10 @@ func Router() *gin.Engine {
 		user.POST("/progress", middleware.AuthMiddleware(), controllers.ProgressController{}.UpsertProgress)
 		user.GET("/progress/:video_id", middleware.AuthMiddleware(), controllers.ProgressController{}.GetProgress)
 		user.GET("/progress/latest", middleware.AuthMiddleware(), controllers.ProgressController{}.GetLatestProgress)
+		user.GET("/points/balance", middleware.AuthMiddleware(), controllers.PointsController{}.GetBalance)
+		user.GET("/points/transactions", middleware.AuthMiddleware(), controllers.PointsController{}.GetTransactions)
+		user.GET("/points/rank", middleware.AuthMiddleware(), controllers.PointsController{}.GetRank)
+		user.POST("/points/award", middleware.InternalMiddleware(), controllers.PointsController{}.AwardPoints)
 		favorite := user.Group("/favorites", middleware.AuthMiddleware())
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)

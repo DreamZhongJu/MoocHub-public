@@ -10,14 +10,15 @@ import (
 
 // 数据库的全表，最好不要直接使用这个结构，可能会泄露消息
 type Users struct {
-	ID           uint
-	Username     string
-	PasswordHash string
-	Role         string
-	Nickname     string
-	AvatarURL    string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID            uint
+	Username      string
+	PasswordHash  string
+	Role          string
+	Nickname      string
+	AvatarURL     string
+	PointsBalance int
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 // 示例接口，获取分页用户列表

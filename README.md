@@ -142,6 +142,19 @@ docker run -d --name minio \
 - `updated_at`
 - UNIQUE(`user_id`, `video_id`)
 
+8) `points_transactions`
+- `id` (PK)
+- `user_id` (FK -> users.id)
+- `event_type` (login/video_complete/comment/favorite/other)
+- `points` (正负积分)
+- `biz_id` (关联业务 ID，如 video_id/comment_id，可空)
+- `remark` (可空)
+- `created_at`
+- 索引：`(user_id, created_at)`、`(event_type, created_at)`
+
+9) `users`（积分字段扩展）
+- `points_balance` (当前积分余额，默认 0)
+
 ### MongoDB（文档型）
 1) `comments`
 - `target_type` (course/video), `target_id` (MySQL ID)
@@ -251,6 +264,14 @@ docker run -d --name minio \
 | POST | `/progress`            | 登录 | `video_id`, `last_position_sec`, `progress_percent` | -                                       |
 | GET  | `/progress/{video_id}` | 登录 | -                                                   | `last_position_sec`, `progress_percent` |
 | GET  | `/progress/latest`     | 登录 | -                                                   | `video`, `progress`                     |
+
+### 积分体系
+| 方法 | 路径                     | 权限 | 请求参数                                         | 响应                                      |
+| ---- | ------------------------ | ---- | ------------------------------------------------ | ----------------------------------------- |
+| GET  | `/points/balance`        | 登录 | -                                                | `points_balance`                          |
+| GET  | `/points/transactions`   | 登录 | `page`, `page_size`, `event_type?`               | 积分流水列表                               |
+| GET  | `/points/rank`           | 登录 | `page`, `page_size`                              | 排行榜（按 `points_balance`）             |
+| POST | `/points/award`（内部）  | 内部 | `event_type`, `points`, `biz_id?`, `remark?`     | -                                         |
 
 ### 管理端（MVP）
 | 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |

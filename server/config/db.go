@@ -1,4 +1,4 @@
-﻿package config
+package config
 
 import (
 	"os"
@@ -89,4 +89,8 @@ func RedisDB() int {
 
 func RabbitMQURL() string {
 	return envOrDefault("RABBITMQ_URL", "amqp://guest:guest@127.0.0.1:5672/")
+}
+
+func InternalToken() string {
+	return envOrDefault("INTERNAL_TOKEN", "moochub-internal")
 }
