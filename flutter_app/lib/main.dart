@@ -2,94 +2,49 @@ import 'package:MoocHub/routers/router.dart';
 import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/services/ScreenAdaper.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "assets/.env");
-  runApp(
-    ScreenAdapter.init(
-      child: const MyApp(),
-    ),
-  );
+  final tdTheme = await _loadTDesignTheme();
+  runApp(ScreenAdapter.init(child: MyApp(tdTheme: tdTheme)));
+}
+
+Future<TDThemeData?> _loadTDesignTheme() async {
+  try {
+    TDTheme.needMultiTheme();
+    final jsonString = await rootBundle.loadString('assets/theme.json');
+    return TDThemeData.fromJson('MoocHub', jsonString);
+  } catch (_) {
+    return null;
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final TDThemeData? tdTheme;
+  const MyApp({super.key, required this.tdTheme});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeData =
+        tdTheme?.systemThemeDataLight ??
+        ThemeData(brightness: Brightness.light);
+    final darkThemeData =
+        tdTheme?.systemThemeDataDark ?? ThemeData(brightness: Brightness.dark);
+
     return MaterialApp(
       title: 'MoocHub',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B9AAA),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
-        fontFamily: GoogleFonts.manrope().fontFamily,
-        appBarTheme: AppBarTheme(
-          elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          titleTextStyle: GoogleFonts.manrope(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
-          surfaceTintColor: Colors.white,
-        ),
-        textTheme: GoogleFonts.manropeTextTheme(),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF1B9AAA), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: EdgeInsets.zero,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: const Color(0xFF1B9AAA),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            textStyle: GoogleFonts.manrope(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFF1B9AAA),
-          unselectedItemColor: Colors.black45,
-          type: BottomNavigationBarType.fixed,
-        ),
+      theme: themeData.copyWith(
+        extensions: tdTheme == null ? null : [tdTheme!],
       ),
+      darkTheme: darkThemeData.copyWith(
+        extensions: tdTheme == null ? null : [tdTheme!],
+      ),
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       onGenerateRoute: onGenerateRoute,

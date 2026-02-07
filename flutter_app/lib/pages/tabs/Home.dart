@@ -1,11 +1,12 @@
-import 'package:MoocHub/model/CoursesModel.dart';
+﻿import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
+import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:MoocHub/routers/route_observer.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,7 +84,8 @@ class HomePageState extends State<HomePage>
 
   Future<void> _loadContinueWatching() async {
     final token = await _storageService.getUserToken();
-    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
     if (!loggedIn) {
       if (mounted) {
         setState(() {
@@ -110,7 +112,8 @@ class HomePageState extends State<HomePage>
       final data = response.data;
       final videoRaw = data['video'];
       final progressRaw = data['progress'];
-      if (videoRaw is Map<String, dynamic> && progressRaw is Map<String, dynamic>) {
+      if (videoRaw is Map<String, dynamic> &&
+          progressRaw is Map<String, dynamic>) {
         final video = VideoModel.fromJson(videoRaw);
         int pos = 0;
         final lastPos = progressRaw['last_position_sec'];
@@ -375,6 +378,78 @@ class HomePageState extends State<HomePage>
     );
   }
 
+  Widget _buildTDesignHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary.withOpacity(0.12),
+                  colorScheme.primary.withOpacity(0.04),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'MoocHub 学习推荐',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '今天想学点什么？试试搜索或看热门课程',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                TDSearchBar(
+                  placeHolder: '搜索课程/讲师/关键词',
+                  onTextChanged: (_) {},
+                  onSubmitted: (_) {},
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    TDButton(
+                      text: '热门课程',
+                      size: TDButtonSize.small,
+                      type: TDButtonType.fill,
+                      onTap: () {},
+                    ),
+                    TDButton(
+                      text: '最新更新',
+                      size: TDButtonSize.small,
+                      type: TDButtonType.fill,
+                      onTap: () {},
+                    ),
+                    TDButton(
+                      text: '高分课程',
+                      size: TDButtonSize.small,
+                      type: TDButtonType.fill,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -397,28 +472,17 @@ class HomePageState extends State<HomePage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Home',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                _buildTDesignHeader(),
                 const SizedBox(height: 12),
                 _buildRecommendedProducts(),
-                const SizedBox(height: 800), // Added space to enable scrolling
+                const SizedBox(height: 800),
               ],
             ),
           ),
         ),
         if (_showContinue && !_continueLoading && _continueVideo != null)
-          Positioned(
-            left: 16,
-            bottom: 16,
-            child: _buildContinueWatching(),
-          ),
+          Positioned(left: 16, bottom: 16, child: _buildContinueWatching()),
       ],
     );
   }

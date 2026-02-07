@@ -3,6 +3,11 @@ import 'package:MoocHub/pages/tabs/Home.dart';
 import 'package:MoocHub/pages/tabs/Learn.dart';
 import 'package:MoocHub/pages/tabs/User.dart';
 import 'package:flutter/material.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
+
+Widget? _selectedIcon;
+
+Widget? _unSelectedIcon;
 
 class Tabs extends StatefulWidget {
   const Tabs({super.key});
@@ -16,7 +21,18 @@ class _TabsState extends State<Tabs> {
   late final PageController _pageController;
   late final List<Widget> _pageList;
   final List<String> _titles = const ['首页', '分类', '学习', '我的'];
-
+  final List<IconData> _selectedIcons = const [
+    TDIcons.home, // 首页
+    TDIcons.app, // 分类
+    TDIcons.book, // 学习
+    TDIcons.user, // 我的
+  ];
+  final List<IconData> _unselectedIcons = const [
+    TDIcons.home, // 首页
+    TDIcons.app, // 分类
+    TDIcons.book, // 学习
+    TDIcons.user, // 我的
+  ];
   @override
   void initState() {
     _pageController = PageController(initialPage: _currentIndex);
@@ -42,32 +58,46 @@ class _TabsState extends State<Tabs> {
     });
   }
 
+  Widget _weakSelectIconTextTabBar(BuildContext context) {
+    return TDBottomTabBar(
+      TDBottomTabBarBasicType.iconText,
+      componentType: TDBottomTabBarComponentType.normal,
+      useVerticalDivider: false,
+      navigationTabs: List.generate(_titles.length, (index) {
+        final label = _titles[index];
+        return TDBottomTabBarTabConfig(
+          selectedIcon: Icon(
+            _selectedIcons[index],
+            size: 24,
+            color: TDTheme.of(context).brandNormalColor,
+          ),
+          unselectedIcon: Icon(
+            _unselectedIcons[index],
+            size: 24,
+            color: TDTheme.of(context).textColorPrimary,
+          ),
+          tabText: label,
+          onTap: () {
+            _handleTabChange(index);
+          },
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_currentIndex])),
       body: PageView(
         controller: _pageController,
-        children: _pageList,
         onPageChanged: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
+        children: _pageList,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        fixedColor: Colors.red,
-        currentIndex: _currentIndex,
-        onTap: _handleTabChange,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: '分类'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: '学习'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: '我的'),
-        ],
-      ),
+      bottomNavigationBar: _weakSelectIconTextTabBar(context),
     );
   }
 }
-
