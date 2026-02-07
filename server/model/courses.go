@@ -4,6 +4,8 @@ import (
 	"MOOCHUB-server/db"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Courses struct {
@@ -73,4 +75,10 @@ func UpdateCourse(id int64, updates map[string]any) error {
 
 func DeleteCourse(id int64) error {
 	return db.GetDB().Where("id = ?", id).Delete(&Courses{}).Error
+}
+
+func IncrementCourseViewCount(courseID int64) error {
+	return db.GetDB().Model(&Courses{}).
+		Where("id = ?", courseID).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
 }

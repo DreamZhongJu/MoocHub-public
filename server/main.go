@@ -85,6 +85,7 @@ func main() {
 	defer mq.CloseRabbitMQ()
 
 	workers.StartProgressWorker()
+	workers.StartPlayWorker()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")

@@ -1,4 +1,4 @@
-package controllers
+﻿package controllers
 
 import (
 	"MOOCHUB-server/cache"
@@ -41,10 +41,10 @@ func (pc ProgressController) UpsertProgress(c *gin.Context) {
 
 	userID := c.GetInt64("user_id")
 
-	// 服务端节流：同一用户+视频 10 秒内仅处理一次入库
+	// 服务端节流：同一用户+视频 5 秒内仅处理一次入库
 	throttleKey := "progress:throttle:" + strconv.FormatInt(userID, 10) + ":" + strconv.FormatInt(videoID, 10)
 	if client := cache.Client(); client != nil {
-		ok, err := client.SetNX(c.Request.Context(), throttleKey, "1", 10*time.Second).Result()
+		ok, err := client.SetNX(c.Request.Context(), throttleKey, "1", 5*time.Second).Result()
 		if err == nil && !ok {
 			// 直接更新“继续观看”缓存，避免界面不刷新
 			payload, _ := json.Marshal(map[string]any{

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class CoursesCard extends StatelessWidget {
   final String title;
@@ -7,8 +7,8 @@ class CoursesCard extends StatelessWidget {
   final int viewCount;
   final int favoriteCount;
   final VoidCallback onTap;
-  const CoursesCard(
-    {
+
+  const CoursesCard({
     super.key,
     required this.title,
     required this.summary,
@@ -22,6 +22,15 @@ class CoursesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = theme.colorScheme.primary;
+
+    String formatCount(int value) {
+      if (value >= 10000) {
+        final double v = value / 10000.0;
+        return '${v.toStringAsFixed(1)}万';
+      }
+      return value.toString();
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -61,11 +70,17 @@ class CoursesCard extends StatelessWidget {
                     children: [
                       Icon(Icons.remove_red_eye, size: 16, color: accent),
                       const SizedBox(width: 4),
-                      Text('$viewCount', style: theme.textTheme.bodySmall),
+                      Text(
+                        formatCount(viewCount),
+                        style: theme.textTheme.bodySmall,
+                      ),
                       const SizedBox(width: 16),
                       Icon(Icons.favorite, size: 16, color: accent),
                       const SizedBox(width: 4),
-                      Text('$favoriteCount', style: theme.textTheme.bodySmall),
+                      Text(
+                        formatCount(favoriteCount),
+                        style: theme.textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ],

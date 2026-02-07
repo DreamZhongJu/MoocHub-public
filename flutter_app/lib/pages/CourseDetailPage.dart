@@ -1,4 +1,4 @@
-import 'package:MoocHub/config/Config.dart';
+﻿import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
@@ -324,7 +324,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               ),
               const Spacer(),
               Text(
-                '播放量：${product.viewCount}',
+                '播放量：${_formatCount(product.viewCount)}',
                 style: const TextStyle(
                   color: Color(0xFF1B9AAA),
                   fontSize: 14,
@@ -471,6 +471,14 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     return '$m:$s';
   }
 
+  String _formatCount(int value) {
+    if (value >= 10000) {
+      final v = value / 10000.0;
+      return '${v.toStringAsFixed(1)}万';
+    }
+    return value.toString();
+  }
+
   Widget _pill(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -548,3 +556,4 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
   }
 }
+

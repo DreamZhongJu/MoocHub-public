@@ -33,6 +33,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   Timer? _hideTimer;
   Timer? _progressTimer;
   VideoPlayerController? _videoController;
+  bool _playEventSent = false;
 
   @override
   void initState() {
@@ -85,6 +86,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         throw Exception('video url empty');
       }
 
+      _playEventSent = false;
       _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
       await _videoController!.initialize();
       await _videoController!.setPlaybackSpeed(_playbackSpeed);
@@ -126,9 +128,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   void _handlePlayerUpdate() {
     final controller = _videoController;
     if (controller == null || !controller.value.isInitialized) return;
-    if (!controller.value.isPlaying) {
-      _saveProgress();
+    if (controller.value.isPlaying) {
+      _maybeReportPlayEvent();
+      return;
     }
+    _saveProgress();
   }
 
   Future<void> _refreshLoginState() async {
@@ -167,6 +171,29 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
       _lastProgressSentAt = now;
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Future<void> _maybeReportPlayEvent() async {
+    if (_playEventSent) return;
+    final controller = _videoController;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final position = controller.value.position.inSeconds;
+    final duration = controller.value.duration.inSeconds;
+    final percent = duration <= 0 ? 0 : position / duration * 100;
+
+    if (position < 10 && percent < 5) return;
+
+    try {
+      await _apiService.postForm<Map<String, dynamic>>(
+        '/events/play',
+        data: {'video_id': widget.videoId.toString()},
+        fromJson: (raw) => raw as Map<String, dynamic>,
+      );
+      _playEventSent = true;
     } catch (_) {
       // ignore
     }
@@ -466,6 +493,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                     _dragValue = null;
                   });
                   _saveProgress(force: true);
+                  _maybeReportPlayEvent();
                 },
               ),
             ],

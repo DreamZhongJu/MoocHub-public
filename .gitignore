@@ -13,3 +13,6 @@ server/logs/*
 server/uploads/thumbs/*
 server/uploads/videos/*
 build/*
+server/controllers/events.go.858128666580865196
+server/model/courses.go.3531606455373040533
+server/workers/play_worker.go.8432565024619186638
