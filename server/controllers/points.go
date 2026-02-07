@@ -111,10 +111,11 @@ func (pc PointsController) AwardPoints(c *gin.Context) {
 		}
 	}
 
-	if err := model.AwardPoints(uint(userID), eventType, points, bizID, remark); err != nil {
+	newBalance, err := model.AwardPoints(uint(userID), eventType, points, bizID, remark)
+	if err != nil {
 		ReturnError(c, 500, "award points failed: "+err.Error())
 		return
 	}
 
-	ReturnSuccess(c, 200, "ok", nil, 0)
+	ReturnSuccess(c, 200, "ok", gin.H{"points_balance": newBalance}, 0)
 }

@@ -11,6 +11,7 @@ class StorageService {
   static const String _categoryBox = 'categories';
   static const String _userBox = 'user';
   static const String _cartBox = 'cart';
+  static const String _pointsBox = 'points';
 
   bool _initialized = false;
 
@@ -23,6 +24,7 @@ class StorageService {
     await Hive.openBox(_categoryBox);
     await Hive.openBox(_userBox);
     await Hive.openBox(_cartBox);
+    await Hive.openBox(_pointsBox);
 
     _initialized = true;
   }
@@ -200,6 +202,35 @@ class StorageService {
     await Hive.box(_productBox).clear();
     await Hive.box(_categoryBox).clear();
     await Hive.box(_cartBox).clear();
+  }
+
+  Future<int?> getLastPointsBalance() async {
+    await init();
+    final box = Hive.box(_pointsBox);
+    final raw = box.get('last_points_balance');
+    if (raw is num) return raw.toInt();
+    if (raw is String) return int.tryParse(raw);
+    return null;
+  }
+
+  Future<void> saveLastPointsBalance(int balance) async {
+    await init();
+    final box = Hive.box(_pointsBox);
+    await box.put('last_points_balance', balance);
+  }
+
+  Future<Set<int>> getShownPointThresholds() async {
+    await init();
+    final box = Hive.box(_pointsBox);
+    final raw = box.get('shown_thresholds', defaultValue: <dynamic>[]);
+    final list = List<dynamic>.from(raw as List);
+    return list.map((e) => int.tryParse(e.toString()) ?? 0).where((e) => e > 0).toSet();
+  }
+
+  Future<void> saveShownPointThresholds(Set<int> thresholds) async {
+    await init();
+    final box = Hive.box(_pointsBox);
+    await box.put('shown_thresholds', thresholds.toList());
   }
 
   Future<void> close() async {

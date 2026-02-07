@@ -1,5 +1,6 @@
-import 'package:MoocHub/pages/tabs/Category.dart';
+﻿import 'package:MoocHub/pages/tabs/Category.dart';
 import 'package:MoocHub/pages/tabs/Home.dart';
+import 'package:MoocHub/pages/tabs/Learn.dart';
 import 'package:MoocHub/pages/tabs/User.dart';
 import 'package:flutter/material.dart';
 
@@ -14,12 +15,17 @@ class _TabsState extends State<Tabs> {
   int _currentIndex = 0;
   late final PageController _pageController;
   late final List<Widget> _pageList;
-  final List<String> _titles = const ['首页', '分类', '我的'];
+  final List<String> _titles = const ['首页', '分类', '学习', '我的'];
 
   @override
   void initState() {
     _pageController = PageController(initialPage: _currentIndex);
-    _pageList = [const HomePage(), const CategoryPage(), const UserPage()];
+    _pageList = [
+      const HomePage(),
+      const CategoryPage(),
+      const LearnPage(),
+      const UserPage(),
+    ];
     super.initState();
   }
 
@@ -57,9 +63,11 @@ class _TabsState extends State<Tabs> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
           BottomNavigationBarItem(icon: Icon(Icons.category), label: '分类'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: '学习'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: '我的'),
         ],
       ),
     );
   }
 }
+

@@ -77,10 +77,14 @@ func redisZ(userID uint, balance int) interface{} {
 	}
 }
 
-func AwardPoints(userID uint, eventType string, points int, bizID *uint64, remark string) error {
+func AwardPoints(userID uint, eventType string, points int, bizID *uint64, remark string) (int, error) {
 	// 幂等与防刷：窗口内已发放过则跳过。
 	if !allowAward(userID, eventType, bizID) {
-		return nil
+		balance, err := GetUserPointsBalance(userID)
+		if err != nil {
+			return 0, nil
+		}
+		return balance, nil
 	}
 	if err := db.GetDB().Transaction(func(tx *gorm.DB) error {
 		record := PointsTransaction{
@@ -99,11 +103,14 @@ func AwardPoints(userID uint, eventType string, points int, bizID *uint64, remar
 		}
 		return nil
 	}); err != nil {
-		return err
+		return 0, err
 	}
 	// refresh cache and rank after transaction
-	_, _ = refreshPointsCache(userID)
-	return nil
+	balance, err := refreshPointsCache(userID)
+	if err != nil {
+		return 0, err
+	}
+	return balance, nil
 }
 
 func GetUserPointsBalance(userID uint) (int, error) {
