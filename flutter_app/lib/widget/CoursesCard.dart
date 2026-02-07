@@ -44,7 +44,7 @@ class CoursesCard extends StatelessWidget {
                 Image.network(
                   coverUrl,
                   width: double.infinity,
-                  height: 120,
+                  height: 92,
                   fit: BoxFit.cover,
                 ),
                 Positioned(
@@ -85,26 +85,26 @@ class CoursesCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      height: 1.1,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 3),
                   Text(
                     summary,
-                    style: theme.textTheme.bodyMedium,
+                    style: theme.textTheme.bodySmall?.copyWith(height: 1.1),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -128,11 +128,11 @@ class CoursesCardSkeleton extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            height: 150,
+            height: 92,
             color: Colors.grey.shade300,
           ),
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -144,10 +144,10 @@ class CoursesCardSkeleton extends StatelessWidget {
                 const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
-                  height: 16,
+                  height: 14,
                   color: Colors.grey.shade300,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(

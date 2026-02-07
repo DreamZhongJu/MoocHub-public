@@ -1,4 +1,6 @@
-﻿import 'package:MoocHub/model/CoursesModel.dart';
+﻿import 'dart:async';
+
+import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/services/ApiService.dart';
@@ -17,8 +19,18 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin, RouteAware {
+  ScrollController controller = ScrollController();
+  final RefreshController _refreshController = RefreshController();
+  bool showBackTop = false;
   List<CoursesModel> _recommendedProducts = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
+  final int _pageSize = 10;
+  DateTime? _lastLoadAt;
+  int _slowDownMs = 0;
+  Timer? _loadMoreTimer;
   bool _continueLoading = false;
   bool _showContinue = true;
   VideoModel? _continueVideo;
@@ -29,7 +41,19 @@ class HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _loadRecommendedProducts();
+    controller.addListener(() {
+      final shouldShow = controller.hasClients && controller.offset > 120;
+      if (shouldShow != showBackTop && mounted) {
+        setState(() {
+          showBackTop = shouldShow;
+        });
+      }
+      if (controller.hasClients &&
+          controller.position.extentAfter < 80) {
+        _tryLoadMore();
+      }
+    });
+    _loadRecommendedProducts(reset: true);
     _loadContinueWatching();
   }
 
@@ -45,6 +69,9 @@ class HomePageState extends State<HomePage>
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
+    _loadMoreTimer?.cancel();
+    _refreshController.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -266,17 +293,33 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Future<void> _loadRecommendedProducts() async {
+  Future<void> _loadRecommendedProducts({required bool reset}) async {
+    if (_isLoadingMore) return;
+    if (!reset && !_hasMore) return;
+
     if (mounted) {
       setState(() {
-        _isLoading = true;
+        if (reset) {
+          _isLoading = true;
+        } else {
+          _isLoadingMore = true;
+        }
       });
+    }
+
+    if (reset) {
+      _page = 1;
+      _hasMore = true;
     }
 
     try {
       final response = await ApiService().get<Map<String, dynamic>>(
         '/courses',
-        queryParameters: {'page': 1, 'page_size': 10, 'sort': 'view_count'},
+        queryParameters: {
+          'page': _page,
+          'page_size': _pageSize,
+          'sort': 'view_count',
+        },
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
 
@@ -292,87 +335,131 @@ class HomePageState extends State<HomePage>
 
       if (mounted) {
         setState(() {
-          _recommendedProducts = next;
+          if (reset) {
+            _recommendedProducts = next;
+          } else {
+            _recommendedProducts.addAll(next);
+          }
         });
+      }
+
+      if (next.length < _pageSize) {
+        _hasMore = false;
+      } else {
+        _hasMore = true;
+        _page += 1;
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _recommendedProducts = [];
+          if (reset) {
+            _recommendedProducts = [];
+          }
         });
       }
     } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _isLoadingMore = false;
         });
+      }
+      if (reset) {
+        _refreshController.refreshCompleted();
       }
     }
   }
 
-  Widget _buildRecommendedProducts() {
-    if (_isLoading) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          return const CoursesCardSkeleton();
-        },
-      );
+  void _tryLoadMore() {
+    if (_isLoadingMore || !_hasMore) return;
+    _loadMoreTimer?.cancel();
+    final now = DateTime.now();
+    if (_lastLoadAt != null) {
+      final gapMs = now.difference(_lastLoadAt!).inMilliseconds;
+      if (gapMs < 800) {
+        _slowDownMs = (_slowDownMs + 300).clamp(0, 1500);
+      } else {
+        _slowDownMs = (_slowDownMs - 150).clamp(0, 1500);
+      }
     }
+    _lastLoadAt = now;
+    _loadMoreTimer = Timer(
+      Duration(milliseconds: _slowDownMs),
+      () => _loadRecommendedProducts(reset: false),
+    );
+  }
 
-    if (_recommendedProducts.isEmpty) {
-      return Container(
-        height: 300,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(16),
+  SliverGridDelegate _gridDelegate() {
+    return const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.25,
+    );
+  }
+
+  Widget _buildEmptyRecommended() {
+    return Container(
+      height: 240,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Center(
+        child: Text(
+          '暂无推荐视频',
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
-        child: const Center(
-          child: Text(
-            '暂无推荐视频',
-            style: TextStyle(color: Colors.grey, fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildRecommendedItem(CoursesModel product) {
+    return CoursesCard(
+      key: ValueKey(product.id),
+      title: product.title,
+      summary: product.summary,
+      coverUrl: product.coverUrl,
+      viewCount: product.viewCount,
+      favoriteCount: product.favoriteCount,
+      onTap: () {
+        final id = int.tryParse(product.id);
+        if (id == null) {
+          return;
+        }
+        Navigator.pushNamed(context, '/courseDetail', arguments: id);
+      },
+    );
+  }
+
+  Widget _buildRecommendedSliver() {
+    if (_isLoading) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverGrid(
+          gridDelegate: _gridDelegate(),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => const CoursesCardSkeleton(),
+            childCount: 6,
           ),
         ),
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
+    if (_recommendedProducts.isEmpty) {
+      return SliverToBoxAdapter(child: _buildEmptyRecommended());
+    }
+
+    return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _recommendedProducts.length,
-      itemBuilder: (context, index) {
-        final product = _recommendedProducts[index];
-        return CoursesCard(
-          key: ValueKey(product.id),
-          title: product.title,
-          summary: product.summary,
-          coverUrl: product.coverUrl,
-          viewCount: product.viewCount,
-          favoriteCount: product.favoriteCount,
-          onTap: () {
-            final id = int.tryParse(product.id);
-            if (id == null) {
-              return;
-            }
-            Navigator.pushNamed(context, '/courseDetail', arguments: id);
-          },
-        );
-      },
+      sliver: SliverGrid(
+        gridDelegate: _gridDelegate(),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildRecommendedItem(_recommendedProducts[index]),
+          childCount: _recommendedProducts.length,
+        ),
+      ),
     );
   }
 
@@ -448,6 +535,94 @@ class HomePageState extends State<HomePage>
     );
   }
 
+  Widget _buildGradientSkeleton(BuildContext context) {
+    return TDSkeleton(
+      animation: TDSkeletonAnimation.gradient,
+      theme: TDSkeletonTheme.paragraph,
+    );
+  }
+
+  Widget _buildLoadingMoreSliver() {
+    if (!_isLoadingMore) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: SizedBox(
+          height: 120,
+          child: Column(
+            children: [
+              _buildGradientSkeleton(context),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHalfCircleBackTop(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: () async {
+        if (controller.hasClients) {
+          await controller.animateTo(
+            0,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOut,
+          );
+        }
+        if (mounted) {
+          setState(() {
+            showBackTop = false;
+          });
+        }
+      },
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: const BorderRadius.horizontal(
+            left: Radius.circular(20),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.arrow_upward, size: 18, color: Colors.white),
+            SizedBox(width: 6),
+            Text(
+              '返回顶部',
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  double _backTopBottomOffset() {
+    if (_showContinue && !_continueLoading && _continueVideo != null) {
+      return 120;
+    }
+    return 24;
+  }
+
+  Widget _buildBackTopButton() {
+    if (!showBackTop) return const SizedBox.shrink();
+    return Positioned(
+      right: 0,
+      bottom: _backTopBottomOffset(),
+      child: _buildHalfCircleBackTop(context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -455,32 +630,33 @@ class HomePageState extends State<HomePage>
       children: [
         SmartRefresher(
           enablePullDown: true,
+          enablePullUp: false,
           header: const WaterDropHeader(
             complete: Icon(Icons.done, color: Colors.grey),
             waterDropColor: Colors.blue,
           ),
-          controller: RefreshController(),
+          controller: _refreshController,
           onRefresh: () async {
-            await Future.delayed(const Duration(milliseconds: 1000));
-            if (mounted) {
-              setState(() {});
-            }
+            await _loadRecommendedProducts(reset: true);
           },
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
-                _buildTDesignHeader(),
-                const SizedBox(height: 12),
-                _buildRecommendedProducts(),
-                const SizedBox(height: 800),
+          child: ScrollConfiguration(
+            behavior: const _NoScrollbarBehavior(),
+            child: CustomScrollView(
+              controller: controller,
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                SliverToBoxAdapter(child: _buildTDesignHeader()),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                _buildRecommendedSliver(),
+                _buildLoadingMoreSliver(),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             ),
           ),
         ),
         if (_showContinue && !_continueLoading && _continueVideo != null)
           Positioned(left: 16, bottom: 16, child: _buildContinueWatching()),
+        _buildBackTopButton(),
       ],
     );
   }
@@ -488,3 +664,17 @@ class HomePageState extends State<HomePage>
   @override
   bool get wantKeepAlive => true;
 }
+
+class _NoScrollbarBehavior extends MaterialScrollBehavior {
+  const _NoScrollbarBehavior();
+
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
