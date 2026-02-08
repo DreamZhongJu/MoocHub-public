@@ -31,6 +31,8 @@ class HomePageState extends State<HomePage>
   DateTime? _lastLoadAt;
   int _slowDownMs = 0;
   Timer? _loadMoreTimer;
+  bool _pendingScrollUpdate = false;
+  bool _showNotice = true;
   bool _continueLoading = false;
   bool _showContinue = true;
   VideoModel? _continueVideo;
@@ -41,18 +43,7 @@ class HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    controller.addListener(() {
-      final shouldShow = controller.hasClients && controller.offset > 120;
-      if (shouldShow != showBackTop && mounted) {
-        setState(() {
-          showBackTop = shouldShow;
-        });
-      }
-      if (controller.hasClients &&
-          controller.position.extentAfter < 80) {
-        _tryLoadMore();
-      }
-    });
+    controller.addListener(_handleScroll);
     _loadRecommendedProducts(reset: true);
     _loadContinueWatching();
   }
@@ -70,6 +61,7 @@ class HomePageState extends State<HomePage>
   void dispose() {
     routeObserver.unsubscribe(this);
     _loadMoreTimer?.cancel();
+    controller.removeListener(_handleScroll);
     _refreshController.dispose();
     controller.dispose();
     super.dispose();
@@ -389,6 +381,24 @@ class HomePageState extends State<HomePage>
     );
   }
 
+  void _handleScroll() {
+    if (_pendingScrollUpdate) return;
+    _pendingScrollUpdate = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pendingScrollUpdate = false;
+      if (!mounted || !controller.hasClients) return;
+      final shouldShow = controller.offset > 120;
+      if (shouldShow != showBackTop) {
+        setState(() {
+          showBackTop = shouldShow;
+        });
+      }
+      if (controller.position.extentAfter < 60) {
+        _tryLoadMore();
+      }
+    });
+  }
+
   SliverGridDelegate _gridDelegate() {
     return const SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
@@ -456,7 +466,8 @@ class HomePageState extends State<HomePage>
       sliver: SliverGrid(
         gridDelegate: _gridDelegate(),
         delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildRecommendedItem(_recommendedProducts[index]),
+          (context, index) =>
+              _buildRecommendedItem(_recommendedProducts[index]),
           childCount: _recommendedProducts.length,
         ),
       ),
@@ -543,17 +554,14 @@ class HomePageState extends State<HomePage>
   }
 
   Widget _buildLoadingMoreSliver() {
-    if (!_isLoadingMore) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    if (!_isLoadingMore)
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: SizedBox(
           height: 120,
-          child: Column(
-            children: [
-              _buildGradientSkeleton(context),
-            ],
-          ),
+          child: Column(children: [_buildGradientSkeleton(context)]),
         ),
       ),
     );
@@ -597,10 +605,7 @@ class HomePageState extends State<HomePage>
           children: const [
             Icon(Icons.arrow_upward, size: 18, color: Colors.white),
             SizedBox(width: 6),
-            Text(
-              '返回顶部',
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
+            Text('返回顶部', style: TextStyle(color: Colors.white, fontSize: 12)),
           ],
         ),
       ),
@@ -620,6 +625,21 @@ class HomePageState extends State<HomePage>
       right: 0,
       bottom: _backTopBottomOffset(),
       child: _buildHalfCircleBackTop(context),
+    );
+  }
+
+  Widget _closeNoticeBar(BuildContext context) {
+    return TDNoticeBar(
+      content: '这是一条普通的通知信息',
+      prefixIcon: TDIcons.error_circle_filled,
+      suffixIcon: TDIcons.close,
+      onTap: (trigger) {
+        if (trigger == 'suffix-icon') {
+          setState(() {
+            _showNotice = false;
+          });
+        }
+      },
     );
   }
 
@@ -647,6 +667,15 @@ class HomePageState extends State<HomePage>
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 SliverToBoxAdapter(child: _buildTDesignHeader()),
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                if (_showNotice)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _closeNoticeBar(context),
+                    ),
+                  ),
+                if (_showNotice)
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 _buildRecommendedSliver(),
                 _buildLoadingMoreSliver(),
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
@@ -677,4 +706,3 @@ class _NoScrollbarBehavior extends MaterialScrollBehavior {
     return child;
   }
 }
-

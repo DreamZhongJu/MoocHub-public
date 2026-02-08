@@ -6,6 +6,7 @@ import 'package:MoocHub/services/ScreenAdaper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -19,6 +20,7 @@ class _CategoryPageState extends State<CategoryPage>
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
   final Map<int, List<CategoryModel>> _rightCache = {};
+  final TDSideBarController _sideBarController = TDSideBarController();
 
   int _selectIndex = 0;
   List<CategoryModel> _leftCateList = [];
@@ -52,6 +54,7 @@ class _CategoryPageState extends State<CategoryPage>
             setState(() {
               _allCategories = parsed;
               _leftCateList = parsed.where((c) => c.parentId == null).toList();
+              _selectIndex = 0;
             });
           }
           if (_leftCateList.isNotEmpty) {
@@ -89,6 +92,7 @@ class _CategoryPageState extends State<CategoryPage>
         setState(() {
           _allCategories = categories;
           _leftCateList = categories.where((c) => c.parentId == null).toList();
+          _selectIndex = 0;
         });
       }
 
@@ -160,41 +164,38 @@ class _CategoryPageState extends State<CategoryPage>
       );
     }
 
+    final icons = <IconData>[
+      TDIcons.app,
+      TDIcons.folder,
+      TDIcons.book,
+      TDIcons.tag,
+      TDIcons.chart,
+      TDIcons.star,
+      TDIcons.store,
+      TDIcons.book,
+    ];
+
     return SizedBox(
       width: leftWidth,
-      child: ListView.builder(
-        itemCount: _leftCateList.length,
-        itemBuilder: (context, index) {
-          final selected = _selectIndex == index;
-          return InkWell(
-            onTap: () {
-              setState(() {
-                _selectIndex = index;
-              });
-              _loadRightCateData(_leftCateList[index].id);
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 10.w),
-              decoration: BoxDecoration(
-                color: selected ? const Color(0xFFEEF6F3) : Colors.white,
-                border: Border(
-                  left: BorderSide(
-                    color: selected ? Colors.red : Colors.transparent,
-                    width: 3,
-                  ),
-                  bottom: BorderSide(color: Colors.grey.shade200, width: 1),
-                ),
-              ),
-              child: Text(
-                _leftCateList[index].name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected ? Colors.red.shade400 : Colors.black87,
-                ),
-              ),
-            ),
+      child: TDSideBar(
+        style: TDSideBarStyle.normal,
+        value: _selectIndex,
+        controller: _sideBarController,
+        children: _leftCateList.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return TDSideBarItem(
+            label: item.name,
+            value: index,
+            icon: icons[index % icons.length],
           );
+        }).toList(),
+        onSelected: (value) {
+          if (value == _selectIndex) return;
+          setState(() {
+            _selectIndex = value;
+          });
+          _loadRightCateData(_leftCateList[value].id);
         },
       ),
     );
