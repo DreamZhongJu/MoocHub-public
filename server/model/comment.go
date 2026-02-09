@@ -38,6 +38,7 @@ func GetCommentsPaginated(targetType string, targetID int64, page int64, pageSiz
 	filter := bson.D{
 		{Key: "target_type", Value: targetType},
 		{Key: "target_id", Value: targetID},
+		{Key: "status", Value: "normal"},
 	}
 
 	total, err := coll.CountDocuments(ctx, filter)

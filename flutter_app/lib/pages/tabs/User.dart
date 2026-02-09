@@ -15,6 +15,7 @@ class _UserPageState extends State<UserPage>
   final PageController _featureController = PageController();
   int _featurePage = 0;
   Map<String, dynamic> _userData = {};
+  String _userRole = '';
   bool _loading = true;
 
   @override
@@ -31,9 +32,11 @@ class _UserPageState extends State<UserPage>
 
   Future<void> _loadUser() async {
     final userData = await _storageService.getUserData();
+    final role = await _storageService.getUserRole();
     if (mounted) {
       setState(() {
         _userData = userData;
+        _userRole = role ?? '';
         _loading = false;
       });
     }
@@ -55,6 +58,15 @@ class _UserPageState extends State<UserPage>
       if (text.isNotEmpty && text != 'null') return text;
     }
     return fallback;
+  }
+
+  String _currentRole() {
+    if (_userRole.isNotEmpty) return _userRole;
+    final dynamic rawUser = _userData['user'] ?? _userData['User'] ?? _userData;
+    final user = rawUser is Map<String, dynamic>
+        ? rawUser
+        : <String, dynamic>{};
+    return _pickString(user, ['role', 'Role'], 'student');
   }
 
   Widget _userCard() {
@@ -261,6 +273,7 @@ class _UserPageState extends State<UserPage>
             _loadUser();
           },
           footer: _buildLinksFooter,
+          isAdmin: _currentRole().toLowerCase().trim() == 'admin',
         ),
       ),
     );
@@ -455,10 +468,12 @@ class SettingsPage extends StatelessWidget {
     super.key,
     required this.onSwitchAccount,
     required this.footer,
+    this.isAdmin = false,
   });
 
   final Future<void> Function() onSwitchAccount;
   final Widget Function(BuildContext context) footer;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -490,6 +505,19 @@ class SettingsPage extends StatelessWidget {
                       await onSwitchAccount();
                     },
                   ),
+                  if (isAdmin) const Divider(height: 1),
+                  if (isAdmin)
+                    ListTile(
+                      leading: Icon(
+                        Icons.admin_panel_settings,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: const Text('管理后台'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/admin');
+                      },
+                    ),
                 ],
               ),
             ),

@@ -1,9 +1,10 @@
-package controllers
+﻿package controllers
 
 import (
 	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -165,6 +166,10 @@ func (ac AdminController) CreateVideo(c *gin.Context) {
 		ReturnError(c, 500, "创建视频失败："+err.Error())
 		return
 	}
+	if client := cache.Client(); client != nil {
+		ctx := context.Background()
+		_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", courseID)).Err()
+	}
 	ReturnSuccess(c, 200, "创建成功", gin.H{"video": video}, 0)
 }
 
@@ -181,6 +186,12 @@ func (ac AdminController) UpdateVideo(c *gin.Context) {
 	}
 
 	updates := map[string]any{}
+	oldCourseID := int64(0)
+	if oldVideo, err := model.GetVideoDetails(id); err == nil {
+		oldCourseID = oldVideo.CourseID
+	}
+	newCourseID := int64(0)
+	hasNewCourse := false
 	if v := c.DefaultPostForm("course_id", ""); v != "" {
 		courseID, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
@@ -188,6 +199,8 @@ func (ac AdminController) UpdateVideo(c *gin.Context) {
 			return
 		}
 		updates["course_id"] = courseID
+		newCourseID = courseID
+		hasNewCourse = true
 	}
 	if v := c.DefaultPostForm("title", ""); v != "" {
 		updates["title"] = v
@@ -226,6 +239,15 @@ func (ac AdminController) UpdateVideo(c *gin.Context) {
 		ReturnError(c, 500, "更新视频失败："+err.Error())
 		return
 	}
+	if client := cache.Client(); client != nil {
+		ctx := context.Background()
+		if oldCourseID != 0 {
+			_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", oldCourseID)).Err()
+		}
+		if hasNewCourse && newCourseID != 0 && newCourseID != oldCourseID {
+			_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", newCourseID)).Err()
+		}
+	}
 	ReturnSuccess(c, 200, "更新成功", nil, 0)
 }
 
@@ -240,9 +262,17 @@ func (ac AdminController) DeleteVideo(c *gin.Context) {
 		ReturnError(c, 400, "id不合法")
 		return
 	}
+	courseID := int64(0)
+	if oldVideo, err := model.GetVideoDetails(id); err == nil {
+		courseID = oldVideo.CourseID
+	}
 	if err := model.DeleteVideo(id); err != nil {
 		ReturnError(c, 500, "删除视频失败："+err.Error())
 		return
+	}
+	if client := cache.Client(); client != nil && courseID != 0 {
+		ctx := context.Background()
+		_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", courseID)).Err()
 	}
 	ReturnSuccess(c, 200, "删除成功", nil, 0)
 }

@@ -37,7 +37,7 @@ flutter pub get
 flutter run
 ```
 
-## 环境变量（示例）
+## 环境变量
 > 当前后端默认配置写在 `server/config/db.go`，如需覆盖可使用系统环境变量（可选）。
 - `MYSQL_DSN`：MySQL 连接
 - `MONGO_URI`：MongoDB 连接
@@ -54,8 +54,8 @@ flutter run
 - `RABBITMQ_URL`：RabbitMQ 连接（示例：`amqp://guest:guest@127.0.0.1:5672/`）
 - `BACKEND_HOST`：Flutter 端后端地址（assets/.env）
 
-## 对象存储（MinIO，方案 B：私有桶 + 签名 URL）
-### 1) 部署 MinIO（示例）
+## 对象存储
+### 1) 部署 MinIO
 ```bash
 docker run -d --name minio \
   -p 9000:9000 -p 9001:9001 \
@@ -89,7 +89,7 @@ docker run -d --name minio \
 
 ---
 
-## 数据库结构（恢复）
+## 数据库结构
 
 ### MySQL（结构化）
 1) `users`
@@ -174,7 +174,7 @@ docker run -d --name minio \
 
 ---
 
-## TODO List（细化 + 状态）
+## TODO List
 状态说明：✅ 已实现 / ⬜ 未实现 / 🟡 部分完成
 
 | 阶段 | 事项                                 | 细节 TODO                                      | 状态 |
@@ -203,7 +203,7 @@ docker run -d --name minio \
 | 10   | RabbitMQ 深度结合（重试/死信/监控）  | 重试/死信队列；消费幂等；监控与告警            | 🟡    |
 | 11   | UI 深度优化（品牌色/动效/空态）      | 统一色板与排版；动效规范；空态与骨架屏         | 🟡    |
 | 11   | 第三方登录接入（QQ/GitHub）          | OAuth 登录流程；绑定/解绑；回调与错误处理      | ⬜    |
-| 11   | 管理端界面                           | 登录与权限；课程/视频/评论管理后台             | ⬜    |
+| 11   | 管理端界面                           | 登录与权限；课程/视频/评论管理后台             | ✅    |
 | 11   | 实时聊天（私信/群聊）                | 入口：首页右上角消息；头像私信；私聊+群聊      | ⬜    |
 | 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | ⬜    |
 | 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ⬜    |
@@ -220,7 +220,7 @@ docker run -d --name minio \
 
 ---
 
-## API 文档（表格）
+## API 文档
 统一前缀：`/api/v1`
 
 ### 认证与用户
@@ -303,4 +303,3 @@ docker run -d --name minio \
 ---
 
 ## 说明
-“原来的接口文档去哪了？”——已统一整理到本 README 的 **API 文档表格** 中。
