@@ -1,15 +1,20 @@
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class CommentsPanel extends StatefulWidget {
   final String targetType;
   final int targetId;
+  final bool embedded;
+  final bool showHeader;
 
   const CommentsPanel({
     super.key,
     required this.targetType,
     required this.targetId,
+    this.embedded = false,
+    this.showHeader = true,
   });
 
   @override
@@ -19,13 +24,18 @@ class CommentsPanel extends StatefulWidget {
 class _CommentsPanelState extends State<CommentsPanel> {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
-  bool _loading = true;
-  bool _error = false;
-  List<_CommentItem> _items = [];
+  final PanelController _panelController = PanelController();
+  final ScrollController _listController = ScrollController();
+  final TextEditingController _commentController = TextEditingController();
   final Set<String> _likingIds = {};
   final Set<String> _likedIds = {};
-  final TextEditingController _commentController = TextEditingController();
+  final Set<String> _expandedIds = {};
+  final Map<String, GlobalKey> _itemKeys = {};
+
+  bool _loading = true;
+  bool _error = false;
   bool _sending = false;
+  List<_CommentItem> _items = [];
 
   @override
   void initState() {
@@ -36,6 +46,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
 
   @override
   void dispose() {
+    _listController.dispose();
     _commentController.dispose();
     super.dispose();
   }
@@ -132,7 +143,8 @@ class _CommentsPanelState extends State<CommentsPanel> {
       if (mounted) {
         setState(() {
           _likedIds.remove(likedKey);
-          _items[index] = item.copyWith(likeCount: (item.likeCount - 1).clamp(0, 999999));
+          _items[index] =
+              item.copyWith(likeCount: (item.likeCount - 1).clamp(0, 999999));
         });
       }
       await _persistLikedState();
@@ -231,8 +243,114 @@ class _CommentsPanelState extends State<CommentsPanel> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _toggleReplies(String id) {
+    setState(() {
+      if (_expandedIds.contains(id)) {
+        _expandedIds.remove(id);
+      } else {
+        _expandedIds.add(id);
+      }
+    });
+    final key = _itemKeys[id];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 220),
+        alignment: 0.1,
+      );
+    }
+  }
+
+  Widget _buildHeader() {
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        if (details.delta.dy > 6) {
+          _panelController.close();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Column(
+          children: [
+            if (widget.showHeader)
+              Row(
+                children: [
+                  const Text(
+                    '评论',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => _panelController.close(),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputBar() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF0F1115) : Colors.white;
+    final border = isDark ? Colors.white12 : Colors.black12;
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border(top: BorderSide(color: border)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1B1F28) : const Color(0xFFF3F5F9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(
+                    hintText: '写下你的评论...',
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                onPressed: _sending ? null : _sendComment,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: _sending
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('发送'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(ScrollController? controller) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -248,54 +366,128 @@ class _CommentsPanelState extends State<CommentsPanel> {
       return const Center(child: Text('暂无评论'));
     }
 
-    return Column(
+    return ListView.separated(
+      controller: controller,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      itemCount: _items.length,
+      separatorBuilder: (_, __) => const Divider(height: 24),
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        final likedKey = _likedKey(item.id);
+        final expanded = _expandedIds.contains(item.id);
+        final key = _itemKeys.putIfAbsent(item.id, () => GlobalKey());
+        return Container(
+          key: key,
+          child: _CommentTile(
+            item: item,
+            liking: _likingIds.contains(item.id),
+            liked: _likedIds.contains(likedKey),
+            expanded: expanded,
+            onLike: () => _toggleLike(index),
+            onToggleReplies: () => _toggleReplies(item.id),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPanel(ScrollController controller) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  decoration: const InputDecoration(
-                    hintText: '写下你的评论...',
-                    isDense: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _sending ? null : _sendComment,
-                child: _sending
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('发送'),
-              ),
-            ],
+        Positioned.fill(
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.only(bottom: bottom + 64),
+            child: Column(
+              children: [
+                if (widget.showHeader) ...[
+                  _buildHeader(),
+                  const Divider(height: 1),
+                ],
+                Expanded(child: _buildList(controller)),
+              ],
+            ),
           ),
         ),
-        const Divider(height: 1),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => const Divider(height: 24),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              final likedKey = _likedKey(item.id);
-              return _CommentTile(
-                item: item,
-                liking: _likingIds.contains(item.id),
-                liked: _likedIds.contains(likedKey),
-                onLike: () => _toggleLike(index),
-              );
-            },
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.only(bottom: bottom),
+            child: _buildInputBar(),
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.embedded) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.maxHeight;
+          return SlidingUpPanel(
+            controller: _panelController,
+            minHeight: height,
+            maxHeight: height,
+            isDraggable: false,
+            borderRadius: BorderRadius.zero,
+            renderPanelSheet: false,
+            color: Colors.transparent,
+            panelSnapping: false,
+            defaultPanelState: PanelState.OPEN,
+            backdropEnabled: false,
+            panelBuilder: (controller) {
+              final theme = Theme.of(context);
+              final isDark = theme.brightness == Brightness.dark;
+              return Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF151820) : Colors.white,
+                ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: _buildList(_listController)),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _buildInputBar(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    final maxHeight = MediaQuery.of(context).size.height * 0.92;
+    return SlidingUpPanel(
+      controller: _panelController,
+      minHeight: 0,
+      maxHeight: maxHeight,
+      borderRadius: BorderRadius.zero,
+      renderPanelSheet: false,
+      color: Colors.transparent,
+      panelSnapping: true,
+      defaultPanelState: PanelState.OPEN,
+      backdropEnabled: true,
+      backdropOpacity: 0.25,
+      panelBuilder: (controller) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF151820) : Colors.white,
+          ),
+          child: _buildPanel(controller),
+        );
+      },
     );
   }
 }
@@ -305,12 +497,14 @@ class _CommentItem {
   final String content;
   final int likeCount;
   final String createdAt;
+  final int replyCount;
 
   _CommentItem({
     required this.id,
     required this.content,
     required this.likeCount,
     required this.createdAt,
+    required this.replyCount,
   });
 
   factory _CommentItem.fromJson(Map<String, dynamic> json) {
@@ -319,6 +513,7 @@ class _CommentItem {
       content: (json['content'] ?? '').toString(),
       likeCount: _intify(json['like_count']),
       createdAt: (json['created_at'] ?? '').toString(),
+      replyCount: _intify(json['reply_count']),
     );
   }
 
@@ -328,6 +523,7 @@ class _CommentItem {
       content: content,
       likeCount: likeCount ?? this.likeCount,
       createdAt: createdAt,
+      replyCount: replyCount,
     );
   }
 
@@ -340,14 +536,18 @@ class _CommentItem {
 class _CommentTile extends StatelessWidget {
   final _CommentItem item;
   final VoidCallback onLike;
+  final VoidCallback onToggleReplies;
   final bool liking;
   final bool liked;
+  final bool expanded;
 
   const _CommentTile({
     required this.item,
     required this.onLike,
+    required this.onToggleReplies,
     required this.liking,
     required this.liked,
+    required this.expanded,
   });
 
   @override
@@ -357,9 +557,9 @@ class _CommentTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CircleAvatar(
-          radius: 18,
+          radius: 16,
           backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
-          child: Icon(Icons.person, color: theme.colorScheme.primary, size: 18),
+          child: Icon(Icons.person, color: theme.colorScheme.primary, size: 16),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -368,8 +568,33 @@ class _CommentTile extends StatelessWidget {
             children: [
               Text(
                 item.content,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.4,
+                  fontSize: 14,
+                ),
               ),
+              if (item.replyCount > 0) ...[
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: onToggleReplies,
+                  child: Text(
+                    expanded ? '收起回复' : '查看更多回复',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                if (expanded)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '共 ${item.replyCount} 条回复',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+              ],
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -377,6 +602,7 @@ class _CommentTile extends StatelessWidget {
                     item.createdAt,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade600,
+                      fontSize: 11,
                     ),
                   ),
                   const Spacer(),
@@ -386,7 +612,7 @@ class _CommentTile extends StatelessWidget {
                       children: [
                         Icon(
                           liked ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
-                          size: 16,
+                          size: 15,
                           color: liking
                               ? theme.colorScheme.primary
                               : Colors.grey.shade600,
@@ -398,6 +624,7 @@ class _CommentTile extends StatelessWidget {
                             color: liking
                                 ? theme.colorScheme.primary
                                 : Colors.grey.shade600,
+                            fontSize: 11,
                           ),
                         ),
                       ],

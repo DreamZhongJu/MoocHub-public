@@ -610,6 +610,8 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                     CommentsPanel(
                       targetType: 'video',
                       targetId: int.tryParse(_video!.id) ?? 0,
+                      embedded: true,
+                      showHeader: false,
                     ),
                 ],
               ),

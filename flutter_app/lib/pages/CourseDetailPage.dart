@@ -8,6 +8,7 @@ import 'package:tdesign_flutter/tdesign_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int courseId;
@@ -125,7 +126,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
         child: Container(
-          height: 360,
+          height: 220,
           width: double.infinity,
           color: Colors.white,
         ),
@@ -134,7 +135,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
     if (_loadError || _imageUrls.isEmpty) {
       return Container(
-        height: 360,
+        height: 220,
         color: Colors.grey.shade100,
         child: const Center(
           child: Icon(
@@ -146,103 +147,32 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       );
     }
 
-    return Column(
-      children: [
-        Container(
-          height: 320,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueGrey.shade50, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: SizedBox(
+        height: 220,
+        child: Swiper(
+          autoplay: true,
+          itemCount: _imageUrls.length,
+          loop: _imageUrls.length > 1,
+          pagination: SwiperPagination(
+            alignment: Alignment.bottomRight,
+            builder: TDSwiperPagination.fraction,
           ),
-          child: Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: CachedNetworkImage(
-                imageUrl: _imageUrls[_selectedImageIndex],
+          itemBuilder: (BuildContext context, int index) {
+            final url = _imageUrls[index];
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: TDImage(
+                imgUrl: url,
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 300,
-                placeholder: (context, url) => Shimmer.fromColors(
-                  baseColor: Colors.grey.shade300,
-                  highlightColor: Colors.grey.shade100,
-                  child: Container(
-                    width: double.infinity,
-                    height: 300,
-                    color: Colors.white,
-                  ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey.shade200,
-                  child: Image.asset(
-                    Config.defaultProductAsset,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                height: 220,
               ),
-            ),
-          ),
+            );
+          },
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 70,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _imageUrls.length,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedImageIndex = index;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 70,
-                  height: 70,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _selectedImageIndex == index
-                          ? const Color(0xFF1B9AAA)
-                          : Colors.grey.shade300,
-                      width: _selectedImageIndex == index ? 2 : 1,
-                    ),
-                    boxShadow: [
-                      if (_selectedImageIndex == index)
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: _imageUrls[index],
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Container(color: Colors.grey.shade200),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        child: Image.asset(
-                          Config.defaultProductAsset,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -548,6 +478,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   CommentsPanel(
                     targetType: 'course',
                     targetId: widget.courseId,
+                    embedded: true,
+                    showHeader: false,
                   ),
                 ],
               ),
