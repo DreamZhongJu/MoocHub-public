@@ -20,6 +20,7 @@ class _TabsState extends State<Tabs> {
   int _currentIndex = 0;
   late final PageController _pageController;
   late final List<Widget> _pageList;
+  final GlobalKey<LearnPageState> _learnKey = GlobalKey<LearnPageState>();
   final List<String> _titles = const ['首页', '分类', '学习', '我的'];
   final List<IconData> _selectedIcons = const [
     TDIcons.home, // 首页
@@ -39,7 +40,7 @@ class _TabsState extends State<Tabs> {
     _pageList = [
       const HomePage(),
       const CategoryPage(),
-      const LearnPage(),
+      LearnPage(key: _learnKey),
       const UserPage(),
     ];
     super.initState();
@@ -56,6 +57,9 @@ class _TabsState extends State<Tabs> {
       _currentIndex = index;
       _pageController.jumpToPage(_currentIndex);
     });
+    if (index == 2) {
+      _learnKey.currentState?.refreshFromParent();
+    }
   }
 
   Widget _weakSelectIconTextTabBar(BuildContext context) {
@@ -94,6 +98,9 @@ class _TabsState extends State<Tabs> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 2) {
+            _learnKey.currentState?.refreshFromParent();
+          }
         },
         children: _pageList,
       ),

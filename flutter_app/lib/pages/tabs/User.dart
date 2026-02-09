@@ -12,6 +12,8 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage>
     with AutomaticKeepAliveClientMixin<UserPage> {
   final StorageService _storageService = StorageService();
+  final PageController _featureController = PageController();
+  int _featurePage = 0;
   Map<String, dynamic> _userData = {};
   bool _loading = true;
 
@@ -19,6 +21,12 @@ class _UserPageState extends State<UserPage>
   void initState() {
     super.initState();
     _loadUser();
+  }
+
+  @override
+  void dispose() {
+    _featureController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -81,72 +89,112 @@ class _UserPageState extends State<UserPage>
       'avatar',
     ], '');
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primary.withOpacity(0.12),
+            ),
+            child: CircleAvatar(
               radius: 28,
-              backgroundColor: Colors.blueGrey.shade100,
+              backgroundColor: surface,
               backgroundImage: avatarUrl.isEmpty
                   ? null
                   : NetworkImage(avatarUrl),
               child: avatarUrl.isEmpty
-                  ? Icon(Icons.person, color: Colors.blueGrey.shade600)
+                  ? Icon(Icons.person, color: primary)
                   : null,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nickname,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  nickname,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    username,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  username,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
                   ),
-                  const SizedBox(height: 6),
-                  if (_isLoggedIn)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (_isLoggedIn)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          role,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F7F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(role, style: const TextStyle(fontSize: 11)),
-                    ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/login').then((_) => _loadUser());
-              },
-              child: Text(_isLoggedIn ? '切换账号' : '去登录'),
-            ),
-          ],
-        ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _entryItem({required String title, required VoidCallback onTap}) {
+  Widget _entryItem({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final iconBg = isDark ? const Color(0xFF1F2430) : const Color(0xFFF3F6FB);
     return ListTile(
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: iconBg,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+      ),
+      title: Text(
+        title,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+      ),
       onTap: onTap,
     );
   }
@@ -204,37 +252,267 @@ class _UserPageState extends State<UserPage>
     );
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SettingsPage(
+          onSwitchAccount: () async {
+            await Navigator.pushNamed(context, '/login');
+            _loadUser();
+          },
+          footer: _buildLinksFooter,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final iconBg = isDark ? const Color(0xFF1F2430) : const Color(0xFFF1F4F9);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 32),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturePager() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final items = [
+      _FeatureItem(
+        icon: Icons.favorite_border,
+        label: '收藏',
+        onTap: _openFavorites,
+      ),
+      _FeatureItem(
+        icon: Icons.history,
+        label: '学习记录',
+        onTap: () => _openPlaceholder('学习记录'),
+      ),
+      _FeatureItem(icon: Icons.settings, label: '设置', onTap: _openSettings),
+    ];
+    const int perPage = 8;
+    final pages = <List<_FeatureItem>>[];
+    for (var i = 0; i < items.length; i += perPage) {
+      pages.add(
+        items.sublist(
+          i,
+          i + perPage > items.length ? items.length : i + perPage,
+        ),
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? const Color(0xFF171A21) : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 120,
+              child: PageView.builder(
+                controller: _featureController,
+                itemCount: pages.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _featurePage = index;
+                  });
+                },
+                itemBuilder: (context, pageIndex) {
+                  final pageItems = pages[pageIndex];
+                  return GridView.count(
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 4,
+                    crossAxisSpacing: 2,
+                    childAspectRatio: 1,
+                    children: pageItems
+                        .map(
+                          (item) => _buildFeatureItem(
+                            icon: item.icon,
+                            label: item.label,
+                            onTap: item.onTap,
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              ),
+            ),
+            if (pages.length > 1)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pages.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _featurePage == index ? 14 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: _featurePage == index
+                          ? theme.colorScheme.primary
+                          : theme.dividerColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return ListView(
-      children: [
-        _userCard(),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Text(
-            '常用功能',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+    final pageBg = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8);
+    return Container(
+      color: pageBg,
+      child: Stack(
+        children: [
+          Positioned(
+            right: -18,
+            top: -18,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: primary.withOpacity(isDark ? 0.12 : 0.08),
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
-        ),
-        Card(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              _entryItem(title: '我的收藏', onTap: _openFavorites),
-              const Divider(height: 1),
-              _entryItem(title: '学习记录', onTap: () => _openPlaceholder('学习记录')),
+          CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: _userCard(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Text(
+                    '常用功能',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.titleSmall?.color,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(child: _buildFeaturePager()),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
             ],
           ),
-        ),
-        _buildLinksFooter(context),
-      ],
+        ],
+      ),
     );
   }
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({
+    super.key,
+    required this.onSwitchAccount,
+    required this.footer,
+  });
+
+  final Future<void> Function() onSwitchAccount;
+  final Widget Function(BuildContext context) footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final pageBg = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8);
+    return Scaffold(
+      appBar: AppBar(title: const Text('设置')),
+      body: Container(
+        color: pageBg,
+        child: Column(
+          children: [
+            Card(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              color: isDark ? const Color(0xFF171A21) : Colors.white,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(
+                      Icons.swap_horiz,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: const Text('切换账号'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      await onSwitchAccount();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: footer(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureItem {
+  const _FeatureItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 }

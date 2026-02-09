@@ -6,11 +6,11 @@ class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
 
   @override
-  State<LearnPage> createState() => _LearnPageState();
+  State<LearnPage> createState() => LearnPageState();
 }
 
-class _LearnPageState extends State<LearnPage>
-    with AutomaticKeepAliveClientMixin<LearnPage> {
+class LearnPageState extends State<LearnPage>
+    with AutomaticKeepAliveClientMixin<LearnPage>, WidgetsBindingObserver {
   final ApiService _api = ApiService();
   final StorageService _storage = StorageService();
 
@@ -23,6 +23,28 @@ class _LearnPageState extends State<LearnPage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      refreshFromParent();
+    }
+  }
+
+  void refreshFromParent() {
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+    });
     _loadData();
   }
 

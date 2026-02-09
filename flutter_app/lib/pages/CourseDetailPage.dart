@@ -4,6 +4,7 @@ import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
 import 'package:flutter/material.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:badges/badges.dart' as badges;
@@ -531,14 +532,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         child: Column(
           children: [
             _buildImageGallery(),
-            const TabBar(
-              tabs: [
-                Tab(text: '课程详情'),
-                Tab(text: '评论'),
+            TDTabBar(
+              tabs: const [
+                TDTab(text: '课程详情'),
+                TDTab(text: '评论'),
               ],
+              showIndicator: true,
             ),
             Expanded(
-              child: TabBarView(
+              child: TDTabBarView(
                 children: [
                   SingleChildScrollView(
                     child: _buildProductInfo(),
