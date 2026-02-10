@@ -140,6 +140,23 @@ func findOrCreateQQUser(openID string, info qqUserInfo) (model.Users, error) {
 	username := "qq_" + openID
 	user, err := model.GetUserByUsername(username)
 	if err == nil {
+		nickname := strings.TrimSpace(info.Nickname)
+		avatar := strings.TrimSpace(info.FigureURLQQ2)
+		if avatar == "" {
+			avatar = strings.TrimSpace(info.FigureURLQQ1)
+		}
+		needUpdate := false
+		if nickname != "" && nickname != user.Nickname {
+			user.Nickname = nickname
+			needUpdate = true
+		}
+		if avatar != "" && avatar != user.AvatarURL {
+			user.AvatarURL = avatar
+			needUpdate = true
+		}
+		if needUpdate {
+			_ = model.UpdateUserProfile(user.ID, user.Nickname, user.AvatarURL)
+		}
 		return user, nil
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -164,8 +181,9 @@ func findOrCreateQQUser(openID string, info qqUserInfo) (model.Users, error) {
 	if err != nil {
 		return model.Users{}, err
 	}
-	if avatar != "" {
-		_ = model.UpdateUserAvatar(user.ID, avatar)
+	if avatar != "" || nickname != "" {
+		_ = model.UpdateUserProfile(user.ID, nickname, avatar)
+		user.Nickname = nickname
 		user.AvatarURL = avatar
 	}
 	return user, nil

@@ -1,3 +1,5 @@
+import 'package:MoocHub/config/Config.dart';
+
 class CoursesModel {
   final String id;
   final String categoryId;
@@ -32,7 +34,7 @@ class CoursesModel {
       categoryId = json['category_id'] as String,
       title = json['title'] as String,
       summary = json['summary'] as String,
-      coverUrl = json['cover_url'] as String,
+      coverUrl = Config.resolveImage(json['cover_url']?.toString() ?? ''),
       viewCount = json['view_count'] as int,
       favoriteCount = json['favorite_count'] as int,
       instructorName = json['instructor_name'] as String,

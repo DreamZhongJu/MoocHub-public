@@ -147,8 +147,13 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (!resp.isSuccessful || resp.accessToken == null || resp.openid == null) {
       if (mounted) {
+        String message = resp.msg ?? 'QQ 登录失败';
+        final lower = message.toLowerCase();
+        if (lower.contains('permission') || message.contains('授权')) {
+          message = '未授权，暂时无法使用QQ登录及分享等功能';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('QQ 登录失败：${resp.msg ?? '未知错误'}')),
+          SnackBar(content: Text(message)),
         );
         setState(() {
           _qqLoading = false;

@@ -36,79 +36,99 @@ class CoursesCard extends StatelessWidget {
       child: Card(
         clipBehavior: Clip.hardEdge,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool hasBound = constraints.maxHeight.isFinite;
+            final bool compact = hasBound && constraints.maxHeight < 140;
+            final double imageHeight = hasBound
+                ? (constraints.maxHeight * 0.56).clamp(64.0, 92.0)
+                : 92.0;
+            final double verticalPadding = compact ? 4 : 6;
+            final int summaryLines = compact ? 1 : 2;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(
-                  coverUrl,
+                SizedBox(
+                  height: imageHeight,
                   width: double.infinity,
-                  height: 92,
-                  fit: BoxFit.cover,
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        coverUrl,
+                        width: double.infinity,
+                        height: imageHeight,
+                        fit: BoxFit.cover,
+                      ),
+                      Positioned(
+                        left: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.55),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.remove_red_eye, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                formatCount(viewCount),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.favorite, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                formatCount(favoriteCount),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Positioned(
-                  left: 8,
-                  bottom: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.55),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.remove_red_eye, size: 14, color: Colors.white),
-                        const SizedBox(width: 4),
-                        Text(
-                          formatCount(viewCount),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                          ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                          fontSize: compact ? 13 : null,
                         ),
-                        const SizedBox(width: 10),
-                        const Icon(Icons.favorite, size: 14, color: Colors.white),
-                        const SizedBox(width: 4),
-                        Text(
-                          formatCount(favoriteCount),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                          ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        summary,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          height: 1.1,
+                          fontSize: compact ? 11 : null,
                         ),
-                      ],
-                    ),
+                        maxLines: summaryLines,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    summary,
-                    style: theme.textTheme.bodySmall?.copyWith(height: 1.1),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -123,62 +143,79 @@ class CoursesCardSkeleton extends StatelessWidget {
     return Card(
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            height: 92,
-            color: Colors.grey.shade300,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 20,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 14,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 8),
-                Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool hasBound = constraints.maxHeight.isFinite;
+          final bool compact = hasBound && constraints.maxHeight < 140;
+          final double imageHeight = hasBound
+              ? (constraints.maxHeight * 0.56).clamp(64.0, 92.0)
+              : 92.0;
+          final double verticalPadding = compact ? 4 : 6;
+          final double titleHeight = compact ? 14 : 20;
+          final double summaryHeight = compact ? 10 : 14;
+          final double iconSize = compact ? 12 : 16;
+          final double statWidth = compact ? 24 : 30;
+          final double rowGap = compact ? 8 : 16;
+          final double lineGap = compact ? 4 : 6;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                height: imageHeight,
+                color: Colors.grey.shade300,
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 16,
-                      height: 16,
+                      width: double.infinity,
+                      height: titleHeight,
                       color: Colors.grey.shade300,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(height: lineGap),
                     Container(
-                      width: 30,
-                      height: 12,
+                      width: double.infinity,
+                      height: summaryHeight,
                       color: Colors.grey.shade300,
                     ),
-                    const SizedBox(width: 16),
-                    Container(
-                      width: 16,
-                      height: 16,
-                      color: Colors.grey.shade300,
-                    ),
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 30,
-                      height: 12,
-                      color: Colors.grey.shade300,
+                    SizedBox(height: lineGap),
+                    Row(
+                      children: [
+                        Container(
+                          width: iconSize,
+                          height: iconSize,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: statWidth,
+                          height: summaryHeight,
+                          color: Colors.grey.shade300,
+                        ),
+                        SizedBox(width: rowGap),
+                        Container(
+                          width: iconSize,
+                          height: iconSize,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: statWidth,
+                          height: summaryHeight,
+                          color: Colors.grey.shade300,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

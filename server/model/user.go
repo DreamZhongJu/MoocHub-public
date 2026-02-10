@@ -76,3 +76,17 @@ func GetUserByID(id uint) (Users, error) {
 func UpdateUserAvatar(id uint, avatarURL string) error {
 	return db.GetDB().Model(&Users{}).Where("id = ?", id).Update("avatar_url", avatarURL).Error
 }
+
+func UpdateUserProfile(id uint, nickname, avatarURL string) error {
+	updates := map[string]interface{}{}
+	if nickname != "" {
+		updates["nickname"] = nickname
+	}
+	if avatarURL != "" {
+		updates["avatar_url"] = avatarURL
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return db.GetDB().Model(&Users{}).Where("id = ?", id).Updates(updates).Error
+}
