@@ -148,7 +148,17 @@ class _CategoryPageState extends State<CategoryPage>
     if (_loadingLeft) {
       return SizedBox(
         width: leftWidth,
-        child: const Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TDSkeleton(
+                animation: TDSkeletonAnimation.gradient,
+                theme: TDSkeletonTheme.paragraph,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -203,7 +213,19 @@ class _CategoryPageState extends State<CategoryPage>
 
   Widget _rightCateWidget(double rightItemWidth, double rightItemHeight) {
     if (_loadingRight) {
-      return const Expanded(child: Center(child: CircularProgressIndicator()));
+      return Expanded(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TDSkeleton(
+                animation: TDSkeletonAnimation.gradient,
+                theme: TDSkeletonTheme.paragraph,
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (_rightCateList.isEmpty) {

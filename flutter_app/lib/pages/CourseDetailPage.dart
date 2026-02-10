@@ -122,13 +122,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
   Widget _buildImageGallery() {
     if (_isLoading) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          height: 220,
-          width: double.infinity,
-          color: Colors.white,
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Row(
+          children: [
+            TDSkeleton(
+              animation: TDSkeletonAnimation.gradient,
+              theme: TDSkeletonTheme.image,
+            ),
+          ],
         ),
       );
     }
@@ -180,29 +182,11 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     if (_isLoading) {
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Container(width: 200, height: 24, color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Container(width: 150, height: 20, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Container(
-                width: double.infinity,
-                height: 60,
-                color: Colors.white,
-              ),
+            TDSkeleton(
+              animation: TDSkeletonAnimation.gradient,
+              theme: TDSkeletonTheme.paragraph,
             ),
           ],
         ),
@@ -238,20 +222,32 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           const SizedBox(height: 8),
           Row(
             children: [
-              badges.Badge(
-                badgeStyle: const badges.BadgeStyle(
-                  badgeColor: Color(0xFF1B9AAA),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B9AAA).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                badgeContent: const Text(
-                  '4.8',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      '4.8',
+                      style: TextStyle(
+                        color: Color(0xFF1B9AAA),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.star, color: Colors.amber, size: 20),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 8),
               const Text(
-                '4.8 (128 reviews)',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                '128 条评价',
+                style: TextStyle(color: Colors.black45, fontSize: 12),
               ),
               const Spacer(),
               Text(

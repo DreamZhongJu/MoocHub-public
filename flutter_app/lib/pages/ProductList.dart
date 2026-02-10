@@ -5,6 +5,7 @@ import 'package:MoocHub/widget/LoadingWidget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class ProductListPage extends StatefulWidget {
   final int categoryId;
@@ -204,7 +205,21 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Widget _productListWidget() {
     if (_courseList.isEmpty && _isLoading) {
-      return const Loadingwidget();
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 6,
+        itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              TDSkeleton(
+                animation: TDSkeletonAnimation.gradient,
+                theme: TDSkeletonTheme.paragraph,
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (_courseList.isEmpty) {
@@ -219,9 +234,16 @@ class _ProductListPageState extends State<ProductListPage> {
         itemCount: _courseList.length + (_hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _courseList.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Loadingwidget(),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  TDSkeleton(
+                    animation: TDSkeletonAnimation.gradient,
+                    theme: TDSkeletonTheme.paragraph,
+                  ),
+                ],
+              ),
             );
           }
           final item = _courseList[index];

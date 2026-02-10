@@ -4,6 +4,7 @@ import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -191,7 +192,21 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   Widget _buildVideos() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 6,
+        itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              TDSkeleton(
+                animation: TDSkeletonAnimation.gradient,
+                theme: TDSkeletonTheme.paragraph,
+              ),
+            ],
+          ),
+        ),
+      );
     }
     if (_videos.isEmpty) {
       return _buildEmpty('暂无收藏视频');
