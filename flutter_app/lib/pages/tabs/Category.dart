@@ -1,4 +1,4 @@
-import 'package:MoocHub/config/Config.dart';
+﻿import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CategoriesModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
@@ -234,15 +234,15 @@ class _CategoryPageState extends State<CategoryPage>
 
     return Expanded(
       child: Container(
-        padding: EdgeInsets.only(top: 4.h),
+        padding: EdgeInsets.only(top: 2.h),
         decoration: const BoxDecoration(color: Color(0xFFF7F9F8)),
         child: GridView.builder(
-          padding: EdgeInsets.all(12.w),
+          padding: EdgeInsets.all(8.w),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             childAspectRatio: rightItemWidth / rightItemHeight,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
           ),
           itemCount: _rightCateList.length,
           itemBuilder: (context, index) {
@@ -256,24 +256,24 @@ class _CategoryPageState extends State<CategoryPage>
                 );
               },
               child: Container(
-                padding: EdgeInsets.all(10.w),
+                padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
                     AspectRatio(
-                      aspectRatio: 1 / 1,
+                      aspectRatio: 1.15,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         child: CachedNetworkImage(
                           imageUrl:
                               'https://picsum.photos/seed/cate${item.id}/200/200',
@@ -285,21 +285,21 @@ class _CategoryPageState extends State<CategoryPage>
                         ),
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 4,
+                        vertical: 1,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.blueGrey.shade50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         item.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11),
+                        style: const TextStyle(fontSize: 10),
                       ),
                     ),
                   ],
@@ -314,27 +314,27 @@ class _CategoryPageState extends State<CategoryPage>
 
   Widget _searchHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.035),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
           children: [
-            Icon(Icons.search, color: Colors.grey.shade500),
-            const SizedBox(width: 8),
+            Icon(Icons.search, color: Colors.grey.shade500, size: 18),
+            const SizedBox(width: 6),
             Text(
               '搜索分类',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
             ),
           ],
         ),
@@ -345,9 +345,10 @@ class _CategoryPageState extends State<CategoryPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final leftWidth = ScreenAdapter.width(context) / 4;
-    final rightItemWidth = (ScreenAdapter.width(context) - leftWidth - 24) / 3;
-    final rightItemHeight = rightItemWidth + 46.h;
+    final screenWidth = ScreenAdapter.width(context);
+    final leftWidth = (screenWidth * 0.22).clamp(76.0, 96.0).toDouble();
+    final rightItemWidth = (screenWidth - leftWidth - 24) / 3;
+    final rightItemHeight = rightItemWidth + 32.h;
 
     return Container(
       color: const Color(0xFFF7F9F8),

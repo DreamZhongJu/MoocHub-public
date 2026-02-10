@@ -27,6 +27,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   bool _loadError = false;
   int _selectedImageIndex = 0;
   List<String> _imageUrls = [];
+  bool _disposed = false;
 
   String _stringify(dynamic value) => value?.toString() ?? '';
 
@@ -63,8 +64,19 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     _loadProductDetail();
   }
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted || _disposed) return;
+    setState(fn);
+  }
+
   Future<void> _loadProductDetail() async {
-    setState(() {
+    _safeSetState(() {
       _isLoading = true;
       _loadError = false;
     });
@@ -92,7 +104,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 }
               }
             }
-            setState(() {
+            _safeSetState(() {
               _product = product;
               _imageUrls = resolvedImage.isEmpty ? [] : [resolvedImage];
               _videos = videos;
@@ -101,19 +113,19 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             return;
           }
         }
-        setState(() {
+        _safeSetState(() {
           _loadError = true;
           _isLoading = false;
         });
       } else {
-        setState(() {
+        _safeSetState(() {
           _loadError = true;
           _isLoading = false;
         });
       }
     } catch (e) {
       debugPrint('load product detail failed: $e');
-      setState(() {
+      _safeSetState(() {
         _loadError = true;
         _isLoading = false;
       });

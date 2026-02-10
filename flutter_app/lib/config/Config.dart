@@ -19,8 +19,9 @@ class Config {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         final uri = Uri.parse(url);
-        final hasAmzSignature = uri.queryParameters.keys
-            .any((key) => key.toLowerCase().startsWith('x-amz-'));
+        final hasAmzSignature = uri.queryParameters.keys.any(
+          (key) => key.toLowerCase().startsWith('x-amz-'),
+        );
         if (hasAmzSignature) {
           return url;
         }

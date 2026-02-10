@@ -25,7 +25,7 @@ func MongoDBName() string {
 }
 
 func MinioEndpoint() string {
-	return envOrDefault("MINIO_ENDPOINT", "127.0.0.1:9000")
+	return envOrDefault("MINIO_ENDPOINT", "192.168.10.5:9000")
 }
 
 func MinioAccessKey() string {

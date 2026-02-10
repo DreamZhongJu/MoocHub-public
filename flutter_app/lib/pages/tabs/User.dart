@@ -137,13 +137,6 @@ class _UserPageState extends State<UserPage>
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  username,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
-                  ),
-                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
