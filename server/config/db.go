@@ -94,3 +94,19 @@ func RabbitMQURL() string {
 func InternalToken() string {
 	return envOrDefault("INTERNAL_TOKEN", "moochub-internal")
 }
+
+func QQAppID() string {
+	return envOrDefault("QQ_APP_ID", "")
+}
+
+func QQAppKey() string {
+	return envOrDefault("QQ_APP_KEY", "")
+}
+
+func QQRedirectURI() string {
+	return envOrDefault("QQ_REDIRECT_URI", "http://127.0.0.1:3000/api/v1/auth/qq/callback")
+}
+
+func QQState() string {
+	return envOrDefault("QQ_STATE", "moochub")
+}

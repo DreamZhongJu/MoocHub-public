@@ -51,6 +51,7 @@ dependencies:
   tdesign_flutter: ^0.2.7
   flutter_swiper_null_safety: ^1.0.2
   sliding_up_panel: ^2.0.0+1
+  tencent_kit: ^6.2.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -62,7 +63,10 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+flutter_lints: ^6.0.0
+
+tencent_kit:
+  app_id: 102846875
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -79,6 +83,7 @@ flutter:
   assets:
     - assets/.env
     - assets/theme.json
+    - assets/icons/qq.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

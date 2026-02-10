@@ -45,5 +45,27 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>mqq</string>
+		<string>mqqapi</string>
+		<string>mqqwpa</string>
+		<string>mqqbrowser</string>
+		<string>mqqOpensdkSSoLogin</string>
+		<string>mqqOpensdkSSoLoginDetail</string>
+		<string>mqqopensdkapiV2</string>
+		<string>mqqopensdkapiV4</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>tencent</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tencent102846875</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

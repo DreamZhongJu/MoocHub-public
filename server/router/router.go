@@ -61,6 +61,9 @@ func Router() *gin.Engine {
 			auth.POST("/register", controllers.UserController{}.Register)
 			auth.POST("/login", controllers.UserController{}.Login)
 			auth.GET("/me", middleware.AuthMiddleware(), controllers.UserController{}.Me)
+			auth.GET("/qq/login", controllers.QQController{}.Login)
+			auth.GET("/qq/callback", controllers.QQController{}.Callback)
+			auth.POST("/qq/sdk_login", controllers.QQController{}.SDKLogin)
 		}
 		user.GET("/categories", controllers.CourseCategoriesController{}.GetCategories)
 		user.GET("/categories/:id/courses", controllers.CoursesController{}.GetCoursesByCategoryID)

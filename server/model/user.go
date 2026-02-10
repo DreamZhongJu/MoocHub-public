@@ -72,3 +72,7 @@ func GetUserByID(id uint) (Users, error) {
 	err := db.GetDB().First(&user, id).Error
 	return user, err
 }
+
+func UpdateUserAvatar(id uint, avatarURL string) error {
+	return db.GetDB().Model(&Users{}).Where("id = ?", id).Update("avatar_url", avatarURL).Error
+}

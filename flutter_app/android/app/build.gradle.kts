@@ -31,6 +31,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["TENCENT_APP_ID"] = "102846875"
     }
 
     val keystoreProperties = Properties().apply {
