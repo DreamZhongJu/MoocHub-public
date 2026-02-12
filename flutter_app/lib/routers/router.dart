@@ -2,6 +2,7 @@
 import 'package:MoocHub/pages/FavoritesPage.dart';
 import 'package:MoocHub/pages/LoginPage.dart';
 import 'package:MoocHub/pages/MessagePage.dart';
+import 'package:MoocHub/pages/NotificationSettingsPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:MoocHub/pages/admin/AdminHomePage.dart';
@@ -88,6 +89,10 @@ var onGenerateRoute = (RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const AdminHomePage());
     case '/messages':
       return MaterialPageRoute(builder: (_) => const MessagePage());
+    case '/notificationSettings':
+      return MaterialPageRoute(
+        builder: (_) => const NotificationSettingsPage(),
+      );
     default:
       return null;
   }

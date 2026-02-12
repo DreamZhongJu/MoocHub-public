@@ -2,6 +2,7 @@
 
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
+import 'package:MoocHub/services/PushService.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -72,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       await _storageService.saveUserData(resp.data);
+      await PushService.instance.refreshToken();
       if (mounted) {
         Navigator.of(context).pop(true);
       }
@@ -177,6 +179,7 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       await _storageService.saveUserData(result.data);
+      await PushService.instance.refreshToken();
       if (mounted) {
         Navigator.of(context).pop(true);
       }

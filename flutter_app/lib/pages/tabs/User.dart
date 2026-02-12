@@ -498,6 +498,18 @@ class SettingsPage extends StatelessWidget {
                       await onSwitchAccount();
                     },
                   ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      Icons.notifications_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: const Text('通知设置'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.pushNamed(context, '/notificationSettings');
+                    },
+                  ),
                   if (isAdmin) const Divider(height: 1),
                   if (isAdmin)
                     ListTile(

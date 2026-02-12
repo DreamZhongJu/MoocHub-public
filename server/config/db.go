@@ -110,3 +110,11 @@ func QQRedirectURI() string {
 func QQState() string {
 	return envOrDefault("QQ_STATE", "moochub")
 }
+
+func FCMServiceAccountPath() string {
+	return envOrDefault("FCM_SERVICE_ACCOUNT", "")
+}
+
+func FCMProjectID() string {
+	return envOrDefault("FCM_PROJECT_ID", "")
+}

@@ -191,6 +191,12 @@ class _CategoryPageState extends State<CategoryPage>
         style: TDSideBarStyle.normal,
         value: _selectIndex,
         controller: _sideBarController,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        selectedTextStyle: const TextStyle(
+          fontSize: 12,
+          height: 1.2,
+          fontWeight: FontWeight.w600,
+        ),
         children: _leftCateList.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
@@ -198,6 +204,7 @@ class _CategoryPageState extends State<CategoryPage>
             label: item.name,
             value: index,
             icon: icons[index % icons.length],
+            textStyle: const TextStyle(fontSize: 12, height: 1.2),
           );
         }).toList(),
         onSelected: (value) {
@@ -346,7 +353,7 @@ class _CategoryPageState extends State<CategoryPage>
   Widget build(BuildContext context) {
     super.build(context);
     final screenWidth = ScreenAdapter.width(context);
-    final leftWidth = (screenWidth * 0.22).clamp(76.0, 96.0).toDouble();
+    final leftWidth = (screenWidth * 0.3).clamp(110.0, 140.0).toDouble();
     final rightItemWidth = (screenWidth - leftWidth - 24) / 3;
     final rightItemHeight = rightItemWidth + 32.h;
 

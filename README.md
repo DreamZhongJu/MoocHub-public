@@ -52,7 +52,12 @@ flutter run
 - `REDIS_PASSWORD`：Redis 密码（如无可空）
 - `REDIS_DB`：Redis DB（默认 0）
 - `RABBITMQ_URL`：RabbitMQ 连接（示例：`amqp://guest:guest@127.0.0.1:5672/`）
+- `INTERNAL_TOKEN`：内部接口 Token（用于内部接口鉴权）
+- `FCM_SERVICE_ACCOUNT`：Firebase 服务账号 JSON 文件路径
+- `FCM_PROJECT_ID`：Firebase 项目 ID（可选，默认从服务账号读取）
 - `BACKEND_HOST`：Flutter 端后端地址（assets/.env）
+
+> 为了避免敏感文件入库，建议把 `serviceAccount.json` 放到 `server/secrets/`，并通过启动参数或环境变量加载。
 
 ## 对象存储
 ### 1) 部署 MinIO
@@ -118,7 +123,60 @@ docker run -d --name minio \
 - `video_url`, `thumb_url`
 - `sort_order`, `created_at`
 
-5) `favorite_courses`
+5) `messages`
+- `id` (PK)
+- `user_id` (FK -> users.id)
+- `type`（system/like/comment/dm 等）
+- `title`, `content`
+- `biz_id`（业务关联 ID，可空）
+- `is_read`
+- `created_at`
+
+6) `device_tokens`
+- `id` (PK)
+- `user_id` (FK -> users.id)
+- `platform`（android/ios 等）
+- `token`（FCM Token）
+- `created_at`, `updated_at`
+
+#### SQL（messages）
+```sql
+CREATE TABLE messages (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  title VARCHAR(64) NOT NULL,
+  content VARCHAR(512) NOT NULL,
+  biz_id BIGINT UNSIGNED NULL,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_created (user_id, created_at),
+  INDEX idx_user_read (user_id, is_read),
+  INDEX idx_user_type (user_id, type),
+  CONSTRAINT fk_messages_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+#### SQL（device_tokens）
+```sql
+CREATE TABLE device_tokens (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  platform VARCHAR(16) NOT NULL DEFAULT 'android',
+  token VARCHAR(255) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_device_token (token),
+  INDEX idx_user_platform (user_id, platform),
+  CONSTRAINT fk_device_tokens_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+7) `favorite_courses`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `course_id` (FK -> courses.id)
@@ -126,7 +184,7 @@ docker run -d --name minio \
 - `is_deleted` (软删除)
 - UNIQUE(`user_id`, `course_id`)
 
-6) `favorite_videos`
+8) `favorite_videos`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `video_id` (FK -> videos.id)
@@ -274,6 +332,19 @@ docker run -d --name minio \
 | GET  | `/points/rank`          | 登录 | `page`, `page_size`                          | 排行榜（按 `points_balance`） |
 | POST | `/points/award`（内部） | 内部 | `event_type`, `points`, `biz_id?`, `remark?` | -                             |
 
+### 消息通知（最小可用）
+| 方法 | 路径                       | 权限 | 请求参数                              | 响应                      |
+| ---- | -------------------------- | ---- | ------------------------------------- | ------------------------- |
+| GET  | `/messages`                | 登录 | `type?`, `page`, `page_size`          | `items`, `page`, `total`  |
+| GET  | `/messages/unread_count`   | 登录 | `type?`                               | `unread_count`            |
+| POST | `/messages/read`           | 登录 | `ids?`, `type?`, `all?`               | `updated`                 |
+| POST | `/messages/award`（内部）  | 内部 | `user_id`, `type`, `title`, `content`, `biz_id?` | -            |
+
+### 设备推送 Token
+| 方法 | 路径               | 权限 | 请求参数                 | 响应 |
+| ---- | ------------------ | ---- | ------------------------ | ---- |
+| POST | `/device_tokens`   | 登录 | `token`, `platform?`     | -    |
+
 ### 管理端（MVP）
 | 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |
 | ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | -------- |
@@ -284,6 +355,7 @@ docker run -d --name minio \
 | PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -        |
 | DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -        |
 | DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -        |
+| POST   | `/admin/push`          | 管理员 | `user_id?`, `user_ids?`, `title`, `content`, `type?`, `route?`, `biz_id?`                   | `sent`, `failed` |
 
 ---
 

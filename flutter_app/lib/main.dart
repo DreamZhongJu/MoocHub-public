@@ -1,6 +1,11 @@
 import 'package:MoocHub/routers/router.dart';
 import 'package:MoocHub/routers/route_observer.dart';
+import 'package:MoocHub/routers/navigator_key.dart';
 import 'package:MoocHub/services/ScreenAdaper.dart';
+import 'package:MoocHub/services/PushService.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,8 +14,15 @@ import 'package:tdesign_flutter/tdesign_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "assets/.env");
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
   final tdTheme = await _loadTDesignTheme();
   runApp(ScreenAdapter.init(child: MyApp(tdTheme: tdTheme)));
+  if (!kIsWeb) {
+    Future.microtask(() => PushService.instance.init());
+  }
 }
 
 Future<TDThemeData?> _loadTDesignTheme() async {
@@ -38,6 +50,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'MoocHub',
+      navigatorKey: navigatorKey,
       theme: themeData.copyWith(
         extensions: tdTheme == null ? null : [tdTheme!],
       ),

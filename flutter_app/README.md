@@ -19,6 +19,7 @@ flutter run
 
 ## 环境配置
 - `assets/.env`：配置后端地址（`BACKEND_HOST`）
+- Android 推送：需要将 Firebase 控制台下载的 `google-services.json` 放到 `android/app/`
 
 ## 关键能力
 - 推荐流展示
@@ -27,6 +28,7 @@ flutter run
 - 评论列表
 - 收藏列表（课程 / 视频）
 - 我的页（登录入口/信息卡片）
+- 通知设置页（跳转系统通知/应用设置）
 
 ## 待办（客户端）
 - 交互完善：倍速、全屏、进度上报节流

@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"MOOCHUB-server/cache"
@@ -8,6 +8,7 @@ import (
 	"MOOCHUB-server/mq"
 	"MOOCHUB-server/router"
 	"MOOCHUB-server/workers"
+	"flag"
 	"os"
 
 	"go.uber.org/zap"
@@ -15,8 +16,19 @@ import (
 )
 
 func main() {
+	serviceAccount := flag.String("fcm-service-account", "", "path to FCM service account json")
+	projectID := flag.String("fcm-project-id", "", "FCM project ID")
+	flag.Parse()
+
+	if *serviceAccount != "" {
+		_ = os.Setenv("FCM_SERVICE_ACCOUNT", *serviceAccount)
+	}
+	if *projectID != "" {
+		_ = os.Setenv("FCM_PROJECT_ID", *projectID)
+	}
+
 	if err := os.MkdirAll("logs", 0755); err != nil {
-		panic("无法创建logs目录: " + err.Error())
+		panic("鏃犳硶鍒涘缓logs鐩綍: " + err.Error())
 	}
 
 	encoderConfig := zap.NewProductionEncoderConfig()
@@ -25,11 +37,11 @@ func main() {
 
 	infoFile, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		panic("无法初始化日志文件: " + err.Error())
+		panic("鏃犳硶鍒濆鍖栨棩蹇楁枃浠? " + err.Error())
 	}
 	errorFile, err := os.OpenFile("logs/error.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		panic("无法初始化错误日志文件: " + err.Error())
+		panic("鏃犳硶鍒濆鍖栭敊璇棩蹇楁枃浠? " + err.Error())
 	}
 
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -50,7 +62,7 @@ func main() {
 	defer logger.Sync()
 
 	global.Log = logger
-	global.Log.Info("日志系统已初始化")
+	global.Log.Info("鏃ュ織绯荤粺宸插垵濮嬪寲")
 	global.Log.Info("MinIO config loaded",
 		zap.String("endpoint", config.MinioEndpoint()),
 		zap.String("bucket", config.MinioBucket()),

@@ -19,3 +19,6 @@ server/workers/play_worker.go.8432565024619186638
 # Android signing
 flutter_app/android/key.properties
 flutter_app/android/keystore/
+flutter_app/android/app/google-services.json
+server/secrets/
+server/secrets/*

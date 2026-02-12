@@ -52,6 +52,10 @@ dependencies:
   flutter_swiper_null_safety: ^1.0.2
   sliding_up_panel: ^2.0.0+1
   tencent_kit: ^6.2.0
+  firebase_core: ^3.2.0
+  firebase_messaging: ^15.0.2
+  flutter_local_notifications: ^17.2.2
+  app_settings: ^5.1.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
