@@ -4,6 +4,7 @@ import (
 	"MOOCHUB-server/config"
 	"context"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 	"sync"
@@ -65,4 +66,30 @@ func ResolveObjectURL(raw string) (string, error) {
 		return "", err
 	}
 	return url.String(), nil
+}
+
+func PutObject(key string, reader io.Reader, size int64, contentType string) (string, string, error) {
+	if key == "" {
+		return "", "", fmt.Errorf("empty key")
+	}
+	client, err := getMinioClient()
+	if err != nil {
+		return "", "", err
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	_, err = client.PutObject(ctx, config.MinioBucket(), key, reader, size, minio.PutObjectOptions{
+		ContentType: contentType,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	url, err := ResolveObjectURL(key)
+	if err != nil {
+		return key, "", err
+	}
+	return key, url, nil
 }

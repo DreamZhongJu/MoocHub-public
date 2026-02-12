@@ -139,6 +139,15 @@ docker run -d --name minio \
 - `token`（FCM Token）
 - `created_at`, `updated_at`
 
+7) `articles`
+- `id` (PK)
+- `user_id` (FK -> users.id)
+- `title`, `summary`, `content`
+- `cover_url`
+- `status`
+- `view_count`, `like_count`
+- `created_at`, `updated_at`
+
 #### SQL（messages）
 ```sql
 CREATE TABLE messages (
@@ -176,7 +185,29 @@ CREATE TABLE device_tokens (
 );
 ```
 
-7) `favorite_courses`
+#### SQL（articles）
+```sql
+CREATE TABLE articles (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  title VARCHAR(128) NOT NULL,
+  summary VARCHAR(255) NOT NULL,
+  cover_url VARCHAR(512) NOT NULL,
+  content LONGTEXT NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'published',
+  view_count BIGINT NOT NULL DEFAULT 0,
+  like_count BIGINT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_created (user_id, created_at),
+  INDEX idx_status_created (status, created_at),
+  CONSTRAINT fk_articles_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+8) `favorite_courses`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `course_id` (FK -> courses.id)
@@ -184,7 +215,7 @@ CREATE TABLE device_tokens (
 - `is_deleted` (软删除)
 - UNIQUE(`user_id`, `course_id`)
 
-8) `favorite_videos`
+9) `favorite_videos`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `video_id` (FK -> videos.id)
@@ -192,7 +223,7 @@ CREATE TABLE device_tokens (
 - `is_deleted` (软删除)
 - UNIQUE(`user_id`, `video_id`)
 
-7) `learning_progress`
+10) `learning_progress`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `video_id` (FK -> videos.id)
@@ -200,7 +231,7 @@ CREATE TABLE device_tokens (
 - `updated_at`
 - UNIQUE(`user_id`, `video_id`)
 
-8) `points_transactions`
+11) `points_transactions`
 - `id` (PK)
 - `user_id` (FK -> users.id)
 - `event_type` (login/video_complete/comment/favorite/other)
@@ -210,7 +241,7 @@ CREATE TABLE device_tokens (
 - `created_at`
 - 索引：`(user_id, created_at)`、`(event_type, created_at)`
 
-9) `users`（积分字段扩展）
+12) `users`（积分字段扩展）
 - `points_balance` (当前积分余额，默认 0)
 
 ### MongoDB（文档型）
@@ -263,7 +294,7 @@ CREATE TABLE device_tokens (
 | 11   | 第三方登录接入（QQ）                 | OAuth 登录流程；绑定/解绑；回调与错误处理      | ✅    |
 | 11   | 管理端界面                           | 登录与权限；课程/视频/评论管理后台             | ✅    |
 | 11   | 实时聊天（私信/群聊）                | 入口：首页右上角消息；头像私信；私聊+群聊      | 🟡    |
-| 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | ⬜    |
+| 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | 🟡    |
 | 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ⬜    |
 | 12   | 埋点与数据看板（曝光/点击/完播）     | 埋点事件定义；看板指标口径；可视化面板         | ⬜    |
 | 12   | 指标告警（Prometheus/Grafana）       | 指标采集；告警规则；可视化面板                 | ⬜    |
@@ -301,6 +332,13 @@ CREATE TABLE device_tokens (
 | ---- | -------------- | ---- | -------- | ----------------------------------------------------------------------------------- |
 | GET  | `/videos/{id}` | 无   | -        | `id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url` |
 
+### 文章
+| 方法 | 路径             | 权限 | 请求参数                                    | 响应      |
+| ---- | ---------------- | ---- | ------------------------------------------- | --------- |
+| GET  | `/articles`      | 无   | `sort?`, `page`, `page_size`                | 文章列表  |
+| GET  | `/articles/{id}` | 无   | -                                           | 文章详情  |
+| POST | `/articles`      | 登录 | `title`, `summary`, `cover_url?`, `content` | `article` |
+
 ### 收藏
 | 方法   | 路径                             | 权限 | 请求参数    | 响应                |
 | ------ | -------------------------------- | ---- | ----------- | ------------------- |
@@ -333,28 +371,33 @@ CREATE TABLE device_tokens (
 | POST | `/points/award`（内部） | 内部 | `event_type`, `points`, `biz_id?`, `remark?` | -                             |
 
 ### 消息通知（最小可用）
-| 方法 | 路径                       | 权限 | 请求参数                              | 响应                      |
-| ---- | -------------------------- | ---- | ------------------------------------- | ------------------------- |
-| GET  | `/messages`                | 登录 | `type?`, `page`, `page_size`          | `items`, `page`, `total`  |
-| GET  | `/messages/unread_count`   | 登录 | `type?`                               | `unread_count`            |
-| POST | `/messages/read`           | 登录 | `ids?`, `type?`, `all?`               | `updated`                 |
-| POST | `/messages/award`（内部）  | 内部 | `user_id`, `type`, `title`, `content`, `biz_id?` | -            |
+| 方法 | 路径                      | 权限 | 请求参数                                         | 响应                     |
+| ---- | ------------------------- | ---- | ------------------------------------------------ | ------------------------ |
+| GET  | `/messages`               | 登录 | `type?`, `page`, `page_size`                     | `items`, `page`, `total` |
+| GET  | `/messages/unread_count`  | 登录 | `type?`                                          | `unread_count`           |
+| POST | `/messages/read`          | 登录 | `ids?`, `type?`, `all?`                          | `updated`                |
+| POST | `/messages/award`（内部） | 内部 | `user_id`, `type`, `title`, `content`, `biz_id?` | -                        |
 
 ### 设备推送 Token
-| 方法 | 路径               | 权限 | 请求参数                 | 响应 |
-| ---- | ------------------ | ---- | ------------------------ | ---- |
-| POST | `/device_tokens`   | 登录 | `token`, `platform?`     | -    |
+| 方法 | 路径             | 权限 | 请求参数             | 响应 |
+| ---- | ---------------- | ---- | -------------------- | ---- |
+| POST | `/device_tokens` | 登录 | `token`, `platform?` | -    |
+
+### 文件上传（MinIO）
+| 方法 | 路径       | 权限 | 请求参数                  | 响应         |
+| ---- | ---------- | ---- | ------------------------- | ------------ |
+| POST | `/uploads` | 登录 | `file`(multipart), `dir?` | `key`, `url` |
 
 ### 管理端（MVP）
-| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应     |
-| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | -------- |
-| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course` |
-| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -        |
-| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -        |
-| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`  |
-| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -        |
-| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -        |
-| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -        |
+| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应             |
+| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | ---------------- |
+| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course`         |
+| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -                |
+| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -                |
+| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`          |
+| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -                |
+| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -                |
+| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -                |
 | POST   | `/admin/push`          | 管理员 | `user_id?`, `user_ids?`, `title`, `content`, `type?`, `route?`, `biz_id?`                   | `sent`, `failed` |
 
 ---

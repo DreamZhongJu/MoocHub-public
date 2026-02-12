@@ -126,6 +126,44 @@ class ApiService {
     }
   }
 
+  Future<ApiResponse<T>> postMultipart<T>(
+    String path, {
+    required FormData data,
+    Map<String, dynamic>? headers,
+    T Function(dynamic)? fromJson,
+  }) async {
+    try {
+      Map<String, dynamic>? nextHeaders = headers;
+      final auth = headers?['Authorization'];
+      if (auth is String && auth.isNotEmpty) {
+        nextHeaders = Map<String, dynamic>.from(headers ?? {});
+        nextHeaders['Authorization'] = _normalizeToken(auth);
+      }
+      final response = await _dio.post(
+        path,
+        data: data,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: nextHeaders,
+        ),
+      );
+
+      if (fromJson != null) {
+        return ApiResponse<T>.fromJson(
+          response.data as Map<String, dynamic>,
+          fromJson,
+        );
+      }
+
+      return ApiResponse<T>.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => data as T,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<ApiResponse<T>> put<T>(
     String path, {
     dynamic data,

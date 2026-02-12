@@ -1,10 +1,12 @@
 ﻿import 'dart:async';
 
 import 'package:MoocHub/model/CoursesModel.dart';
+import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
+import 'package:MoocHub/widget/ArticleCard.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -23,6 +25,8 @@ class HomePageState extends State<HomePage>
   final RefreshController _refreshController = RefreshController();
   bool showBackTop = false;
   List<CoursesModel> _recommendedProducts = [];
+  List<ArticleModel> _articleItems = [];
+  List<_HomeFeedItem> _feedItems = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -99,6 +103,47 @@ class HomePageState extends State<HomePage>
           ? now
           : _stringify(json['updated_at']),
     };
+  }
+
+  Map<String, dynamic> _normalizeArticleMap(Map<String, dynamic> json) {
+    final now = DateTime.now().toIso8601String();
+    return {
+      'id': _stringify(json['id']),
+      'user_id': _stringify(json['user_id']),
+      'title': _stringify(json['title']),
+      'summary': _stringify(json['summary']),
+      'cover_url': _stringify(json['cover_url']),
+      'content': _stringify(json['content']),
+      'status': _stringify(json['status']),
+      'view_count': _intify(json['view_count']),
+      'like_count': _intify(json['like_count']),
+      'created_at': _stringify(json['created_at']).isEmpty
+          ? now
+          : _stringify(json['created_at']),
+      'updated_at': _stringify(json['updated_at']).isEmpty
+          ? now
+          : _stringify(json['updated_at']),
+    };
+  }
+
+  List<_HomeFeedItem> _mixFeedItems(
+    List<CoursesModel> courses,
+    List<ArticleModel> articles,
+  ) {
+    final List<_HomeFeedItem> result = [];
+    int i = 0;
+    int j = 0;
+    while (i < courses.length || j < articles.length) {
+      for (var k = 0; k < 2 && i < courses.length; k++) {
+        result.add(_HomeFeedItem.course(courses[i]));
+        i++;
+      }
+      if (j < articles.length) {
+        result.add(_HomeFeedItem.article(articles[j]));
+        j++;
+      }
+    }
+    return result;
   }
 
   Future<void> _loadContinueWatching() async {
@@ -305,22 +350,44 @@ class HomePageState extends State<HomePage>
     }
 
     try {
-      final response = await ApiService().get<Map<String, dynamic>>(
-        '/courses',
-        queryParameters: {
-          'page': _page,
-          'page_size': _pageSize,
-          'sort': 'view_count',
-        },
-        fromJson: (raw) => raw as Map<String, dynamic>,
-      );
+      final results = await Future.wait([
+        ApiService().get<Map<String, dynamic>>(
+          '/courses',
+          queryParameters: {
+            'page': _page,
+            'page_size': _pageSize,
+            'sort': 'view_count',
+          },
+          fromJson: (raw) => raw as Map<String, dynamic>,
+        ),
+        ApiService().get<Map<String, dynamic>>(
+          '/articles',
+          queryParameters: {
+            'page': _page,
+            'page_size': _pageSize,
+            'sort': 'created_at',
+          },
+          fromJson: (raw) => raw as Map<String, dynamic>,
+        ),
+      ]);
 
-      final raw = response.data['courses'];
-      final List<CoursesModel> next = [];
-      if (raw is List) {
-        for (final item in raw) {
+      final coursesRaw = results[0].data['courses'];
+      final articlesRaw = results[1].data['articles'];
+
+      final List<CoursesModel> nextCourses = [];
+      if (coursesRaw is List) {
+        for (final item in coursesRaw) {
           if (item is Map<String, dynamic>) {
-            next.add(CoursesModel.fromJson(_normalizeCourseMap(item)));
+            nextCourses.add(CoursesModel.fromJson(_normalizeCourseMap(item)));
+          }
+        }
+      }
+
+      final List<ArticleModel> nextArticles = [];
+      if (articlesRaw is List) {
+        for (final item in articlesRaw) {
+          if (item is Map<String, dynamic>) {
+            nextArticles.add(ArticleModel.fromJson(_normalizeArticleMap(item)));
           }
         }
       }
@@ -328,14 +395,19 @@ class HomePageState extends State<HomePage>
       if (mounted) {
         setState(() {
           if (reset) {
-            _recommendedProducts = next;
+            _recommendedProducts = nextCourses;
+            _articleItems = nextArticles;
           } else {
-            _recommendedProducts.addAll(next);
+            _recommendedProducts.addAll(nextCourses);
+            _articleItems.addAll(nextArticles);
           }
+          _feedItems = _mixFeedItems(_recommendedProducts, _articleItems);
         });
       }
 
-      if (next.length < _pageSize) {
+      final hasMoreCourses = nextCourses.length == _pageSize;
+      final hasMoreArticles = nextArticles.length == _pageSize;
+      if (!hasMoreCourses && !hasMoreArticles) {
         _hasMore = false;
       } else {
         _hasMore = true;
@@ -346,6 +418,8 @@ class HomePageState extends State<HomePage>
         setState(() {
           if (reset) {
             _recommendedProducts = [];
+            _articleItems = [];
+            _feedItems = [];
           }
         });
       }
@@ -418,7 +492,7 @@ class HomePageState extends State<HomePage>
       ),
       child: const Center(
         child: Text(
-          '暂无推荐视频',
+          '暂无推荐内容',
           style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       ),
@@ -443,6 +517,34 @@ class HomePageState extends State<HomePage>
     );
   }
 
+  Widget _buildArticleItem(ArticleModel article) {
+    return ArticleCard(
+      key: ValueKey('article-${article.id}'),
+      title: article.title,
+      summary: article.summary,
+      coverUrl: article.coverUrl,
+      viewCount: article.viewCount,
+      likeCount: article.likeCount,
+      onTap: () {
+        final id = int.tryParse(article.id);
+        if (id == null) {
+          return;
+        }
+        Navigator.pushNamed(context, '/articleDetail', arguments: id);
+      },
+    );
+  }
+
+  Widget _buildFeedItem(_HomeFeedItem item) {
+    if (item.isArticle && item.article != null) {
+      return _buildArticleItem(item.article!);
+    }
+    if (item.course != null) {
+      return _buildRecommendedItem(item.course!);
+    }
+    return const SizedBox.shrink();
+  }
+
   Widget _buildRecommendedSliver() {
     if (_isLoading) {
       return SliverPadding(
@@ -457,7 +559,7 @@ class HomePageState extends State<HomePage>
       );
     }
 
-    if (_recommendedProducts.isEmpty) {
+    if (_feedItems.isEmpty) {
       return SliverToBoxAdapter(child: _buildEmptyRecommended());
     }
 
@@ -466,9 +568,8 @@ class HomePageState extends State<HomePage>
       sliver: SliverGrid(
         gridDelegate: _gridDelegate(),
         delegate: SliverChildBuilderDelegate(
-          (context, index) =>
-              _buildRecommendedItem(_recommendedProducts[index]),
-          childCount: _recommendedProducts.length,
+          (context, index) => _buildFeedItem(_feedItems[index]),
+          childCount: _feedItems.length,
         ),
       ),
     );
@@ -488,6 +589,10 @@ class HomePageState extends State<HomePage>
                   '首页',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/articles'),
+                icon: const Icon(Icons.article_outlined),
               ),
               IconButton(
                 onPressed: () => Navigator.pushNamed(context, '/messages'),
@@ -719,6 +824,20 @@ class HomePageState extends State<HomePage>
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class _HomeFeedItem {
+  final CoursesModel? course;
+  final ArticleModel? article;
+  bool get isArticle => article != null;
+
+  const _HomeFeedItem._({this.course, this.article});
+
+  factory _HomeFeedItem.course(CoursesModel course) =>
+      _HomeFeedItem._(course: course);
+
+  factory _HomeFeedItem.article(ArticleModel article) =>
+      _HomeFeedItem._(article: article);
 }
 
 class _NoScrollbarBehavior extends MaterialScrollBehavior {

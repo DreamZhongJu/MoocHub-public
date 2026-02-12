@@ -3,6 +3,9 @@ import 'package:MoocHub/pages/FavoritesPage.dart';
 import 'package:MoocHub/pages/LoginPage.dart';
 import 'package:MoocHub/pages/MessagePage.dart';
 import 'package:MoocHub/pages/NotificationSettingsPage.dart';
+import 'package:MoocHub/pages/ArticleDetailPage.dart';
+import 'package:MoocHub/pages/ArticleListPage.dart';
+import 'package:MoocHub/pages/ArticlePublishPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:MoocHub/pages/admin/AdminHomePage.dart';
@@ -93,6 +96,33 @@ var onGenerateRoute = (RouteSettings settings) {
       return MaterialPageRoute(
         builder: (_) => const NotificationSettingsPage(),
       );
+    case '/articles':
+      return MaterialPageRoute(builder: (_) => const ArticleListPage());
+    case '/articleDetail':
+      final args = settings.arguments;
+      int? articleId;
+      if (args is int) {
+        articleId = args;
+      } else if (args is Map<String, dynamic>) {
+        final raw = args['articleId'] ?? args['id'];
+        if (raw is int) {
+          articleId = raw;
+        } else if (raw is String) {
+          articleId = int.tryParse(raw);
+        }
+      }
+      if (articleId == null) {
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('文章ID无效')),
+          ),
+        );
+      }
+      return MaterialPageRoute(
+        builder: (_) => ArticleDetailPage(articleId: articleId!),
+      );
+    case '/articlePublish':
+      return MaterialPageRoute(builder: (_) => const ArticlePublishPage());
     default:
       return null;
   }
