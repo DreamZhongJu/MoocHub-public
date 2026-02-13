@@ -137,7 +137,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       if (_favorite) {
         await _apiService.delete<Map<String, dynamic>>(
           '/favorites/articles/${widget.articleId}',
-          fromJson: (raw) => raw as Map<String, dynamic>,
+          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (mounted) {
           setState(() {
@@ -148,7 +148,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         await _apiService.postForm<Map<String, dynamic>>(
           '/favorites/articles',
           data: {'article_id': widget.articleId.toString()},
-          fromJson: (raw) => raw as Map<String, dynamic>,
+          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (mounted) {
           setState(() {

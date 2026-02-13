@@ -1,6 +1,7 @@
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class ArticleListPage extends StatefulWidget {
@@ -15,17 +16,25 @@ class _ArticleListPageState extends State<ArticleListPage> {
   final ScrollController _scrollController = ScrollController();
   final List<ArticleModel> _articles = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   bool _hasMore = true;
   int _page = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
     _loadArticles(reset: true);
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >
+      if (!_scrollController.hasClients) return;
+      if (_scrollController.position.maxScrollExtent <= 0) return;
+      if (_scrollController.position.userScrollDirection !=
+          ScrollDirection.reverse) {
+        return;
+      }
+      if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 20) {
-        if (_hasMore && !_isLoading) {
+        if (_hasMore && !_isLoading && !_isLoadingMore) {
           _loadArticles();
         }
       }
@@ -39,10 +48,16 @@ class _ArticleListPageState extends State<ArticleListPage> {
   }
 
   Future<void> _loadArticles({bool reset = false}) async {
-    if (_isLoading) return;
-    setState(() {
-      _isLoading = true;
-    });
+    if (_isLoading || _isLoadingMore) return;
+    if (reset) {
+      setState(() {
+        _isLoading = true;
+      });
+    } else {
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
     if (reset) {
       _page = 1;
       _hasMore = true;
@@ -52,7 +67,7 @@ class _ArticleListPageState extends State<ArticleListPage> {
     try {
       final resp = await _apiService.get<Map<String, dynamic>>(
         '/articles',
-        queryParameters: {'page': _page, 'page_size': 10},
+        queryParameters: {'page': _page, 'page_size': _pageSize},
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
       final raw = resp.data['articles'];
@@ -64,10 +79,13 @@ class _ArticleListPageState extends State<ArticleListPage> {
           }
         }
       }
+      final existingIds = _articles.map((item) => item.id).toSet();
+      final filtered =
+          next.where((item) => !existingIds.contains(item.id)).toList();
       setState(() {
-        _articles.addAll(next);
+        _articles.addAll(filtered);
         _page += 1;
-        _hasMore = next.isNotEmpty;
+        _hasMore = filtered.isNotEmpty && filtered.length == _pageSize;
       });
     } catch (_) {
       setState(() {
@@ -77,6 +95,7 @@ class _ArticleListPageState extends State<ArticleListPage> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _isLoadingMore = false;
         });
       }
     }
@@ -88,9 +107,13 @@ class _ArticleListPageState extends State<ArticleListPage> {
       itemCount: 6,
       itemBuilder: (context, index) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: TDSkeleton(
-          animation: TDSkeletonAnimation.gradient,
-          theme: TDSkeletonTheme.paragraph,
+        child: Row(
+          children: [
+            TDSkeleton(
+              animation: TDSkeletonAnimation.gradient,
+              theme: TDSkeletonTheme.paragraph,
+            ),
+          ],
         ),
       ),
     );
@@ -159,7 +182,8 @@ class _ArticleListPageState extends State<ArticleListPage> {
               ? _buildEmpty()
               : ListView.builder(
                   controller: _scrollController,
-                  itemCount: _articles.length + (_hasMore ? 1 : 0),
+                  itemCount:
+                      _articles.length + (_isLoadingMore && _hasMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == _articles.length) {
                       return const Padding(

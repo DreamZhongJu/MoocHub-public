@@ -299,10 +299,12 @@ class _FavoritesPageState extends State<FavoritesPage>
             viewCount: article.viewCount,
             likeCount: article.likeCount,
             onTap: () {
+              final id = int.tryParse(article.id);
+              if (id == null) return;
               Navigator.pushNamed(
                 context,
                 '/articleDetail',
-                arguments: article.id,
+                arguments: id,
               );
             },
           ),

@@ -1,14 +1,20 @@
-﻿import 'package:MoocHub/config/Config.dart';
+﻿import 'dart:async';
+
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tencent_kit/tencent_kit.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int courseId;
@@ -21,6 +27,7 @@ class CourseDetailPage extends StatefulWidget {
 
 class _CourseDetailPageState extends State<CourseDetailPage> {
   final ApiService _apiService = ApiService();
+  final StorageService _storageService = StorageService();
   CoursesModel? _product;
   List<VideoModel> _videos = [];
   bool _isLoading = true;
@@ -28,6 +35,14 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   int _selectedImageIndex = 0;
   List<String> _imageUrls = [];
   bool _disposed = false;
+  bool _favoriteLoading = false;
+  bool _isFavorite = false;
+  int _favoriteCount = 0;
+  bool _loggedIn = false;
+
+  late final String _qqAppId;
+  TencentKitPlatform? _tencent;
+  StreamSubscription<TencentResp>? _qqShareSub;
 
   String _stringify(dynamic value) => value?.toString() ?? '';
 
@@ -61,13 +76,56 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   void initState() {
     super.initState();
+    _bootstrap();
+    _initTencent();
     _loadProductDetail();
   }
 
   @override
   void dispose() {
     _disposed = true;
+    _qqShareSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _bootstrap() async {
+    final token = await _storageService.getUserToken();
+    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    if (mounted) {
+      setState(() {
+        _loggedIn = loggedIn;
+      });
+    }
+    if (loggedIn) {
+      _loadFavoriteState();
+    }
+  }
+
+  void _initTencent() {
+    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '').trim();
+    if (_qqAppId.isNotEmpty && !kIsWeb) {
+      _tencent = TencentKitPlatform.instance;
+      _tencent!.registerApp(appId: _qqAppId);
+      _qqShareSub = _tencent!.respStream().listen(_handleTencentResp);
+    }
+  }
+
+  void _handleTencentResp(TencentResp resp) {
+    if (resp is TencentShareMsgResp && mounted) {
+      if (resp.isSuccessful) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('分享成功')),
+        );
+      } else if (resp.isCancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已取消分享')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(resp.msg ?? '分享失败')),
+        );
+      }
+    }
   }
 
   void _safeSetState(VoidCallback fn) {
@@ -108,8 +166,10 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               _product = product;
               _imageUrls = resolvedImage.isEmpty ? [] : [resolvedImage];
               _videos = videos;
+              _favoriteCount = product.favoriteCount;
               _isLoading = false;
             });
+            _loadFavoriteState();
             return;
           }
         }
@@ -130,6 +190,168 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadFavoriteState() async {
+    if (!_loggedIn) return;
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/favorites',
+        fromJson: (raw) => raw as Map<String, dynamic>,
+      );
+      final coursesRaw = response.data['courses'];
+      if (coursesRaw is List) {
+        final matched = coursesRaw.any((item) {
+          if (item is Map<String, dynamic>) {
+            final id = item['id'];
+            if (id is num) return id.toInt() == widget.courseId;
+            return id?.toString() == widget.courseId.toString();
+          }
+          return false;
+        });
+        if (mounted) {
+          setState(() {
+            _isFavorite = matched;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (!_loggedIn) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请先登录')),
+        );
+      }
+      return;
+    }
+    if (_favoriteLoading) return;
+    final bool next = !_isFavorite;
+    setState(() {
+      _favoriteLoading = true;
+      _isFavorite = next;
+      if (next) {
+        _favoriteCount += 1;
+      } else if (_favoriteCount > 0) {
+        _favoriteCount -= 1;
+      }
+    });
+    try {
+      if (next) {
+        final resp = await _apiService.postForm<Map<String, dynamic>>(
+          '/favorites/courses',
+          data: {'course_id': widget.courseId.toString()},
+          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+        );
+        if (resp.code != 0 && resp.code != 200) {
+          throw Exception(resp.msg);
+        }
+      } else {
+        final resp = await _apiService.delete<Map<String, dynamic>>(
+          '/favorites/courses/${widget.courseId}',
+          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+        );
+        if (resp.code != 0 && resp.code != 200) {
+          throw Exception(resp.msg);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isFavorite = !next;
+          if (next) {
+            if (_favoriteCount > 0) _favoriteCount -= 1;
+          } else {
+            _favoriteCount += 1;
+          }
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _favoriteLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showShareSheet() {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Web 不支持 QQ 分享')),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.chat_bubble_outline),
+                title: const Text('分享给 QQ 好友'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareToQQ(TencentScene.kScene_QQ);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.group_outlined),
+                title: const Text('分享到 QQ 空间'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareToQQ(TencentScene.kScene_QZone);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _shareToQQ(int scene) async {
+    if (_qqAppId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('QQ AppID 未配置（请检查 assets/.env）')),
+      );
+      return;
+    }
+    if (_tencent == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('QQ SDK 未初始化')),
+      );
+      return;
+    }
+    final installed = await _tencent!.isQQInstalled();
+    if (!installed) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('未检测到 QQ 客户端')),
+        );
+      }
+      return;
+    }
+    final product = _product;
+    if (product == null) return;
+
+    final title = product.title;
+    final summary = product.summary;
+    final cover = Config.resolveImage(product.coverUrl);
+    final targetUrl = '${Config.imageHost}/courses/${widget.courseId}';
+
+    await _tencent!.shareWebpage(
+      scene: scene,
+      title: title,
+      summary: summary,
+      imageUri: cover.isEmpty ? null : Uri.parse(cover),
+      targetUrl: targetUrl,
+      appName: 'MoocHub',
+    );
   }
 
   Widget _buildImageGallery() {
@@ -279,7 +501,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             children: [
               _pill('级别', product.level),
               _pill('讲师', product.instructorName),
-              _pill('收藏', product.favoriteCount.toString()),
+              _pill('收藏', _favoriteCount.toString()),
             ],
           ),
           const SizedBox(height: 24),
@@ -461,8 +683,11 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       appBar: AppBar(
         title: const Text('课程详情'),
         actions: [
-          IconButton(icon: const Icon(Icons.share), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.share), onPressed: _showShareSheet),
+          IconButton(
+            icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
+            onPressed: _favoriteLoading ? null : _toggleFavorite,
+          ),
         ],
       ),
       body: DefaultTabController(
@@ -498,4 +723,6 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
   }
 }
+
+
 

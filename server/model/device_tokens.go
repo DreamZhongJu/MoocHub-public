@@ -28,18 +28,40 @@ func UpsertDeviceToken(userID uint, platform, token string) error {
 	}
 
 	dbConn := db.GetDB()
+
+	// 1) If this token already exists, update its owner/platform.
+	var byToken DeviceToken
+	err := dbConn.Where("token = ?", token).First(&byToken).Error
+	if err == nil {
+		updates := map[string]any{}
+		if byToken.UserID != userID {
+			updates["user_id"] = userID
+		}
+		if byToken.Platform != platform {
+			updates["platform"] = platform
+		}
+		if len(updates) == 0 {
+			return nil
+		}
+		return dbConn.Model(&byToken).Updates(updates).Error
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// 2) Otherwise update existing record by user + platform (avoid new rows on refresh).
 	var existing DeviceToken
-	err := dbConn.Where("token = ?", token).First(&existing).Error
+	err = dbConn.Where("user_id = ? AND platform = ?", userID, platform).First(&existing).Error
 	if err == nil {
 		return dbConn.Model(&existing).Updates(map[string]any{
-			"user_id":  userID,
-			"platform": platform,
+			"token": token,
 		}).Error
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
+	// 3) Create new record when no prior record exists.
 	item := DeviceToken{
 		UserID:   userID,
 		Platform: platform,

@@ -330,7 +330,10 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Future<void> _loadRecommendedProducts({required bool reset}) async {
+  Future<void> _loadRecommendedProducts({
+    required bool reset,
+    bool fromLoadMore = false,
+  }) async {
     if (_isLoadingMore) return;
     if (!reset && !_hasMore) return;
 
@@ -432,6 +435,13 @@ class HomePageState extends State<HomePage>
       }
       if (reset) {
         _refreshController.refreshCompleted();
+        _refreshController.resetNoData();
+      } else if (fromLoadMore) {
+        if (_hasMore) {
+          _refreshController.loadComplete();
+        } else {
+          _refreshController.loadNoData();
+        }
       }
     }
   }
@@ -466,9 +476,6 @@ class HomePageState extends State<HomePage>
         setState(() {
           showBackTop = shouldShow;
         });
-      }
-      if (controller.position.extentAfter < 60) {
-        _tryLoadMore();
       }
     });
   }
@@ -782,7 +789,11 @@ class HomePageState extends State<HomePage>
       children: [
         SmartRefresher(
           enablePullDown: true,
-          enablePullUp: false,
+          enablePullUp: true,
+          footer: const ClassicFooter(
+            loadStyle: LoadStyle.ShowWhenLoading,
+            noDataText: '没有更多内容了',
+          ),
           header: const WaterDropHeader(
             complete: Icon(Icons.done, color: Colors.grey),
             waterDropColor: Colors.blue,
@@ -790,6 +801,9 @@ class HomePageState extends State<HomePage>
           controller: _refreshController,
           onRefresh: () async {
             await _loadRecommendedProducts(reset: true);
+          },
+          onLoading: () async {
+            await _loadRecommendedProducts(reset: false, fromLoadMore: true);
           },
           child: ScrollConfiguration(
             behavior: const _NoScrollbarBehavior(),
