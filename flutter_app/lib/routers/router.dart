@@ -10,6 +10,7 @@ import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/SplashPage.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:MoocHub/pages/admin/AdminHomePage.dart';
+import 'package:MoocHub/pages/RegisterPage.dart';
 import 'package:flutter/material.dart';
 import '../pages/tabs/Tabs.dart';
 
@@ -89,6 +90,8 @@ var onGenerateRoute = (RouteSettings settings) {
       );
     case '/login':
       return MaterialPageRoute(builder: (_) => const LoginPage());
+    case '/register':
+      return MaterialPageRoute(builder: (_) => const RegisterPage());
     case '/favorites':
       return MaterialPageRoute(builder: (_) => const FavoritesPage());
     case '/admin':

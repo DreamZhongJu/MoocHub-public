@@ -14,6 +14,10 @@ import 'package:tdesign_flutter/tdesign_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "assets/.env");
+  debugPrint('[dotenv] QQ_APP_ID=${dotenv.env['QQ_APP_ID']}');
+  debugPrint('[dotenv] TENCENT_APP_ID=${dotenv.env['TENCENT_APP_ID']}');
+  debugPrint('[dotenv] BACKEND_IP=${dotenv.env['BACKEND_IP']}');
+  debugPrint('[dotenv] BACKEND_PORT=${dotenv.env['BACKEND_PORT']}');
   if (!kIsWeb) {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

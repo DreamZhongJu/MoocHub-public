@@ -31,7 +31,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _qqAppId = dotenv.env['QQ_APP_ID'] ?? '';
+    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
+        .trim();
+    debugPrint('[login] QQ_APP_ID=$_qqAppId');
     if (_qqAppId.isNotEmpty && !kIsWeb) {
       _tencent = TencentKitPlatform.instance;
       _tencent!.registerApp(appId: _qqAppId);
@@ -51,9 +53,9 @@ class _LoginPageState extends State<LoginPage> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入用户名和密码')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入用户名和密码')));
       return;
     }
 
@@ -87,15 +89,15 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('登录失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('登录失败：$e')));
       }
     } finally {
       if (mounted) {
@@ -114,24 +116,40 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
     if (_qqAppId.isEmpty) {
+      final fromEnv =
+          (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '').trim();
+      debugPrint('[login] reload QQ_APP_ID=$fromEnv');
+      if (fromEnv.isNotEmpty) {
+        _qqAppId = fromEnv;
+        _tencent ??= TencentKitPlatform.instance;
+        _tencent!.registerApp(appId: _qqAppId);
+      }
+    }
+    if (_qqAppId.isEmpty) {
+      final envQq = (dotenv.env['QQ_APP_ID'] ?? '').trim();
+      final envTencent = (dotenv.env['TENCENT_APP_ID'] ?? '').trim();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QQ AppID 未配置')),
+        SnackBar(
+          content: Text(
+            'QQ AppID 未配置（QQ_APP_ID=$envQq, TENCENT_APP_ID=$envTencent）',
+          ),
+        ),
       );
       return;
     }
     if (_tencent == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QQ SDK 未初始化')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('QQ SDK 未初始化')));
       return;
     }
 
     final installed = await _tencent!.isQQInstalled();
     if (!installed) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未检测到 QQ 客户端')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('未检测到 QQ 客户端')));
       }
       return;
     }
@@ -154,9 +172,9 @@ class _LoginPageState extends State<LoginPage> {
         if (lower.contains('permission') || message.contains('授权')) {
           message = '未授权，暂时无法使用QQ登录及分享等功能';
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
         setState(() {
           _qqLoading = false;
         });
@@ -167,10 +185,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final result = await _apiService.postForm<Map<String, dynamic>>(
         '/auth/qq/sdk_login',
-        data: {
-          'access_token': resp.accessToken,
-          'openid': resp.openid,
-        },
+        data: {'access_token': resp.accessToken, 'openid': resp.openid},
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
 
@@ -193,15 +208,15 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('QQ 登录失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('QQ 登录失败：$e')));
       }
     } finally {
       if (mounted) {
@@ -237,29 +252,43 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('登录'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: (_qqLoading || kIsWeb) ? null : _qqLogin,
-                icon: Image.asset(
-                  'assets/icons/qq.png',
-                  width: 22,
-                  height: 22,
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _submit,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('登录'),
+                  ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final result = await Navigator.pushNamed(
+                        context,
+                        '/register',
+                      );
+                      if (result == true && mounted) {
+                        Navigator.of(context).pop(true);
+                      }
+                    },
+                    child: const Text('注册'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (_qqLoading || kIsWeb) ? null : _qqLogin,
+                icon: Image.asset('assets/icons/qq.png', width: 20, height: 20),
                 label: _qqLoading
                     ? const SizedBox(
                         width: 18,
@@ -267,6 +296,14 @@ class _LoginPageState extends State<LoginPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('QQ 登录'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF12B7F5),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ),
           ],
