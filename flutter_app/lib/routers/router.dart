@@ -8,6 +8,7 @@ import 'package:MoocHub/pages/ChatDetailPage.dart';
 import 'package:MoocHub/pages/ArticleDetailPage.dart';
 import 'package:MoocHub/pages/ArticleListPage.dart';
 import 'package:MoocHub/pages/ArticlePublishPage.dart';
+import 'package:MoocHub/pages/PointsDetailPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/SplashPage.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
@@ -136,6 +137,8 @@ var onGenerateRoute = (RouteSettings settings) {
       );
     case '/articles':
       return MaterialPageRoute(builder: (_) => const ArticleListPage());
+    case '/pointsDetail':
+      return MaterialPageRoute(builder: (_) => const PointsDetailPage());
     case '/articleDetail':
       final args = settings.arguments;
       int? articleId;

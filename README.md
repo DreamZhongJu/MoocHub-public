@@ -409,6 +409,20 @@ CREATE TABLE favorite_articles (
 | POST | `/messages/read`          | 登录 | `ids?`, `type?`, `all?`                          | `updated`                |
 | POST | `/messages/award`（内部） | 内部 | `user_id`, `type`, `title`, `content`, `biz_id?` | -                        |
 
+### 实时聊天（私信/群聊，MVP）
+> 先执行建表脚本：`server/scripts/chat_schema.sql`
+
+| 方法 | 路径                      | 权限 | 请求参数                                                     | 响应 |
+| ---- | ------------------------- | ---- | ------------------------------------------------------------ | ---- |
+| GET  | `/chat/conversations`     | 登录 | `page`, `page_size`                                          | 会话列表（含 `unread_count`） |
+| POST | `/chat/private/start`     | 登录 | `target_user_id`                                             | 私聊会话 |
+| POST | `/chat/groups`            | 登录 | `name`, `avatar_url?`, `member_ids[]`                        | 群聊会话 |
+| POST | `/chat/groups/{id}/members` | 登录 | `user_ids[]`                                                 | - |
+| GET  | `/chat/messages`          | 登录 | `conversation_id`, `page`, `page_size`                       | 消息列表 |
+| POST | `/chat/messages`          | 登录 | `conversation_id`, `msg_type?`(默认 `text`), `content`, `extra_json?` | 新消息 |
+| POST | `/chat/read`              | 登录 | `conversation_id`, `last_message_id`                         | - |
+| GET  | `/chat/unread_count`      | 登录 | -                                                            | 总未读 |
+
 ### 设备推送 Token
 | 方法 | 路径             | 权限 | 请求参数             | 响应 |
 | ---- | ---------------- | ---- | -------------------- | ---- |

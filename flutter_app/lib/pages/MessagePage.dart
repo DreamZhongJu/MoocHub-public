@@ -16,12 +16,9 @@ class _MessagePageState extends State<MessagePage> {
   final StorageService _storageService = StorageService();
 
   bool _loadingSystem = true;
-  bool _loadingDM = true;
   bool _errorSystem = false;
-  bool _errorDM = false;
   int _unreadCount = 0;
   List<_MessageItem> _systemItems = [];
-  List<_MessageItem> _dmItems = [];
 
   @override
   void initState() {
@@ -33,7 +30,6 @@ class _MessagePageState extends State<MessagePage> {
     await Future.wait([
       _loadUnread(),
       _loadMessages(type: 'system'),
-      _loadMessages(type: 'dm'),
     ]);
   }
 
@@ -57,16 +53,13 @@ class _MessagePageState extends State<MessagePage> {
 
   Future<void> _loadMessages({required String type}) async {
     if (mounted) {
-      setState(() {
-        if (type == 'system') {
-          _loadingSystem = true;
-          _errorSystem = false;
-        } else {
-          _loadingDM = true;
-          _errorDM = false;
-        }
-      });
-    }
+        setState(() {
+          if (type == 'system') {
+            _loadingSystem = true;
+            _errorSystem = false;
+          }
+        });
+      }
 
     try {
       final response = await _apiService.get<Map<String, dynamic>>(
@@ -88,9 +81,6 @@ class _MessagePageState extends State<MessagePage> {
           if (type == 'system') {
             _systemItems = items;
             _loadingSystem = false;
-          } else {
-            _dmItems = items;
-            _loadingDM = false;
           }
         });
       }
@@ -100,9 +90,6 @@ class _MessagePageState extends State<MessagePage> {
           if (type == 'system') {
             _errorSystem = true;
             _loadingSystem = false;
-          } else {
-            _errorDM = true;
-            _loadingDM = false;
           }
         });
       }
@@ -120,9 +107,6 @@ class _MessagePageState extends State<MessagePage> {
         setState(() {
           _unreadCount = 0;
           for (final item in _systemItems) {
-            item.isRead = true;
-          }
-          for (final item in _dmItems) {
             item.isRead = true;
           }
         });
@@ -222,204 +206,6 @@ class _MessagePageState extends State<MessagePage> {
     );
   }
 
-  Widget _buildChatItem(_ConversationItem item, {bool showBottom = true}) {
-    return InkWell(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/chatDetail',
-          arguments: {
-            'title': item.title,
-            'conversationId': item.id,
-            'isGroup': item.isGroup,
-          },
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x11000000)),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: TDImage(
-                imgUrl: item.avatarUrl,
-                width: 36,
-                height: 36,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        item.time,
-                        style:
-                            const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.preview,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      if (item.unread > 0)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            item.unread > 99 ? '99+' : '${item.unread}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<_ConversationItem> _buildConversationItems() {
-    final List<_ConversationItem> items = [
-      const _ConversationItem(
-        id: 'group-frontend',
-        title: 'MoocHub 前端组',
-        preview: 'UI 我今晚改完。',
-        time: '20:12',
-        unread: 5,
-        avatarUrl: 'https://picsum.photos/seed/moochub_group1/80',
-        isGroup: true,
-      ),
-      const _ConversationItem(
-        id: 'group-design',
-        title: '毕业设计讨论群',
-        preview: '下周五答辩流程已整理。',
-        time: '18:40',
-        unread: 0,
-        avatarUrl: 'https://picsum.photos/seed/moochub_group2/80',
-        isGroup: true,
-      ),
-    ];
-
-    for (final item in _dmItems) {
-      items.add(
-        _ConversationItem(
-          id: item.id,
-          title: item.title,
-          preview: item.content,
-          time: item.displayTime,
-          unread: item.isRead ? 0 : 1,
-          avatarUrl: 'https://picsum.photos/seed/${item.id}/80',
-          isGroup: false,
-        ),
-      );
-    }
-    return items;
-  }
-
-  Widget _buildConversationList() {
-    if (_loadingDM) {
-      return _buildCard(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                TDSkeleton(
-                  animation: TDSkeletonAnimation.gradient,
-                  theme: TDSkeletonTheme.paragraph,
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-    if (_errorDM) {
-      return _buildCard(
-        children: const [
-          TDCell(
-            title: '\u4f1a\u8bdd\u5217\u8868',
-            description: '\u52a0\u8f7d\u5931\u8d25\uff0c\u70b9\u51fb\u91cd\u8bd5',
-            leftIcon: TDIcons.error_circle,
-            arrow: false,
-            showBottomBorder: false,
-          ),
-        ],
-      );
-    }
-
-    final items = _buildConversationItems();
-    if (items.isEmpty) {
-      return _buildCard(
-        children: const [
-          TDCell(
-            title: '\u4f1a\u8bdd\u5217\u8868',
-            description: '\u6682\u65e0\u6d88\u606f',
-            leftIcon: TDIcons.user_circle,
-            arrow: false,
-            showBottomBorder: false,
-          ),
-        ],
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            _buildChatItem(items[i]),
-            if (i != items.length - 1) const SizedBox(height: 10),
-          ],
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -450,9 +236,6 @@ class _MessagePageState extends State<MessagePage> {
               const SizedBox(height: 8),
               _buildSectionTitle('\u7cfb\u7edf\u901a\u77e5'),
               _buildSystemNotice(),
-              const SizedBox(height: 12),
-              _buildSectionTitle('\u4f1a\u8bdd\u5217\u8868'),
-              _buildConversationList(),
               const SizedBox(height: 16),
             ],
           );
@@ -494,24 +277,4 @@ class _MessageItem {
     if (createdAt.isEmpty) return '';
     return createdAt.length > 10 ? createdAt.substring(0, 10) : createdAt;
   }
-}
-
-class _ConversationItem {
-  final String id;
-  final String title;
-  final String preview;
-  final String time;
-  final int unread;
-  final String avatarUrl;
-  final bool isGroup;
-
-  const _ConversationItem({
-    required this.id,
-    required this.title,
-    required this.preview,
-    required this.time,
-    required this.unread,
-    required this.avatarUrl,
-    required this.isGroup,
-  });
 }

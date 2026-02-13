@@ -22,3 +22,4 @@ flutter_app/android/keystore/
 flutter_app/android/app/google-services.json
 server/secrets/
 server/secrets/*
+.gocache/*

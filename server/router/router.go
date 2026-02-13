@@ -84,6 +84,17 @@ func Router() *gin.Engine {
 		user.GET("/messages/unread_count", middleware.AuthMiddleware(), controllers.MessageController{}.GetUnreadCount)
 		user.POST("/messages/read", middleware.AuthMiddleware(), controllers.MessageController{}.MarkRead)
 		user.POST("/messages/award", middleware.InternalMiddleware(), controllers.MessageController{}.AwardMessage)
+		chat := user.Group("/chat", middleware.AuthMiddleware())
+		{
+			chat.GET("/conversations", controllers.ChatController{}.GetConversations)
+			chat.POST("/private/start", controllers.ChatController{}.CreatePrivateConversation)
+			chat.POST("/groups", controllers.ChatController{}.CreateGroupConversation)
+			chat.POST("/groups/:id/members", controllers.ChatController{}.AddGroupMembers)
+			chat.GET("/messages", controllers.ChatController{}.GetMessages)
+			chat.POST("/messages", controllers.ChatController{}.SendMessage)
+			chat.POST("/read", controllers.ChatController{}.MarkRead)
+			chat.GET("/unread_count", controllers.ChatController{}.GetUnreadCount)
+		}
 		user.POST("/progress", middleware.AuthMiddleware(), controllers.ProgressController{}.UpsertProgress)
 		user.GET("/progress/:video_id", middleware.AuthMiddleware(), controllers.ProgressController{}.GetProgress)
 		user.GET("/progress/latest", middleware.AuthMiddleware(), controllers.ProgressController{}.GetLatestProgress)
