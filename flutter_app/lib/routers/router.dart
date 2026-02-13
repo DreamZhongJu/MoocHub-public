@@ -3,6 +3,8 @@ import 'package:MoocHub/pages/FavoritesPage.dart';
 import 'package:MoocHub/pages/LoginPage.dart';
 import 'package:MoocHub/pages/MessagePage.dart';
 import 'package:MoocHub/pages/NotificationSettingsPage.dart';
+import 'package:MoocHub/pages/ChatHomePage.dart';
+import 'package:MoocHub/pages/ChatDetailPage.dart';
 import 'package:MoocHub/pages/ArticleDetailPage.dart';
 import 'package:MoocHub/pages/ArticleListPage.dart';
 import 'package:MoocHub/pages/ArticlePublishPage.dart';
@@ -98,6 +100,36 @@ var onGenerateRoute = (RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const AdminHomePage());
     case '/messages':
       return MaterialPageRoute(builder: (_) => const MessagePage());
+    case '/chat':
+      return MaterialPageRoute(builder: (_) => const ChatHomePage());
+    case '/chatDetail':
+      final args = settings.arguments;
+      String title = '聊天';
+      String conversationId = '';
+      bool isGroup = false;
+      if (args is Map<String, dynamic>) {
+        final rawTitle = args['title'];
+        if (rawTitle is String && rawTitle.isNotEmpty) {
+          title = rawTitle;
+        }
+        final rawId = args['conversationId'] ?? args['id'];
+        if (rawId != null) {
+          conversationId = rawId.toString();
+        }
+        final rawGroup = args['isGroup'];
+        if (rawGroup is bool) {
+          isGroup = rawGroup;
+        } else if (rawGroup is String) {
+          isGroup = rawGroup.toLowerCase() == 'true';
+        }
+      }
+      return MaterialPageRoute(
+        builder: (_) => ChatDetailPage(
+          conversationId: conversationId,
+          title: title,
+          isGroup: isGroup,
+        ),
+      );
     case '/notificationSettings':
       return MaterialPageRoute(
         builder: (_) => const NotificationSettingsPage(),
