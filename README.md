@@ -148,6 +148,14 @@ docker run -d --name minio \
 - `view_count`, `like_count`
 - `created_at`, `updated_at`
 
+7.1) `favorite_articles`
+- `id` (PK)
+- `user_id` (FK -> users.id)
+- `article_id` (FK -> articles.id)
+- `created_at`
+- `is_deleted` (软删除)
+- UNIQUE(`user_id`, `article_id`)
+
 #### SQL（messages）
 ```sql
 CREATE TABLE messages (
@@ -203,6 +211,25 @@ CREATE TABLE articles (
   INDEX idx_status_created (status, created_at),
   CONSTRAINT fk_articles_user
     FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+#### SQL（favorite_articles）
+```sql
+CREATE TABLE favorite_articles (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  article_id BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_fav_articles_user_article (user_id, article_id),
+  INDEX idx_fav_articles_article (article_id),
+  CONSTRAINT fk_fav_articles_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_fav_articles_article
+    FOREIGN KEY (article_id) REFERENCES articles(id)
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 ```
@@ -335,18 +362,22 @@ CREATE TABLE articles (
 ### 文章
 | 方法 | 路径             | 权限 | 请求参数                                    | 响应      |
 | ---- | ---------------- | ---- | ------------------------------------------- | --------- |
-| GET  | `/articles`      | 无   | `sort?`, `page`, `page_size`                | 文章列表  |
-| GET  | `/articles/{id}` | 无   | -                                           | 文章详情  |
-| POST | `/articles`      | 登录 | `title`, `summary`, `cover_url?`, `content` | `article` |
+| GET  | `/articles`           | 无   | `sort?`, `page`, `page_size`                | 文章列表  |
+| GET  | `/articles/{id}`      | 无   | -                                           | 文章详情  |
+| POST | `/articles/{id}/view` | 无   | -                                           | 阅读 +1   |
+| POST | `/articles/{id}/like` | 登录 | -                                           | 点赞 +1   |
+| POST | `/articles`           | 登录 | `title`, `summary`, `cover_url?`, `content` | `article` |
 
 ### 收藏
 | 方法   | 路径                             | 权限 | 请求参数    | 响应                |
 | ------ | -------------------------------- | ---- | ----------- | ------------------- |
 | POST   | `/favorites/courses`             | 登录 | `course_id` | -                   |
 | DELETE | `/favorites/courses/{course_id}` | 登录 | -           | -                   |
-| POST   | `/favorites/videos`              | 登录 | `video_id`  | -                   |
-| DELETE | `/favorites/videos/{video_id}`   | 登录 | -           | -                   |
-| GET    | `/favorites`                     | 登录 | -           | 收藏课程 + 收藏视频 |
+| POST   | `/favorites/videos`              | 登录 | `video_id`   | -                             |
+| DELETE | `/favorites/videos/{video_id}`   | 登录 | -            | -                             |
+| POST   | `/favorites/articles`            | 登录 | `article_id` | -                             |
+| DELETE | `/favorites/articles/{article_id}` | 登录 | -          | -                             |
+| GET    | `/favorites`                     | 登录 | -            | 收藏课程 + 收藏视频 + 收藏文章 |
 
 ### 评论（MongoDB）
 | 方法 | 路径                  | 权限 | 请求参数                                        | 响应         |

@@ -1,7 +1,9 @@
-﻿import 'package:MoocHub/model/CoursesModel.dart';
+﻿import 'package:MoocHub/model/ArticleModel.dart';
+import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
+import 'package:MoocHub/widget/ArticleCard.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
@@ -23,11 +25,12 @@ class _FavoritesPageState extends State<FavoritesPage>
   bool _loggedIn = false;
   List<CoursesModel> _courses = [];
   List<VideoModel> _videos = [];
+  List<ArticleModel> _articles = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _bootstrap();
   }
 
@@ -103,6 +106,7 @@ class _FavoritesPageState extends State<FavoritesPage>
 
       final coursesRaw = response.data['courses'];
       final videosRaw = response.data['videos'];
+      final articlesRaw = response.data['articles'];
 
       final List<CoursesModel> nextCourses = [];
       if (coursesRaw is List) {
@@ -122,10 +126,20 @@ class _FavoritesPageState extends State<FavoritesPage>
         }
       }
 
+      final List<ArticleModel> nextArticles = [];
+      if (articlesRaw is List) {
+        for (final item in articlesRaw) {
+          if (item is Map<String, dynamic>) {
+            nextArticles.add(ArticleModel.fromJson(item));
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           _courses = nextCourses;
           _videos = nextVideos;
+          _articles = nextArticles;
         });
       }
     } catch (_) {
@@ -133,6 +147,7 @@ class _FavoritesPageState extends State<FavoritesPage>
         setState(() {
           _courses = [];
           _videos = [];
+          _articles = [];
         });
       }
     } finally {
@@ -255,6 +270,47 @@ class _FavoritesPageState extends State<FavoritesPage>
     );
   }
 
+  Widget _buildArticles() {
+    if (_loading) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 6,
+        itemBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: CoursesCardSkeleton(),
+        ),
+      );
+    }
+    if (_articles.isEmpty) {
+      return _buildEmpty('暂无收藏文章');
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _articles.length,
+      itemBuilder: (context, index) {
+        final article = _articles[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ArticleCard(
+            title: article.title,
+            summary: article.summary,
+            coverUrl: article.coverUrl,
+            viewCount: article.viewCount,
+            likeCount: article.likeCount,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/articleDetail',
+                arguments: article.id,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildLoginRequired() {
     return Center(
       child: Column(
@@ -286,6 +342,7 @@ class _FavoritesPageState extends State<FavoritesPage>
           tabs: const [
             Tab(text: '课程'),
             Tab(text: '视频'),
+            Tab(text: '文章'),
           ],
         ),
       ),
@@ -296,6 +353,7 @@ class _FavoritesPageState extends State<FavoritesPage>
               children: [
                 _buildCourses(),
                 _buildVideos(),
+                _buildArticles(),
               ],
             ),
     );

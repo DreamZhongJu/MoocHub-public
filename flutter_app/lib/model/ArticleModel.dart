@@ -27,12 +27,19 @@ class ArticleModel {
     required this.updatedAt,
   });
 
+  static String _normalizeCover(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    final resolved = Config.resolveImage(raw);
+    if (resolved.isEmpty) return '';
+    return resolved;
+  }
+
   ArticleModel.fromJson(Map<String, dynamic> json)
       : id = json['id']?.toString() ?? '',
         userId = json['user_id']?.toString() ?? '',
         title = json['title']?.toString() ?? '',
         summary = json['summary']?.toString() ?? '',
-        coverUrl = Config.resolveImage(json['cover_url']?.toString()),
+        coverUrl = _normalizeCover(json['cover_url']?.toString()),
         content = json['content']?.toString() ?? '',
         status = json['status']?.toString() ?? '',
         viewCount = (json['view_count'] is num)

@@ -71,6 +71,8 @@ func Router() *gin.Engine {
 		user.GET("/courses/:id", controllers.CoursesController{}.GetCourseDetails)
 		user.GET("/articles", controllers.ArticlesController{}.GetArticles)
 		user.GET("/articles/:id", controllers.ArticlesController{}.GetArticleDetail)
+		user.POST("/articles/:id/view", controllers.ArticlesController{}.ViewArticle)
+		user.POST("/articles/:id/like", middleware.AuthMiddleware(), controllers.ArticlesController{}.LikeArticle)
 		user.POST("/articles", middleware.AuthMiddleware(), controllers.ArticlesController{}.CreateArticle)
 		user.POST("/uploads", middleware.AuthMiddleware(), controllers.UploadController{}.Upload)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)
@@ -96,6 +98,8 @@ func Router() *gin.Engine {
 			favorite.DELETE("/courses/:id", controllers.FavoriteController{}.DeleteFavorite)
 			favorite.POST("/videos", controllers.FavoriteController{}.ToggleFavoriteVideo)
 			favorite.DELETE("/videos/:id", controllers.FavoriteController{}.DeleteFavoriteVideo)
+			favorite.POST("/articles", controllers.FavoriteController{}.ToggleFavoriteArticle)
+			favorite.DELETE("/articles/:id", controllers.FavoriteController{}.DeleteFavoriteArticle)
 			favorite.GET("", controllers.FavoriteController{}.GetFavorites)
 		}
 		admin := user.Group("/admin", middleware.AdminMiddleware())

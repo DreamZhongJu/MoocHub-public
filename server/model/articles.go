@@ -4,6 +4,8 @@ import (
 	"MOOCHUB-server/db"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Article struct {
@@ -71,4 +73,26 @@ func UpdateArticle(id int64, updates map[string]any) error {
 
 func DeleteArticle(id int64) error {
 	return db.GetDB().Where("id = ?", id).Delete(&Article{}).Error
+}
+
+func IncrementArticleViewCount(articleID int64) error {
+	return db.GetDB().Model(&Article{}).
+		Where("id = ?", articleID).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}
+
+func IncrementArticleLikeCount(articleID int64) (int64, error) {
+	if err := db.GetDB().Model(&Article{}).
+		Where("id = ?", articleID).
+		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error; err != nil {
+		return 0, err
+	}
+	var likeCount int64
+	if err := db.GetDB().Model(&Article{}).
+		Select("like_count").
+		Where("id = ?", articleID).
+		Scan(&likeCount).Error; err != nil {
+		return 0, err
+	}
+	return likeCount, nil
 }

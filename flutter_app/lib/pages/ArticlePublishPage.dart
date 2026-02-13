@@ -21,6 +21,7 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
   bool _submitting = false;
   bool _uploadingCover = false;
   String _coverUrl = '';
+  String _coverKey = '';
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -30,6 +31,27 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
     _coverCtrl.dispose();
     _contentCtrl.dispose();
     super.dispose();
+  }
+
+  String _normalizeCoverInput(String input) {
+    if (input.isEmpty) return '';
+    if (input.startsWith('minio://')) return input;
+    if (input.startsWith('http://') || input.startsWith('https://')) {
+      try {
+        final uri = Uri.parse(input);
+        final segments =
+            uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+        if (segments.length >= 2) {
+          return segments.sublist(1).join('/');
+        }
+        if (segments.length == 1) {
+          return segments.first;
+        }
+      } catch (_) {
+        return input;
+      }
+    }
+    return input;
   }
 
   Future<void> _pickCover() async {
@@ -52,11 +74,13 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
         data: form,
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
+      final key = resp.data['key']?.toString() ?? '';
       final url = resp.data['url']?.toString() ?? '';
-      if (url.isNotEmpty && mounted) {
+      if (key.isNotEmpty && mounted) {
         setState(() {
+          _coverKey = key;
           _coverUrl = url;
-          _coverCtrl.text = url;
+          _coverCtrl.text = key;
         });
       }
     } catch (_) {
@@ -76,12 +100,16 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
+      final coverInput = _coverCtrl.text.trim();
+      final coverKey = _coverKey.isNotEmpty
+          ? _coverKey
+          : _normalizeCoverInput(coverInput);
       final resp = await ApiService().postForm<Map<String, dynamic>>(
         '/articles',
         data: {
           'title': _titleCtrl.text.trim(),
           'summary': _summaryCtrl.text.trim(),
-          'cover_url': _coverCtrl.text.trim(),
+          'cover_url': coverKey,
           'content': _contentCtrl.text.trim(),
         },
         fromJson: (raw) => raw as Map<String, dynamic>,
