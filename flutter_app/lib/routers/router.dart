@@ -7,6 +7,7 @@ import 'package:MoocHub/pages/ArticleDetailPage.dart';
 import 'package:MoocHub/pages/ArticleListPage.dart';
 import 'package:MoocHub/pages/ArticlePublishPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
+import 'package:MoocHub/pages/SplashPage.dart';
 import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:MoocHub/pages/admin/AdminHomePage.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ import '../pages/tabs/Tabs.dart';
 // 路由配置
 var onGenerateRoute = (RouteSettings settings) {
   switch (settings.name) {
+    case '/splash':
+      return MaterialPageRoute(builder: (_) => const SplashPage());
     case '/':
       return MaterialPageRoute(builder: (_) => const Tabs());
     case '/courseDetail':

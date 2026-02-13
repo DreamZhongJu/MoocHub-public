@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/splash',
       onGenerateRoute: onGenerateRoute,
       navigatorObservers: [routeObserver],
     );
