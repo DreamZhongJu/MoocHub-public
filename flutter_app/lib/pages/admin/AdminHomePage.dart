@@ -1,6 +1,7 @@
-﻿import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
+import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -44,9 +45,7 @@ class _AdminHomePageState extends State<AdminHomePage>
   @override
   Widget build(BuildContext context) {
     if (_loadingRole) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!_isAdmin) {
@@ -223,7 +222,9 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
                 ),
                 TextField(
                   controller: statusCtrl,
-                  decoration: const InputDecoration(labelText: '状态(如 published)'),
+                  decoration: const InputDecoration(
+                    labelText: '状态(如 published)',
+                  ),
                 ),
               ],
             ),
@@ -247,7 +248,7 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
                 try {
                   final resp = isEdit
                       ? await _apiService.putForm<Map<String, dynamic>>(
-                          '/admin/courses/${initial?['id']}',
+                          '/admin/courses/${initial['id']}',
                           data: data,
                           fromJson: (raw) => raw is Map<String, dynamic>
                               ? raw
@@ -268,9 +269,9 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('提交失败：$e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('提交失败：$e')));
                   }
                 }
               },
@@ -309,9 +310,8 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
     try {
       final resp = await _apiService.delete<Map<String, dynamic>>(
         '/admin/courses/$id',
-        fromJson: (raw) => raw is Map<String, dynamic>
-            ? raw
-            : <String, dynamic>{},
+        fromJson: (raw) =>
+            raw is Map<String, dynamic> ? raw : <String, dynamic>{},
       );
       if (resp.code != 0 && resp.code != 200) {
         throw Exception(resp.msg);
@@ -319,11 +319,93 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('删除失败：$e')));
       }
     }
+  }
+
+  List<Map<String, dynamic>> _courseTableData() {
+    return _items
+        .map(
+          (item) => <String, dynamic>{
+            'id': '${item['id'] ?? '-'}',
+            'title': item['title']?.toString() ?? '未命名课程',
+            'category': '${item['category_id'] ?? '-'}',
+            'instructor': item['instructor_name']?.toString() ?? '-',
+            'status': item['status']?.toString() ?? '-',
+          },
+        )
+        .toList();
+  }
+
+  Widget _buildCourseTable() {
+    final data = _courseTableData();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: TDTable(
+              width: constraints.maxWidth,
+              bordered: true,
+              stripe: true,
+              columns: [
+                TDTableCol(
+                  title: 'ID',
+                  colKey: 'id',
+                  width: 82,
+                  fixed: TDTableColFixed.left,
+                ),
+                TDTableCol(title: '标题', colKey: 'title', width: 180),
+                TDTableCol(title: '分类', colKey: 'category', width: 90),
+                TDTableCol(title: '讲师', colKey: 'instructor', width: 120),
+                TDTableCol(title: '状态', colKey: 'status', width: 100),
+                TDTableCol(
+                  title: '操作',
+                  colKey: 'action',
+                  width: 128,
+                  cellBuilder: (context, index) {
+                    final item = _items[index];
+                    final id = item['id'];
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => _openEditor(initial: item),
+                          child: TDText(
+                            '编辑',
+                            style: TextStyle(
+                              color: TDTheme.of(context).brandNormalColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => id is num
+                              ? _deleteCourse(id.toInt())
+                              : _showToast('无效课程ID'),
+                          child: TDText(
+                            '删除',
+                            style: TextStyle(
+                              color: TDTheme.of(context).errorNormalColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+              data: data,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -333,10 +415,7 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
     }
     if (_error) {
       return Center(
-        child: TextButton(
-          onPressed: _load,
-          child: const Text('加载失败，点击重试'),
-        ),
+        child: TextButton(onPressed: _load, child: const Text('加载失败，点击重试')),
       );
     }
     return Column(
@@ -347,24 +426,9 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
           onRefresh: _load,
         ),
         Expanded(
-          child: ListView.separated(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              final id = item['id'];
-              return ListTile(
-                title: Text(item['title']?.toString() ?? '未命名课程'),
-                subtitle: Text('ID: ${id ?? '-'}'),
-                trailing: _AdminActions(
-                  onEdit: () => _openEditor(initial: item),
-                  onDelete: id is num
-                      ? () => _deleteCourse(id.toInt())
-                      : () => _showToast('无效课程ID'),
-                ),
-              );
-            },
+            child: _buildCourseTable(),
           ),
         ),
       ],
@@ -560,7 +624,7 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
                 try {
                   final resp = isEdit
                       ? await _apiService.putForm<Map<String, dynamic>>(
-                          '/admin/videos/${initial?['id']}',
+                          '/admin/videos/${initial['id']}',
                           data: data,
                           fromJson: (raw) => raw is Map<String, dynamic>
                               ? raw
@@ -581,9 +645,9 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('提交失败：$e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('提交失败：$e')));
                   }
                 }
               },
@@ -622,9 +686,8 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
     try {
       final resp = await _apiService.delete<Map<String, dynamic>>(
         '/admin/videos/$id',
-        fromJson: (raw) => raw is Map<String, dynamic>
-            ? raw
-            : <String, dynamic>{},
+        fromJson: (raw) =>
+            raw is Map<String, dynamic> ? raw : <String, dynamic>{},
       );
       if (resp.code != 0 && resp.code != 200) {
         throw Exception(resp.msg);
@@ -632,11 +695,91 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
       await _loadByCourse();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('删除失败：$e')));
       }
     }
+  }
+
+  List<Map<String, dynamic>> _videoTableData() {
+    return _videos
+        .map(
+          (item) => <String, dynamic>{
+            'id': '${item['id'] ?? '-'}',
+            'title': item['title']?.toString() ?? '未命名视频',
+            'sort_order': '${item['sort_order'] ?? '-'}',
+            'duration': '${item['duration_sec'] ?? '-'}',
+          },
+        )
+        .toList();
+  }
+
+  Widget _buildVideoTable() {
+    final data = _videoTableData();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: TDTable(
+              width: constraints.maxWidth,
+              bordered: true,
+              stripe: true,
+              columns: [
+                TDTableCol(
+                  title: 'ID',
+                  colKey: 'id',
+                  width: 82,
+                  fixed: TDTableColFixed.left,
+                ),
+                TDTableCol(title: '标题', colKey: 'title', width: 200),
+                TDTableCol(title: '排序', colKey: 'sort_order', width: 90),
+                TDTableCol(title: '时长(秒)', colKey: 'duration', width: 100),
+                TDTableCol(
+                  title: '操作',
+                  colKey: 'action',
+                  width: 128,
+                  cellBuilder: (context, index) {
+                    final item = _videos[index];
+                    final id = item['id'];
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => _openVideoEditor(initial: item),
+                          child: TDText(
+                            '编辑',
+                            style: TextStyle(
+                              color: TDTheme.of(context).brandNormalColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => id is num
+                              ? _deleteVideo(id.toInt())
+                              : _toast('无效视频ID'),
+                          child: TDText(
+                            '删除',
+                            style: TextStyle(
+                              color: TDTheme.of(context).errorNormalColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+              data: data,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -658,10 +801,7 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _loadByCourse,
-                child: const Text('查询'),
-              ),
+              ElevatedButton(onPressed: _loadByCourse, child: const Text('查询')),
             ],
           ),
         ),
@@ -691,24 +831,9 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
           )
         else
           Expanded(
-            child: ListView.separated(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              itemCount: _videos.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final item = _videos[index];
-                final id = item['id'];
-                return ListTile(
-                  title: Text(item['title']?.toString() ?? '未命名视频'),
-                  subtitle: Text('ID: ${id ?? '-'} | 顺序: ${item['sort_order'] ?? '-'}'),
-                  trailing: _AdminActions(
-                    onEdit: () => _openVideoEditor(initial: item),
-                    onDelete: id is num
-                        ? () => _deleteVideo(id.toInt())
-                        : () => _toast('无效视频ID'),
-                  ),
-                );
-              },
+              child: _buildVideoTable(),
             ),
           ),
       ],
@@ -781,6 +906,46 @@ class _AdminCategoriesTabState extends State<_AdminCategoriesTab> {
     }
   }
 
+  List<Map<String, dynamic>> _categoryTableData() {
+    return _items
+        .map(
+          (item) => <String, dynamic>{
+            'id': '${item['id'] ?? '-'}',
+            'name': item['name']?.toString() ?? '未命名分类',
+          },
+        )
+        .toList();
+  }
+
+  Widget _buildCategoryTable() {
+    final data = _categoryTableData();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: TDTable(
+              width: constraints.maxWidth,
+              bordered: true,
+              stripe: true,
+              columns: [
+                TDTableCol(
+                  title: 'ID',
+                  colKey: 'id',
+                  width: 96,
+                  fixed: TDTableColFixed.left,
+                ),
+                TDTableCol(title: '分类名称', colKey: 'name', width: 260),
+              ],
+              data: data,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -788,31 +953,16 @@ class _AdminCategoriesTabState extends State<_AdminCategoriesTab> {
     }
     if (_error) {
       return Center(
-        child: TextButton(
-          onPressed: _load,
-          child: const Text('加载失败，点击重试'),
-        ),
+        child: TextButton(onPressed: _load, child: const Text('加载失败，点击重试')),
       );
     }
     return Column(
       children: [
-        _AdminToolbar(
-          title: '分类管理',
-          onAdd: null,
-          onRefresh: _load,
-        ),
+        _AdminToolbar(title: '分类管理', onAdd: null, onRefresh: _load),
         Expanded(
-          child: ListView.separated(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              return ListTile(
-                title: Text(item['name']?.toString() ?? '未命名分类'),
-                subtitle: Text('ID: ${item['id'] ?? '-'}'),
-              );
-            },
+            child: _buildCategoryTable(),
           ),
         ),
       ],
@@ -902,9 +1052,8 @@ class _AdminCommentsTabState extends State<_AdminCommentsTab> {
     try {
       final resp = await _apiService.delete<Map<String, dynamic>>(
         '/admin/comments/$id',
-        fromJson: (raw) => raw is Map<String, dynamic>
-            ? raw
-            : <String, dynamic>{},
+        fromJson: (raw) =>
+            raw is Map<String, dynamic> ? raw : <String, dynamic>{},
       );
       if (resp.code != 0 && resp.code != 200) {
         throw Exception(resp.msg);
@@ -912,11 +1061,79 @@ class _AdminCommentsTabState extends State<_AdminCommentsTab> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('删除失败：$e')));
       }
     }
+  }
+
+  List<Map<String, dynamic>> _commentTableData() {
+    return _items
+        .map(
+          (item) => <String, dynamic>{
+            'id': _extractId(item['id']),
+            'content': item['content']?.toString() ?? '',
+            'user_id': '${item['user_id'] ?? '-'}',
+            'like_count': '${item['like_count'] ?? 0}',
+          },
+        )
+        .toList();
+  }
+
+  Widget _buildCommentTable() {
+    final data = _commentTableData();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: TDTable(
+              width: constraints.maxWidth,
+              bordered: true,
+              stripe: true,
+              columns: [
+                TDTableCol(
+                  title: '评论ID',
+                  colKey: 'id',
+                  width: 140,
+                  fixed: TDTableColFixed.left,
+                ),
+                TDTableCol(
+                  title: '内容',
+                  colKey: 'content',
+                  width: 220,
+                  ellipsis: true,
+                ),
+                TDTableCol(title: '用户ID', colKey: 'user_id', width: 92),
+                TDTableCol(title: '点赞', colKey: 'like_count', width: 72),
+                TDTableCol(
+                  title: '操作',
+                  colKey: 'action',
+                  width: 82,
+                  cellBuilder: (context, index) {
+                    final item = _items[index];
+                    final id = _extractId(item['id']);
+                    return GestureDetector(
+                      onTap: id.isEmpty ? null : () => _deleteComment(id),
+                      child: TDText(
+                        '删除',
+                        style: TextStyle(
+                          color: TDTheme.of(context).errorNormalColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              data: data,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -950,18 +1167,11 @@ class _AdminCommentsTabState extends State<_AdminCommentsTab> {
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _load,
-                child: const Text('查询'),
-              ),
+              ElevatedButton(onPressed: _load, child: const Text('查询')),
             ],
           ),
         ),
-        _AdminToolbar(
-          title: '评论管理',
-          onAdd: null,
-          onRefresh: _load,
-        ),
+        _AdminToolbar(title: '评论管理', onAdd: null, onRefresh: _load),
         if (_loading)
           const Expanded(child: Center(child: CircularProgressIndicator()))
         else if (_error)
@@ -975,24 +1185,9 @@ class _AdminCommentsTabState extends State<_AdminCommentsTab> {
           )
         else
           Expanded(
-            child: ListView.separated(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              itemCount: _items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final item = _items[index];
-                final id = _extractId(item['id']);
-                return ListTile(
-                  title: Text(item['content']?.toString() ?? ''),
-                  subtitle: Text(
-                    'ID: $id | 用户: ${item['user_id'] ?? '-'} | 赞: ${item['like_count'] ?? 0}',
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: id.isEmpty ? null : () => _deleteComment(id),
-                  ),
-                );
-              },
+              child: _buildCommentTable(),
             ),
           ),
       ],
@@ -1057,29 +1252,4 @@ class _AdminToolbar extends StatelessWidget {
       ),
     );
   }
-}
-
-class _AdminActions extends StatelessWidget {
-  const _AdminActions({required this.onEdit, required this.onDelete});
-
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      onSelected: (value) {
-        if (value == 'edit') onEdit();
-        if (value == 'delete') onDelete();
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'edit', child: Text('编辑')),
-        PopupMenuItem(value: 'delete', child: Text('删除')),
-      ],
-    );
-  }
-}
-
-void _showToast(BuildContext context, String msg) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 }

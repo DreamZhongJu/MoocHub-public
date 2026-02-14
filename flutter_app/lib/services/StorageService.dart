@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class StorageService {
@@ -150,6 +149,37 @@ class StorageService {
     return box.get('user_token');
   }
 
+  Future<String> _hiddenConversationKey() async {
+    final userId = await getUserId();
+    if (userId == null || userId <= 0) {
+      return 'hidden_conversation_ids';
+    }
+    return 'hidden_conversation_ids_$userId';
+  }
+
+  Future<Set<String>> getHiddenConversationIds() async {
+    await init();
+    final box = Hive.box(_userBox);
+    final key = await _hiddenConversationKey();
+    final raw = box.get(key, defaultValue: <dynamic>[]);
+    if (raw is! List) return <String>{};
+    return raw.map((e) => e.toString()).where((e) => e.isNotEmpty).toSet();
+  }
+
+  Future<void> saveHiddenConversationIds(Set<String> ids) async {
+    await init();
+    final box = Hive.box(_userBox);
+    final key = await _hiddenConversationKey();
+    await box.put(key, ids.toList());
+  }
+
+  Future<void> clearHiddenConversationIds() async {
+    await init();
+    final box = Hive.box(_userBox);
+    final key = await _hiddenConversationKey();
+    await box.delete(key);
+  }
+
   Future<String?> getUserRole() async {
     final userData = await getUserData();
     final user = userData['user'];
@@ -224,7 +254,10 @@ class StorageService {
     final box = Hive.box(_pointsBox);
     final raw = box.get('shown_thresholds', defaultValue: <dynamic>[]);
     final list = List<dynamic>.from(raw as List);
-    return list.map((e) => int.tryParse(e.toString()) ?? 0).where((e) => e > 0).toSet();
+    return list
+        .map((e) => int.tryParse(e.toString()) ?? 0)
+        .where((e) => e > 0)
+        .toSet();
   }
 
   Future<void> saveShownPointThresholds(Set<int> thresholds) async {

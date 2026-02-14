@@ -1,4 +1,5 @@
 import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -131,9 +132,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
     final token = await _storageService.getUserToken();
     if (token == null || token.toString().isEmpty || token == 'null') {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先登录再点赞')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录再点赞')));
         await Navigator.pushNamed(context, '/login');
       }
       return;
@@ -143,8 +144,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
       if (mounted) {
         setState(() {
           _likedIds.remove(likedKey);
-          _items[index] =
-              item.copyWith(likeCount: (item.likeCount - 1).clamp(0, 999999));
+          _items[index] = item.copyWith(
+            likeCount: (item.likeCount - 1).clamp(0, 999999),
+          );
         });
       }
       await _persistLikedState();
@@ -180,9 +182,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
       await _persistLikedState();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('点赞失败，请稍后重试')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('点赞失败，请稍后重试')));
       }
     } finally {
       if (mounted) {
@@ -200,9 +202,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
     final token = await _storageService.getUserToken();
     if (token == null || token.toString().isEmpty || token == 'null') {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先登录再评论')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录再评论')));
         await Navigator.pushNamed(context, '/login');
       }
       return;
@@ -230,9 +232,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
       await _loadComments();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('评论发送失败')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('评论发送失败')));
       }
     } finally {
       if (mounted) {
@@ -240,6 +242,68 @@ class _CommentsPanelState extends State<CommentsPanel> {
           _sending = false;
         });
       }
+    }
+  }
+
+  int _parseConversationId(Map<String, dynamic> data) {
+    final raw = data['id'] ?? data['ID'];
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '') ?? 0;
+  }
+
+  Future<void> _startPrivateChat(_CommentItem item) async {
+    if (item.userId <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('该用户信息缺失，无法发起私信')));
+      return;
+    }
+
+    final token = await _storageService.getUserToken();
+    if (token == null || token.toString().isEmpty || token == 'null') {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录再发起私信')));
+        await Navigator.pushNamed(context, '/login');
+      }
+      return;
+    }
+
+    final myUserId = await _storageService.getUserId();
+    if (myUserId != null && myUserId == item.userId) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('不能给自己发私信')));
+      return;
+    }
+
+    try {
+      final resp = await _apiService.post<Map<String, dynamic>>(
+        '/chat/private/start',
+        data: {'target_user_id': item.userId},
+        fromJson: (raw) => Map<String, dynamic>.from(raw as Map),
+      );
+      final conversationId = _parseConversationId(resp.data);
+      if (conversationId <= 0) {
+        throw Exception('会话ID无效');
+      }
+
+      if (!mounted) return;
+      await Navigator.pushNamed(
+        context,
+        '/chatDetail',
+        arguments: {
+          'conversationId': conversationId.toString(),
+          'title': item.userName,
+          'isGroup': false,
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('发起私信失败: $e')));
     }
   }
 
@@ -311,7 +375,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1B1F28) : const Color(0xFFF3F5F9),
+                  color: isDark
+                      ? const Color(0xFF1B1F28)
+                      : const Color(0xFFF3F5F9),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: TextField(
@@ -385,6 +451,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
             expanded: expanded,
             onLike: () => _toggleLike(index),
             onToggleReplies: () => _toggleReplies(item.id),
+            onAvatarTap: () => _startPrivateChat(item),
           ),
         );
       },
@@ -494,6 +561,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
 
 class _CommentItem {
   final String id;
+  final int userId;
+  final String userName;
+  final String avatarUrl;
   final String content;
   final int likeCount;
   final String createdAt;
@@ -501,6 +571,9 @@ class _CommentItem {
 
   _CommentItem({
     required this.id,
+    required this.userId,
+    required this.userName,
+    required this.avatarUrl,
     required this.content,
     required this.likeCount,
     required this.createdAt,
@@ -508,8 +581,34 @@ class _CommentItem {
   });
 
   factory _CommentItem.fromJson(Map<String, dynamic> json) {
+    final userId = _intify(json['user_id'] ?? json['userId'] ?? json['uid']);
+    final userName =
+        (json['nickname'] ??
+                json['username'] ??
+                json['user_name'] ??
+                json['userName'] ??
+                '')
+            .toString()
+            .trim()
+            .isEmpty
+        ? (userId > 0 ? '用户$userId' : '匿名用户')
+        : (json['nickname'] ??
+                  json['username'] ??
+                  json['user_name'] ??
+                  json['userName'])
+              .toString()
+              .trim();
+    final avatar = Config.resolveImage(
+      (json['avatar_url'] ?? json['avatar'] ?? json['user_avatar'] ?? '')
+          .toString()
+          .trim(),
+    );
+
     return _CommentItem(
       id: (json['id'] ?? '').toString(),
+      userId: userId,
+      userName: userName,
+      avatarUrl: avatar,
       content: (json['content'] ?? '').toString(),
       likeCount: _intify(json['like_count']),
       createdAt: (json['created_at'] ?? '').toString(),
@@ -520,6 +619,9 @@ class _CommentItem {
   _CommentItem copyWith({int? likeCount}) {
     return _CommentItem(
       id: id,
+      userId: userId,
+      userName: userName,
+      avatarUrl: avatarUrl,
       content: content,
       likeCount: likeCount ?? this.likeCount,
       createdAt: createdAt,
@@ -537,6 +639,7 @@ class _CommentTile extends StatelessWidget {
   final _CommentItem item;
   final VoidCallback onLike;
   final VoidCallback onToggleReplies;
+  final VoidCallback onAvatarTap;
   final bool liking;
   final bool liked;
   final bool expanded;
@@ -545,6 +648,7 @@ class _CommentTile extends StatelessWidget {
     required this.item,
     required this.onLike,
     required this.onToggleReplies,
+    required this.onAvatarTap,
     required this.liking,
     required this.liked,
     required this.expanded,
@@ -556,16 +660,32 @@ class _CommentTile extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
-          child: Icon(Icons.person, color: theme.colorScheme.primary, size: 16),
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: CircleAvatar(
+            radius: 16,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+            backgroundImage: item.avatarUrl.isEmpty
+                ? null
+                : NetworkImage(item.avatarUrl),
+            child: item.avatarUrl.isEmpty
+                ? Icon(Icons.person, color: theme.colorScheme.primary, size: 16)
+                : null,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                item.userName,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
               Text(
                 item.content,
                 style: theme.textTheme.bodyMedium?.copyWith(

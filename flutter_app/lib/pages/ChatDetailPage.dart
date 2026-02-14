@@ -201,7 +201,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('发送失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('发送失败：$e')));
       }
     } finally {
       if (mounted) {
@@ -209,6 +209,57 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           _sending = false;
         });
       }
+    }
+  }
+
+  int _parseConversationId(Map<String, dynamic> data) {
+    final raw = data['id'] ?? data['ID'];
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '') ?? 0;
+  }
+
+  Future<void> _startPrivateChatFromAvatar(_ChatMessage msg) async {
+    if (_myUserId > 0 && msg.senderId == _myUserId) {
+      return;
+    }
+    if (msg.senderId <= 0) {
+      return;
+    }
+
+    final token = await _storage.getUserToken();
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
+    if (!loggedIn) {
+      if (!mounted) return;
+      await Navigator.pushNamed(context, '/login');
+      return;
+    }
+
+    try {
+      final resp = await _api.post<Map<String, dynamic>>(
+        '/chat/private/start',
+        data: {'target_user_id': msg.senderId},
+        fromJson: (raw) => Map<String, dynamic>.from(raw as Map),
+      );
+      final conversationId = _parseConversationId(resp.data);
+      if (conversationId <= 0) {
+        throw Exception('会话编号无效');
+      }
+      if (!mounted) return;
+      await Navigator.pushNamed(
+        context,
+        '/chatDetail',
+        arguments: {
+          'conversationId': conversationId.toString(),
+          'title': msg.senderName,
+          'isGroup': false,
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('发起私信失败：$e')));
     }
   }
 
@@ -226,15 +277,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final align = mine ? MainAxisAlignment.end : MainAxisAlignment.start;
 
     final resolvedAvatar = Config.resolveImage(msg.senderAvatar);
-    final avatar = ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: TDImage(
-        imgUrl: resolvedAvatar.isEmpty
-            ? 'https://picsum.photos/seed/chat_${msg.senderId}/80'
-            : resolvedAvatar,
-        width: 32,
-        height: 32,
-        fit: BoxFit.cover,
+    final avatar = GestureDetector(
+      onTap: (!mine && widget.isGroup)
+          ? () => _startPrivateChatFromAvatar(msg)
+          : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: TDImage(
+          imgUrl: resolvedAvatar.isEmpty
+              ? 'https://picsum.photos/seed/chat_${msg.senderId}/80'
+              : resolvedAvatar,
+          width: 32,
+          height: 32,
+          fit: BoxFit.cover,
+        ),
       ),
     );
 
@@ -352,7 +408,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       SizedBox(height: 140),
                       Center(
                         child: Text(
-                          '暂无消息，发送第一条吧',
+                          '暂无消息',
                           style: TextStyle(color: Colors.grey),
                         ),
                       ),

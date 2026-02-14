@@ -24,6 +24,7 @@ class LearnPageState extends State<LearnPage>
   bool _errorChats = false;
   int _chatUnreadTotal = 0;
   List<_ConversationItem> _chatItems = [];
+  Set<String> _hiddenConversationIds = <String>{};
 
   @override
   void initState() {
@@ -88,6 +89,7 @@ class LearnPageState extends State<LearnPage>
         });
       }
 
+      await _loadHiddenConversationIds();
       await _loadChats();
     } catch (e) {
       if (mounted) {
@@ -111,30 +113,26 @@ class LearnPageState extends State<LearnPage>
     }
 
     try {
-      final responses = await Future.wait([
-        _api.get<Map<String, dynamic>>(
-          '/chat/conversations',
-          queryParameters: const {'page': 1, 'page_size': 8},
-          fromJson: (data) => Map<String, dynamic>.from(data as Map),
-        ),
-        _api.get<Map<String, dynamic>>(
-          '/chat/unread_count',
-          fromJson: (data) => Map<String, dynamic>.from(data as Map),
-        ),
-      ]);
+      final convResp = await _api.get<Map<String, dynamic>>(
+        '/chat/conversations',
+        queryParameters: const {'page': 1, 'page_size': 8},
+        fromJson: (data) => Map<String, dynamic>.from(data as Map),
+      );
 
-      final convData = responses[0].data;
-      final unreadData = responses[1].data;
+      final convData = convResp.data;
 
       final rawItems = convData['items'] as List<dynamic>? ?? [];
       final items = rawItems
           .whereType<Map>()
           .map((e) => _ConversationItem.fromJson(Map<String, dynamic>.from(e)))
+          .where((e) => !_hiddenConversationIds.contains(e.id))
           .toList();
 
-      final unread =
-          (unreadData['unread_count'] as num?)?.toInt() ??
-          items.fold<int>(0, (prev, e) => prev + e.unread);
+      final unreadInVisibleList = items.fold<int>(
+        0,
+        (prev, e) => prev + e.unread,
+      );
+      final unread = unreadInVisibleList;
 
       if (mounted) {
         setState(() {
@@ -152,6 +150,14 @@ class LearnPageState extends State<LearnPage>
         });
       }
     }
+  }
+
+  Future<void> _loadHiddenConversationIds() async {
+    final ids = await _storage.getHiddenConversationIds();
+    if (!mounted) return;
+    setState(() {
+      _hiddenConversationIds = ids;
+    });
   }
 
   Widget _buildBalanceCard() {
@@ -215,7 +221,62 @@ class LearnPageState extends State<LearnPage>
     await _loadChats();
   }
 
-  Widget _buildChatItem(_ConversationItem item) {
+  Future<void> _hideConversation(_ConversationItem item) async {
+    if (item.id.isEmpty || _hiddenConversationIds.contains(item.id)) {
+      return;
+    }
+
+    final previous = Set<String>.from(_hiddenConversationIds);
+    setState(() {
+      _hiddenConversationIds = {..._hiddenConversationIds, item.id};
+      _chatItems = _chatItems.where((e) => e.id != item.id).toList();
+      _chatUnreadTotal = _chatItems.fold<int>(0, (prev, e) => prev + e.unread);
+    });
+
+    try {
+      await _storage.saveHiddenConversationIds(_hiddenConversationIds);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _hiddenConversationIds = previous;
+      });
+      return;
+    }
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: const Text('会话已隐藏（历史消息不会删除）'),
+        action: SnackBarAction(
+          label: '撤销',
+          onPressed: () {
+            _restoreConversation(item.id);
+          },
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      controller.close();
+    });
+  }
+
+  Future<void> _restoreConversation(String conversationId) async {
+    if (!_hiddenConversationIds.contains(conversationId)) {
+      return;
+    }
+    setState(() {
+      _hiddenConversationIds = Set<String>.from(_hiddenConversationIds)
+        ..remove(conversationId);
+    });
+    await _storage.saveHiddenConversationIds(_hiddenConversationIds);
+    await _loadChats();
+  }
+
+  Widget _buildChatCell(_ConversationItem item) {
     return InkWell(
       onTap: () => _openConversation(item),
       borderRadius: BorderRadius.circular(12),
@@ -308,10 +369,35 @@ class LearnPageState extends State<LearnPage>
     );
   }
 
+  Widget _buildChatItem(_ConversationItem item) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: TDSwipeCell(
+        slidableKey: ValueKey('learn_chat_${item.id}'),
+        groupTag: 'learn_chat_list',
+        right: TDSwipeCellPanel(
+          extentRatio: 72 / screenWidth,
+          dragDismissible: false,
+          onDismissed: (_) => _hideConversation(item),
+          children: [
+            TDSwipeCellAction(
+              backgroundColor: TDTheme.of(context).errorNormalColor,
+              label: '隐藏',
+              onPressed: (_) => _hideConversation(item),
+            ),
+          ],
+        ),
+        cell: _buildChatCell(item),
+      ),
+    );
+  }
+
   Widget _buildChatSection() {
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -21,11 +21,25 @@ class _ChatHomePageState extends State<ChatHomePage> {
 
   String _keyword = '';
   List<_ChatItem> _items = [];
+  Set<String> _hiddenConversationIds = <String>{};
 
   @override
   void initState() {
     super.initState();
-    _loadConversations();
+    _initPage();
+  }
+
+  Future<void> _initPage() async {
+    await _loadHiddenConversationIds();
+    await _loadConversations();
+  }
+
+  Future<void> _loadHiddenConversationIds() async {
+    final ids = await _storage.getHiddenConversationIds();
+    if (!mounted) return;
+    setState(() {
+      _hiddenConversationIds = ids;
+    });
   }
 
   Future<void> _loadConversations() async {
@@ -44,6 +58,8 @@ class _ChatHomePageState extends State<ChatHomePage> {
       }
       return;
     }
+
+    _hiddenConversationIds = await _storage.getHiddenConversationIds();
 
     if (mounted) {
       setState(() {
@@ -64,6 +80,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
       final items = rawItems
           .whereType<Map>()
           .map((e) => _ChatItem.fromJson(Map<String, dynamic>.from(e)))
+          .where((e) => !_hiddenConversationIds.contains(e.id.toString()))
           .toList();
 
       if (mounted) {
@@ -106,6 +123,88 @@ class _ChatHomePageState extends State<ChatHomePage> {
         'isGroup': item.isGroup,
       },
     );
+    await _loadConversations();
+  }
+
+  Future<void> _hideConversation(_ChatItem item) async {
+    final id = item.id.toString();
+    if (id.isEmpty || _hiddenConversationIds.contains(id)) {
+      return;
+    }
+
+    final previous = Set<String>.from(_hiddenConversationIds);
+    setState(() {
+      _hiddenConversationIds = {..._hiddenConversationIds, id};
+      _items = _items.where((e) => e.id != item.id).toList();
+    });
+
+    try {
+      await _storage.saveHiddenConversationIds(_hiddenConversationIds);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _hiddenConversationIds = previous;
+      });
+      return;
+    }
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: const Text('会话已隐藏（历史消息不会删除）'),
+        action: SnackBarAction(
+          label: '撤销',
+          onPressed: () {
+            _restoreConversation(item.id);
+          },
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      controller.close();
+    });
+  }
+
+  Future<void> _restoreConversation(int conversationId) async {
+    final id = conversationId.toString();
+    if (!_hiddenConversationIds.contains(id)) {
+      return;
+    }
+    setState(() {
+      _hiddenConversationIds = Set<String>.from(_hiddenConversationIds)
+        ..remove(id);
+    });
+    await _storage.saveHiddenConversationIds(_hiddenConversationIds);
+    await _loadConversations();
+  }
+
+  Future<void> _showCreateGroupDialog() async {
+    final result = await showDialog<_CreateGroupResult>(
+      context: context,
+      builder: (_) => _CreateGroupDialog(api: _api),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    await _loadConversations();
+    if (!mounted) return;
+
+    await Navigator.pushNamed(
+      context,
+      '/chatDetail',
+      arguments: {
+        'conversationId': result.id.toString(),
+        'title': result.name,
+        'isGroup': true,
+      },
+    );
+
     await _loadConversations();
   }
 
@@ -173,7 +272,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
           ElevatedButton(
             onPressed: () async {
               await Navigator.pushNamed(context, '/login');
-              await _loadConversations();
+              await _initPage();
             },
             child: const Text('去登录'),
           ),
@@ -182,7 +281,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
     );
   }
 
-  Widget _buildChatItem(_ChatItem item) {
+  Widget _buildChatCell(_ChatItem item) {
     return InkWell(
       onTap: () => _openChat(item),
       borderRadius: BorderRadius.circular(14),
@@ -257,6 +356,30 @@ class _ChatHomePageState extends State<ChatHomePage> {
     );
   }
 
+  Widget _buildChatItem(_ChatItem item) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: TDSwipeCell(
+        slidableKey: ValueKey('chat_${item.id}'),
+        groupTag: 'chat_list',
+        right: TDSwipeCellPanel(
+          extentRatio: 72 / screenWidth,
+          dragDismissible: false,
+          onDismissed: (_) => _hideConversation(item),
+          children: [
+            TDSwipeCellAction(
+              backgroundColor: TDTheme.of(context).errorNormalColor,
+              label: '隐藏',
+              onPressed: (_) => _hideConversation(item),
+            ),
+          ],
+        ),
+        cell: _buildChatCell(item),
+      ),
+    );
+  }
+
   Widget _buildChatList(List<_ChatItem> items) {
     if (_loading) {
       return _buildLoading();
@@ -290,14 +413,10 @@ class _ChatHomePageState extends State<ChatHomePage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: TDButton(
-        text: '创建群聊（暂未开放）',
+        text: '创建群聊',
         type: TDButtonType.outline,
         size: TDButtonSize.large,
-        onTap: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('下一步接入创建群聊接口')));
-        },
+        onTap: _showCreateGroupDialog,
       ),
     );
   }
@@ -345,6 +464,148 @@ class _ChatHomePageState extends State<ChatHomePage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CreateGroupResult {
+  final int id;
+  final String name;
+
+  const _CreateGroupResult({required this.id, required this.name});
+}
+
+class _CreateGroupDialog extends StatefulWidget {
+  final ApiService api;
+
+  const _CreateGroupDialog({required this.api});
+
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  String _groupName = '';
+  String _memberIdsText = '';
+  String _avatarUrl = '';
+
+  bool _creating = false;
+
+  List<int> _parseMemberIds(String raw) {
+    final normalized = raw.replaceAll('，', ',');
+    final parts = normalized
+        .split(RegExp(r'[\s,]+'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
+    return parts
+        .map((e) => int.tryParse(e))
+        .whereType<int>()
+        .where((id) => id > 0)
+        .toSet()
+        .toList();
+  }
+
+  int _parseConversationId(Map<String, dynamic> data) {
+    final raw = data['id'] ?? data['ID'];
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '') ?? 0;
+  }
+
+  Future<void> _submit() async {
+    final name = _groupName.trim();
+    final avatar = _avatarUrl.trim();
+    final memberIds = _parseMemberIds(_memberIdsText);
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入群名称')));
+      return;
+    }
+
+    setState(() {
+      _creating = true;
+    });
+
+    try {
+      final payload = <String, dynamic>{'name': name, 'member_ids': memberIds};
+      if (avatar.isNotEmpty) {
+        payload['avatar_url'] = avatar;
+      }
+
+      final resp = await widget.api.post<Map<String, dynamic>>(
+        '/chat/groups',
+        data: payload,
+        fromJson: (raw) => Map<String, dynamic>.from(raw as Map),
+      );
+
+      final conversationId = _parseConversationId(resp.data);
+      if (conversationId <= 0) {
+        throw Exception('会话编号无效');
+      }
+
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pop(_CreateGroupResult(id: conversationId, name: name));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('创建群聊失败: $e')));
+      setState(() {
+        _creating = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('创建群聊'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              onChanged: (value) => _groupName = value,
+              decoration: const InputDecoration(
+                labelText: '群名称',
+                hintText: '例如：学习交流群',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              onChanged: (value) => _memberIdsText = value,
+              decoration: const InputDecoration(
+                labelText: '成员用户编号（可选）',
+                hintText: '使用逗号分隔，例如：8,9,12',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              onChanged: (value) => _avatarUrl = value,
+              decoration: const InputDecoration(labelText: '群头像地址（可选）'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _creating ? null : () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        ElevatedButton(
+          onPressed: _creating ? null : _submit,
+          child: _creating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('创建'),
+        ),
+      ],
     );
   }
 }
