@@ -6,6 +6,7 @@ class ArticleCard extends StatelessWidget {
   final String coverUrl;
   final int viewCount;
   final int likeCount;
+  final String highlightKeyword;
   final VoidCallback onTap;
 
   const ArticleCard({
@@ -15,6 +16,7 @@ class ArticleCard extends StatelessWidget {
     required this.coverUrl,
     required this.viewCount,
     required this.likeCount,
+    this.highlightKeyword = '',
     required this.onTap,
   });
 
@@ -24,6 +26,63 @@ class ArticleCard extends StatelessWidget {
       return '${v.toStringAsFixed(1)}万';
     }
     return value.toString();
+  }
+
+  List<TextSpan> _highlightSpans(
+    BuildContext context,
+    String text,
+    TextStyle? baseStyle,
+  ) {
+    final keyword = highlightKeyword.trim();
+    if (keyword.isEmpty || text.isEmpty) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerKeyword = keyword.toLowerCase();
+    final start = lowerText.indexOf(lowerKeyword);
+    if (start < 0) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final highlightStyle = baseStyle?.copyWith(
+      color: Theme.of(context).colorScheme.primary,
+      fontWeight: FontWeight.w700,
+    );
+
+    final spans = <TextSpan>[];
+    int cursor = 0;
+    while (cursor < text.length) {
+      final index = lowerText.indexOf(lowerKeyword, cursor);
+      if (index < 0) {
+        spans.add(TextSpan(text: text.substring(cursor), style: baseStyle));
+        break;
+      }
+      if (index > cursor) {
+        spans.add(
+          TextSpan(text: text.substring(cursor, index), style: baseStyle),
+        );
+      }
+      final end = index + keyword.length;
+      spans.add(
+        TextSpan(text: text.substring(index, end), style: highlightStyle),
+      );
+      cursor = end;
+    }
+    return spans;
+  }
+
+  Widget _buildHighlightText(
+    BuildContext context,
+    String text,
+    TextStyle? style, {
+    required int maxLines,
+  }) {
+    return Text.rich(
+      TextSpan(children: _highlightSpans(context, text, style)),
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   @override
@@ -75,8 +134,11 @@ class ArticleCard extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.remove_red_eye,
-                                  size: 14, color: Colors.white),
+                              const Icon(
+                                Icons.remove_red_eye,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 _formatCount(viewCount),
@@ -85,8 +147,11 @@ class ArticleCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(Icons.thumb_up,
-                                  size: 14, color: Colors.white),
+                              const Icon(
+                                Icons.thumb_up,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 _formatCount(likeCount),
@@ -102,30 +167,34 @@ class ArticleCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding:
-                      EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
+                  padding: EdgeInsets.fromLTRB(
+                    12,
+                    verticalPadding,
+                    12,
+                    verticalPadding,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      _buildHighlightText(
+                        context,
                         title,
-                        style: theme.textTheme.titleSmall?.copyWith(
+                        theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           height: 1.1,
                           fontSize: compact ? 13 : null,
                         ),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      Text(
+                      _buildHighlightText(
+                        context,
                         summary,
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        theme.textTheme.bodySmall?.copyWith(
                           height: 1.1,
                           fontSize: compact ? 11 : null,
                         ),
                         maxLines: summaryLines,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

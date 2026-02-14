@@ -74,6 +74,8 @@ func Router() *gin.Engine {
 		user.POST("/articles/:id/view", controllers.ArticlesController{}.ViewArticle)
 		user.POST("/articles/:id/like", middleware.AuthMiddleware(), controllers.ArticlesController{}.LikeArticle)
 		user.POST("/articles", middleware.AuthMiddleware(), controllers.ArticlesController{}.CreateArticle)
+		user.GET("/search", controllers.SearchController{}.Search)
+		user.GET("/search/suggest", controllers.SearchController{}.Suggest)
 		user.POST("/uploads", middleware.AuthMiddleware(), controllers.UploadController{}.Upload)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)
 		user.GET("/comments", controllers.CommentController{}.GetComments)

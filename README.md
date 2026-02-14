@@ -320,9 +320,9 @@ CREATE TABLE favorite_articles (
 | 11   | UI 深度优化（品牌色/动效/空态）      | 统一色板与排版；动效规范；空态与骨架屏         | 🟡    |
 | 11   | 第三方登录接入（QQ）                 | OAuth 登录流程；绑定/解绑；回调与错误处理      | ✅    |
 | 11   | 管理端界面                           | 登录与权限；课程/视频/评论管理后台             | ✅    |
-| 11   | 实时聊天（私信/群聊）                | 入口：首页右上角消息；头像私信；私聊+群聊      | 🟡    |
-| 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | 🟡    |
-| 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ⬜    |
+| 11   | 实时聊天（私信/群聊）                | 入口：首页右上角消息；头像私信；私聊+群聊      | ✅    |
+| 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | ✅    |
+| 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ✅    |
 | 12   | 埋点与数据看板（曝光/点击/完播）     | 埋点事件定义；看板指标口径；可视化面板         | ⬜    |
 | 12   | 指标告警（Prometheus/Grafana）       | 指标采集；告警规则；可视化面板                 | ⬜    |
 | 12   | 统一日志规范（结构化/链路追踪）      | 结构化字段；trace_id；采样与落盘策略           | ⬜    |
@@ -360,24 +360,30 @@ CREATE TABLE favorite_articles (
 | GET  | `/videos/{id}` | 无   | -        | `id`, `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url` |
 
 ### 文章
-| 方法 | 路径             | 权限 | 请求参数                                    | 响应      |
-| ---- | ---------------- | ---- | ------------------------------------------- | --------- |
+| 方法 | 路径                  | 权限 | 请求参数                                    | 响应      |
+| ---- | --------------------- | ---- | ------------------------------------------- | --------- |
 | GET  | `/articles`           | 无   | `sort?`, `page`, `page_size`                | 文章列表  |
 | GET  | `/articles/{id}`      | 无   | -                                           | 文章详情  |
 | POST | `/articles/{id}/view` | 无   | -                                           | 阅读 +1   |
 | POST | `/articles/{id}/like` | 登录 | -                                           | 点赞 +1   |
 | POST | `/articles`           | 登录 | `title`, `summary`, `cover_url?`, `content` | `article` |
 
+### 搜索
+| 方法 | 路径              | 权限 | 请求参数                                                             | 响应                                              |
+| ---- | ----------------- | ---- | -------------------------------------------------------------------- | ------------------------------------------------- |
+| GET  | `/search`         | 无   | `keyword`, `scope?=all/course/article`, `sort?`, `page`, `page_size` | `courses` + `articles` + `total_courses/articles` |
+| GET  | `/search/suggest` | 无   | `keyword`, `limit?`                                                  | `suggestions`（联想词）                           |
+
 ### 收藏
-| 方法   | 路径                             | 权限 | 请求参数    | 响应                |
-| ------ | -------------------------------- | ---- | ----------- | ------------------- |
-| POST   | `/favorites/courses`             | 登录 | `course_id` | -                   |
-| DELETE | `/favorites/courses/{course_id}` | 登录 | -           | -                   |
-| POST   | `/favorites/videos`              | 登录 | `video_id`   | -                             |
-| DELETE | `/favorites/videos/{video_id}`   | 登录 | -            | -                             |
-| POST   | `/favorites/articles`            | 登录 | `article_id` | -                             |
-| DELETE | `/favorites/articles/{article_id}` | 登录 | -          | -                             |
-| GET    | `/favorites`                     | 登录 | -            | 收藏课程 + 收藏视频 + 收藏文章 |
+| 方法   | 路径                               | 权限 | 请求参数     | 响应                           |
+| ------ | ---------------------------------- | ---- | ------------ | ------------------------------ |
+| POST   | `/favorites/courses`               | 登录 | `course_id`  | -                              |
+| DELETE | `/favorites/courses/{course_id}`   | 登录 | -            | -                              |
+| POST   | `/favorites/videos`                | 登录 | `video_id`   | -                              |
+| DELETE | `/favorites/videos/{video_id}`     | 登录 | -            | -                              |
+| POST   | `/favorites/articles`              | 登录 | `article_id` | -                              |
+| DELETE | `/favorites/articles/{article_id}` | 登录 | -            | -                              |
+| GET    | `/favorites`                       | 登录 | -            | 收藏课程 + 收藏视频 + 收藏文章 |
 
 ### 评论（MongoDB）
 | 方法 | 路径                  | 权限 | 请求参数                                        | 响应         |
@@ -412,16 +418,16 @@ CREATE TABLE favorite_articles (
 ### 实时聊天（私信/群聊，MVP）
 > 先执行建表脚本：`server/scripts/chat_schema.sql`
 
-| 方法 | 路径                      | 权限 | 请求参数                                                     | 响应 |
-| ---- | ------------------------- | ---- | ------------------------------------------------------------ | ---- |
-| GET  | `/chat/conversations`     | 登录 | `page`, `page_size`                                          | 会话列表（含 `unread_count`） |
-| POST | `/chat/private/start`     | 登录 | `target_user_id`                                             | 私聊会话 |
-| POST | `/chat/groups`            | 登录 | `name`, `avatar_url?`, `member_ids[]`                        | 群聊会话 |
-| POST | `/chat/groups/{id}/members` | 登录 | `user_ids[]`                                                 | - |
-| GET  | `/chat/messages`          | 登录 | `conversation_id`, `page`, `page_size`                       | 消息列表 |
-| POST | `/chat/messages`          | 登录 | `conversation_id`, `msg_type?`(默认 `text`), `content`, `extra_json?` | 新消息 |
-| POST | `/chat/read`              | 登录 | `conversation_id`, `last_message_id`                         | - |
-| GET  | `/chat/unread_count`      | 登录 | -                                                            | 总未读 |
+| 方法 | 路径                        | 权限 | 请求参数                                                              | 响应                          |
+| ---- | --------------------------- | ---- | --------------------------------------------------------------------- | ----------------------------- |
+| GET  | `/chat/conversations`       | 登录 | `page`, `page_size`                                                   | 会话列表（含 `unread_count`） |
+| POST | `/chat/private/start`       | 登录 | `target_user_id`                                                      | 私聊会话                      |
+| POST | `/chat/groups`              | 登录 | `name`, `avatar_url?`, `member_ids[]`                                 | 群聊会话                      |
+| POST | `/chat/groups/{id}/members` | 登录 | `user_ids[]`                                                          | -                             |
+| GET  | `/chat/messages`            | 登录 | `conversation_id`, `page`, `page_size`                                | 消息列表                      |
+| POST | `/chat/messages`            | 登录 | `conversation_id`, `msg_type?`(默认 `text`), `content`, `extra_json?` | 新消息                        |
+| POST | `/chat/read`                | 登录 | `conversation_id`, `last_message_id`                                  | -                             |
+| GET  | `/chat/unread_count`        | 登录 | -                                                                     | 总未读                        |
 
 ### 设备推送 Token
 | 方法 | 路径             | 权限 | 请求参数             | 响应 |

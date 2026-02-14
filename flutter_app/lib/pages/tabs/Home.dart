@@ -1,6 +1,4 @@
-﻿import 'dart:async';
-
-import 'package:MoocHub/model/CoursesModel.dart';
+﻿import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/routers/route_observer.dart';
@@ -21,7 +19,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin, RouteAware {
-  ScrollController controller = ScrollController();
+  final ScrollController controller = ScrollController();
   final RefreshController _refreshController = RefreshController();
   bool showBackTop = false;
   List<CoursesModel> _recommendedProducts = [];
@@ -32,9 +30,6 @@ class HomePageState extends State<HomePage>
   bool _hasMore = true;
   int _page = 1;
   final int _pageSize = 10;
-  DateTime? _lastLoadAt;
-  int _slowDownMs = 0;
-  Timer? _loadMoreTimer;
   bool _pendingScrollUpdate = false;
   bool _showNotice = true;
   bool _continueLoading = false;
@@ -43,6 +38,7 @@ class HomePageState extends State<HomePage>
   int _continuePositionSec = 0;
   double _continuePercent = 0;
   final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -64,7 +60,6 @@ class HomePageState extends State<HomePage>
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
-    _loadMoreTimer?.cancel();
     controller.removeListener(_handleScroll);
     _refreshController.dispose();
     controller.dispose();
@@ -168,7 +163,7 @@ class HomePageState extends State<HomePage>
     }
 
     try {
-      final response = await ApiService().get<Map<String, dynamic>>(
+      final response = await _apiService.get<Map<String, dynamic>>(
         '/progress/latest',
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
@@ -354,7 +349,7 @@ class HomePageState extends State<HomePage>
 
     try {
       final results = await Future.wait([
-        ApiService().get<Map<String, dynamic>>(
+        _apiService.get<Map<String, dynamic>>(
           '/courses',
           queryParameters: {
             'page': _page,
@@ -363,7 +358,7 @@ class HomePageState extends State<HomePage>
           },
           fromJson: (raw) => raw as Map<String, dynamic>,
         ),
-        ApiService().get<Map<String, dynamic>>(
+        _apiService.get<Map<String, dynamic>>(
           '/articles',
           queryParameters: {
             'page': _page,
@@ -444,25 +439,6 @@ class HomePageState extends State<HomePage>
         }
       }
     }
-  }
-
-  void _tryLoadMore() {
-    if (_isLoadingMore || !_hasMore) return;
-    _loadMoreTimer?.cancel();
-    final now = DateTime.now();
-    if (_lastLoadAt != null) {
-      final gapMs = now.difference(_lastLoadAt!).inMilliseconds;
-      if (gapMs < 800) {
-        _slowDownMs = (_slowDownMs + 300).clamp(0, 1500);
-      } else {
-        _slowDownMs = (_slowDownMs - 150).clamp(0, 1500);
-      }
-    }
-    _lastLoadAt = now;
-    _loadMoreTimer = Timer(
-      Duration(milliseconds: _slowDownMs),
-      () => _loadRecommendedProducts(reset: false),
-    );
   }
 
   void _handleScroll() {
@@ -649,8 +625,10 @@ class HomePageState extends State<HomePage>
                 const SizedBox(height: 12),
                 TDSearchBar(
                   placeHolder: '搜索课程/讲师/关键词',
-                  onTextChanged: (_) {},
-                  onSubmitted: (_) {},
+                  readOnly: true,
+                  action: '前往搜索',
+                  onInputClick: () => Navigator.pushNamed(context, '/search'),
+                  onActionClick: (_) => Navigator.pushNamed(context, '/search'),
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -661,19 +639,43 @@ class HomePageState extends State<HomePage>
                       text: '热门课程',
                       size: TDButtonSize.small,
                       type: TDButtonType.fill,
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        '/search',
+                        arguments: const {
+                          'keyword': '课程',
+                          'scope': 'course',
+                          'sort': 'view_count',
+                        },
+                      ),
                     ),
                     TDButton(
                       text: '最新更新',
                       size: TDButtonSize.small,
                       type: TDButtonType.fill,
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        '/search',
+                        arguments: const {
+                          'keyword': '最新',
+                          'scope': 'all',
+                          'sort': 'created_at',
+                        },
+                      ),
                     ),
                     TDButton(
-                      text: '高分课程',
+                      text: '推荐文章',
                       size: TDButtonSize.small,
                       type: TDButtonType.fill,
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        '/search',
+                        arguments: const {
+                          'keyword': '文章',
+                          'scope': 'article',
+                          'sort': 'view_count',
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -693,8 +695,9 @@ class HomePageState extends State<HomePage>
   }
 
   Widget _buildLoadingMoreSliver() {
-    if (!_isLoadingMore)
+    if (!_isLoadingMore) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),

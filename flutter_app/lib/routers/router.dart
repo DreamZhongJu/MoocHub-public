@@ -1,4 +1,4 @@
-﻿import 'package:MoocHub/pages/CourseDetailPage.dart';
+import 'package:MoocHub/pages/CourseDetailPage.dart';
 import 'package:MoocHub/pages/FavoritesPage.dart';
 import 'package:MoocHub/pages/LoginPage.dart';
 import 'package:MoocHub/pages/MessagePage.dart';
@@ -8,6 +8,7 @@ import 'package:MoocHub/pages/ChatDetailPage.dart';
 import 'package:MoocHub/pages/ArticleDetailPage.dart';
 import 'package:MoocHub/pages/ArticleListPage.dart';
 import 'package:MoocHub/pages/ArticlePublishPage.dart';
+import 'package:MoocHub/pages/SearchPage.dart';
 import 'package:MoocHub/pages/PointsDetailPage.dart';
 import 'package:MoocHub/pages/ProductList.dart';
 import 'package:MoocHub/pages/SplashPage.dart';
@@ -60,9 +61,7 @@ var onGenerateRoute = (RouteSettings settings) {
       }
       if (categoryId == null) {
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('分类ID无效')),
-          ),
+          builder: (_) => const Scaffold(body: Center(child: Text('分类ID无效'))),
         );
       }
       return MaterialPageRoute(
@@ -83,9 +82,7 @@ var onGenerateRoute = (RouteSettings settings) {
       }
       if (videoId == null) {
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('视频ID无效')),
-          ),
+          builder: (_) => const Scaffold(body: Center(child: Text('视频ID无效'))),
         );
       }
       return MaterialPageRoute(
@@ -137,6 +134,34 @@ var onGenerateRoute = (RouteSettings settings) {
       );
     case '/articles':
       return MaterialPageRoute(builder: (_) => const ArticleListPage());
+    case '/search':
+      String initialKeyword = '';
+      String initialScope = 'all';
+      String initialSort = 'default';
+      final args = settings.arguments;
+      if (args is String) {
+        initialKeyword = args;
+      } else if (args is Map<String, dynamic>) {
+        final rawKeyword = args['keyword'];
+        final rawScope = args['scope'];
+        final rawSort = args['sort'];
+        if (rawKeyword is String) {
+          initialKeyword = rawKeyword;
+        }
+        if (rawScope is String) {
+          initialScope = rawScope;
+        }
+        if (rawSort is String) {
+          initialSort = rawSort;
+        }
+      }
+      return MaterialPageRoute(
+        builder: (_) => SearchPage(
+          initialKeyword: initialKeyword,
+          initialScope: initialScope,
+          initialSort: initialSort,
+        ),
+      );
     case '/pointsDetail':
       return MaterialPageRoute(builder: (_) => const PointsDetailPage());
     case '/articleDetail':
@@ -154,9 +179,7 @@ var onGenerateRoute = (RouteSettings settings) {
       }
       if (articleId == null) {
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('文章ID无效')),
-          ),
+          builder: (_) => const Scaffold(body: Center(child: Text('文章ID无效'))),
         );
       }
       return MaterialPageRoute(

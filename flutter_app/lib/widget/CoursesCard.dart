@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class CoursesCard extends StatelessWidget {
   final String title;
@@ -6,6 +6,7 @@ class CoursesCard extends StatelessWidget {
   final String coverUrl;
   final int viewCount;
   final int favoriteCount;
+  final String highlightKeyword;
   final VoidCallback onTap;
 
   const CoursesCard({
@@ -15,13 +16,70 @@ class CoursesCard extends StatelessWidget {
     required this.coverUrl,
     required this.viewCount,
     required this.favoriteCount,
+    this.highlightKeyword = '',
     required this.onTap,
   });
+
+  List<TextSpan> _highlightSpans(
+    BuildContext context,
+    String text,
+    TextStyle? baseStyle,
+  ) {
+    final keyword = highlightKeyword.trim();
+    if (keyword.isEmpty || text.isEmpty) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerKeyword = keyword.toLowerCase();
+    final start = lowerText.indexOf(lowerKeyword);
+    if (start < 0) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final highlightStyle = baseStyle?.copyWith(
+      color: Theme.of(context).colorScheme.primary,
+      fontWeight: FontWeight.w700,
+    );
+
+    final spans = <TextSpan>[];
+    int cursor = 0;
+    while (cursor < text.length) {
+      final index = lowerText.indexOf(lowerKeyword, cursor);
+      if (index < 0) {
+        spans.add(TextSpan(text: text.substring(cursor), style: baseStyle));
+        break;
+      }
+      if (index > cursor) {
+        spans.add(
+          TextSpan(text: text.substring(cursor, index), style: baseStyle),
+        );
+      }
+      final end = index + keyword.length;
+      spans.add(
+        TextSpan(text: text.substring(index, end), style: highlightStyle),
+      );
+      cursor = end;
+    }
+    return spans;
+  }
+
+  Widget _buildHighlightText(
+    BuildContext context,
+    String text,
+    TextStyle? style, {
+    required int maxLines,
+  }) {
+    return Text.rich(
+      TextSpan(children: _highlightSpans(context, text, style)),
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = theme.colorScheme.primary;
 
     String formatCount(int value) {
       if (value >= 10000) {
@@ -74,7 +132,11 @@ class CoursesCard extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.remove_red_eye, size: 14, color: Colors.white),
+                              const Icon(
+                                Icons.remove_red_eye,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 formatCount(viewCount),
@@ -83,7 +145,11 @@ class CoursesCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(Icons.favorite, size: 14, color: Colors.white),
+                              const Icon(
+                                Icons.favorite,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 formatCount(favoriteCount),
@@ -99,29 +165,34 @@ class CoursesCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
+                  padding: EdgeInsets.fromLTRB(
+                    12,
+                    verticalPadding,
+                    12,
+                    verticalPadding,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      _buildHighlightText(
+                        context,
                         title,
-                        style: theme.textTheme.titleSmall?.copyWith(
+                        theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           height: 1.1,
                           fontSize: compact ? 13 : null,
                         ),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      Text(
+                      _buildHighlightText(
+                        context,
                         summary,
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        theme.textTheme.bodySmall?.copyWith(
                           height: 1.1,
                           fontSize: compact ? 11 : null,
                         ),
                         maxLines: summaryLines,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -167,7 +238,12 @@ class CoursesCardSkeleton extends StatelessWidget {
                 color: Colors.grey.shade300,
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  verticalPadding,
+                  12,
+                  verticalPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
