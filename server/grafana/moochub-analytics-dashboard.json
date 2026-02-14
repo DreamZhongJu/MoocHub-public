@@ -1,0 +1,489 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_MOOCHUB_MYSQL",
+      "label": "Moochub MySQL",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(SUM(pv), 0) AS value\nFROM event_stats_hourly\nWHERE event_type = 'exposure' AND $__timeFilter(bucket_hour);",
+          "refId": "A"
+        }
+      ],
+      "title": "曝光 PV",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(SUM(pv), 0) AS value\nFROM event_stats_hourly\nWHERE event_type = 'click' AND $__timeFilter(bucket_hour);",
+          "refId": "A"
+        }
+      ],
+      "title": "点击 PV",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.02
+              },
+              {
+                "color": "green",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "table",
+          "rawSql": "SELECT\n  CASE\n    WHEN exposure_pv = 0 THEN 0\n    ELSE click_pv / exposure_pv\n  END AS value\nFROM (\n  SELECT\n    COALESCE(SUM(CASE WHEN event_type = 'exposure' THEN pv ELSE 0 END), 0) AS exposure_pv,\n    COALESCE(SUM(CASE WHEN event_type = 'click' THEN pv ELSE 0 END), 0) AS click_pv\n  FROM event_stats_hourly\n  WHERE $__timeFilter(bucket_hour)\n) t;",
+          "refId": "A"
+        }
+      ],
+      "title": "点击率 CTR",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.2
+              },
+              {
+                "color": "green",
+                "value": 0.4
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "table",
+          "rawSql": "SELECT\n  CASE\n    WHEN play_start_uv = 0 THEN 0\n    ELSE play_complete_uv / play_start_uv\n  END AS value\nFROM (\n  SELECT\n    COALESCE(SUM(CASE WHEN event_type = 'play_start' THEN uv ELSE 0 END), 0) AS play_start_uv,\n    COALESCE(SUM(CASE WHEN event_type = 'play_complete' THEN uv ELSE 0 END), 0) AS play_complete_uv\n  FROM event_stats_hourly\n  WHERE $__timeFilter(bucket_hour)\n) t;",
+          "refId": "A"
+        }
+      ],
+      "title": "完播率",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "never"
+          },
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "time_series",
+          "rawSql": "SELECT\n  bucket_hour AS time,\n  event_type AS metric,\n  SUM(pv) AS value\nFROM event_stats_hourly\nWHERE event_type IN ('exposure', 'click', 'play_start', 'play_complete')\n  AND $__timeFilter(bucket_hour)\nGROUP BY bucket_hour, event_type\nORDER BY bucket_hour;",
+          "refId": "A"
+        }
+      ],
+      "title": "事件趋势（PV）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "never"
+          },
+          "mappings": [],
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "time_series",
+          "rawSql": "SELECT\n  bucket_hour AS time,\n  CASE\n    WHEN SUM(CASE WHEN event_type = 'exposure' THEN pv ELSE 0 END) = 0 THEN 0\n    ELSE SUM(CASE WHEN event_type = 'click' THEN pv ELSE 0 END) /\n         SUM(CASE WHEN event_type = 'exposure' THEN pv ELSE 0 END)\n  END AS ctr,\n  CASE\n    WHEN SUM(CASE WHEN event_type = 'play_start' THEN uv ELSE 0 END) = 0 THEN 0\n    ELSE SUM(CASE WHEN event_type = 'play_complete' THEN uv ELSE 0 END) /\n         SUM(CASE WHEN event_type = 'play_start' THEN uv ELSE 0 END)\n  END AS complete_rate\nFROM event_stats_hourly\nWHERE $__timeFilter(bucket_hour)\nGROUP BY bucket_hour\nORDER BY bucket_hour;",
+          "refId": "A"
+        }
+      ],
+      "title": "CTR/完播率趋势",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MOOCHUB_MYSQL}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MOOCHUB_MYSQL}"
+          },
+          "format": "table",
+          "rawSql": "SELECT\n  content_type,\n  content_id,\n  SUM(pv) AS click_pv,\n  SUM(uv) AS click_uv\nFROM event_stats_hourly\nWHERE event_type = 'click'\n  AND $__timeFilter(bucket_hour)\nGROUP BY content_type, content_id\nORDER BY click_pv DESC\nLIMIT 20;",
+          "refId": "A"
+        }
+      ],
+      "title": "点击 Top 内容",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "moochub",
+    "analytics"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Moochub 埋点看板",
+  "uid": "moochub-analytics-v1",
+  "version": 1,
+  "weekStart": ""
+}

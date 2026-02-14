@@ -1,7 +1,8 @@
-﻿import 'package:MoocHub/model/CoursesModel.dart';
+import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/routers/route_observer.dart';
+import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/ArticleCard.dart';
@@ -37,8 +38,34 @@ class HomePageState extends State<HomePage>
   VideoModel? _continueVideo;
   int _continuePositionSec = 0;
   double _continuePercent = 0;
+  int _mockLoadCursor = 0;
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
+  final AnalyticsService _analyticsService = AnalyticsService();
+  static const String _homeScene = 'home_feed';
+  final Set<String> _homeExposedKeys = <String>{};
+
+  Duration _nextMockDelay() {
+    const fastDelaysMs = <int>[120, 180, 260];
+    const slowDelaysMs = <int>[680, 920, 760];
+
+    // 3 次快 -> 3 次慢，循环切换，模拟“时快时慢”的加载体验。
+    final inSlowPhase = ((_mockLoadCursor ~/ 3) % 2) == 1;
+    final indexInPhase = _mockLoadCursor % 3;
+    _mockLoadCursor += 1;
+    final ms = inSlowPhase
+        ? slowDelaysMs[indexInPhase]
+        : fastDelaysMs[indexInPhase];
+    return Duration(milliseconds: ms);
+  }
+
+  Future<void> _waitMockLoadingDelay(DateTime startedAt) async {
+    final target = _nextMockDelay();
+    final elapsed = DateTime.now().difference(startedAt);
+    if (elapsed < target) {
+      await Future.delayed(target - elapsed);
+    }
+  }
 
   @override
   void initState() {
@@ -345,7 +372,10 @@ class HomePageState extends State<HomePage>
     if (reset) {
       _page = 1;
       _hasMore = true;
+      _homeExposedKeys.clear();
+      _analyticsService.resetSceneExposure(_homeScene);
     }
+    final startedAt = DateTime.now();
 
     try {
       final results = await Future.wait([
@@ -422,6 +452,7 @@ class HomePageState extends State<HomePage>
         });
       }
     } finally {
+      await _waitMockLoadingDelay(startedAt);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -453,6 +484,12 @@ class HomePageState extends State<HomePage>
           showBackTop = shouldShow;
         });
       }
+      if (_isLoading || _isLoadingMore || !_hasMore) return;
+      final remain =
+          controller.position.maxScrollExtent - controller.position.pixels;
+      if (remain <= 200) {
+        _loadRecommendedProducts(reset: false, fromLoadMore: true);
+      }
     });
   }
 
@@ -482,7 +519,34 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildRecommendedItem(CoursesModel product) {
+  void _reportHomeExposure({
+    required String contentType,
+    required String contentIdText,
+    required int position,
+  }) {
+    final contentId = int.tryParse(contentIdText);
+    if (contentId == null) return;
+
+    final key = '$contentType|$contentId';
+    if (_homeExposedKeys.contains(key)) return;
+    _homeExposedKeys.add(key);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _analyticsService.trackExposure(
+        contentType: contentType,
+        contentId: contentId,
+        scene: _homeScene,
+        position: position,
+      );
+    });
+  }
+
+  Widget _buildRecommendedItem(CoursesModel product, int position) {
+    _reportHomeExposure(
+      contentType: 'course',
+      contentIdText: product.id,
+      position: position,
+    );
     return CoursesCard(
       key: ValueKey(product.id),
       title: product.title,
@@ -495,12 +559,23 @@ class HomePageState extends State<HomePage>
         if (id == null) {
           return;
         }
+        _analyticsService.trackClick(
+          contentType: 'course',
+          contentId: id,
+          scene: _homeScene,
+          position: position,
+        );
         Navigator.pushNamed(context, '/courseDetail', arguments: id);
       },
     );
   }
 
-  Widget _buildArticleItem(ArticleModel article) {
+  Widget _buildArticleItem(ArticleModel article, int position) {
+    _reportHomeExposure(
+      contentType: 'article',
+      contentIdText: article.id,
+      position: position,
+    );
     return ArticleCard(
       key: ValueKey('article-${article.id}'),
       title: article.title,
@@ -513,17 +588,24 @@ class HomePageState extends State<HomePage>
         if (id == null) {
           return;
         }
+        _analyticsService.trackClick(
+          contentType: 'article',
+          contentId: id,
+          scene: _homeScene,
+          position: position,
+        );
         Navigator.pushNamed(context, '/articleDetail', arguments: id);
       },
     );
   }
 
-  Widget _buildFeedItem(_HomeFeedItem item) {
+  Widget _buildFeedItem(_HomeFeedItem item, int index) {
+    final position = index + 1;
     if (item.isArticle && item.article != null) {
-      return _buildArticleItem(item.article!);
+      return _buildArticleItem(item.article!, position);
     }
     if (item.course != null) {
-      return _buildRecommendedItem(item.course!);
+      return _buildRecommendedItem(item.course!, position);
     }
     return const SizedBox.shrink();
   }
@@ -551,7 +633,7 @@ class HomePageState extends State<HomePage>
       sliver: SliverGrid(
         gridDelegate: _gridDelegate(),
         delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildFeedItem(_feedItems[index]),
+          (context, index) => _buildFeedItem(_feedItems[index], index),
           childCount: _feedItems.length,
         ),
       ),

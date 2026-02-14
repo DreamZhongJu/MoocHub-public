@@ -271,6 +271,24 @@ CREATE TABLE favorite_articles (
 12) `users`（积分字段扩展）
 - `points_balance` (当前积分余额，默认 0)
 
+13) `event_logs`（埋点原始事件）
+- `id` (PK)
+- `event_type`（`exposure/click/play_start/play_complete`）
+- `content_type`, `content_id`
+- `user_id`（可空）, `session_id`, `scene`, `position`
+- `ip`, `ua`, `occurred_at`, `created_at`
+- 索引：`(event_type, occurred_at)`、`(content_type, content_id, occurred_at)`
+
+14) `event_stats_hourly`（埋点小时聚合）
+- `id` (PK)
+- `bucket_hour`（小时粒度）
+- `event_type`, `content_type`, `content_id`, `scene`
+- `pv`, `uv`
+- `created_at`, `updated_at`
+- UNIQUE(`bucket_hour`, `event_type`, `content_type`, `content_id`, `scene`)
+
+> 建表脚本：`server/scripts/event_analytics_schema.sql`
+
 ### MongoDB（文档型）
 1) `comments`
 - `target_type` (course/video), `target_id` (MySQL ID)
@@ -323,7 +341,7 @@ CREATE TABLE favorite_articles (
 | 11   | 实时聊天（私信/群聊）                | 入口：首页右上角消息；头像私信；私聊+群聊      | ✅    |
 | 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | ✅    |
 | 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ✅    |
-| 12   | 埋点与数据看板（曝光/点击/完播）     | 埋点事件定义；看板指标口径；可视化面板         | ⬜    |
+| 12   | 埋点与数据看板（曝光/点击/完播）     | 埋点事件定义；看板指标口径；可视化面板         | ✅    |
 | 12   | 指标告警（Prometheus/Grafana）       | 指标采集；告警规则；可视化面板                 | ⬜    |
 | 12   | 统一日志规范（结构化/链路追踪）      | 结构化字段；trace_id；采样与落盘策略           | ⬜    |
 | 12   | 缓存预热/热点保护/分页索引优化       | 首页/分类预热；热点 key 锁；分页索引优化       | ⬜    |
@@ -399,6 +417,16 @@ CREATE TABLE favorite_articles (
 | GET  | `/progress/{video_id}` | 登录 | -                                                   | `last_position_sec`, `progress_percent` |
 | GET  | `/progress/latest`     | 登录 | -                                                   | `video`, `progress`                     |
 
+### 埋点事件（M1）
+| 方法 | 路径                | 权限 | 请求参数                                                                | 响应             |
+| ---- | ------------------- | ---- | ----------------------------------------------------------------------- | ---------------- |
+| POST | `/events/exposure`  | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
+| POST | `/events/click`     | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
+| POST | `/events/complete`  | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
+| POST | `/events/play`      | 无   | `video_id`, `scene?`, `session_id?`, `position?`                        | `skipped`（去重） |
+
+> 事件会异步写入 `event_logs`，并聚合到 `event_stats_hourly`（PV/UV）。
+
 ### 积分体系
 | 方法 | 路径                    | 权限 | 请求参数                                     | 响应                          |
 | ---- | ----------------------- | ---- | -------------------------------------------- | ----------------------------- |
@@ -442,6 +470,9 @@ CREATE TABLE favorite_articles (
 ### 管理端（MVP）
 | 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应             |
 | ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | ---------------- |
+| GET    | `/admin/analytics/overview` | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                  | 汇总指标（曝光/点击/完播/CTR） |
+| GET    | `/admin/analytics/trend`    | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                  | 小时趋势（PV/UV/CTR/完播率）   |
+| GET    | `/admin/analytics/top`      | 管理员 | `from?`, `to?`, `event_type?`, `content_type?`, `scene?`, `limit?`                        | Top 内容（按 PV）              |
 | POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course`         |
 | PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -                |
 | DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -                |
@@ -450,6 +481,11 @@ CREATE TABLE favorite_articles (
 | DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -                |
 | DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -                |
 | POST   | `/admin/push`          | 管理员 | `user_id?`, `user_ids?`, `title`, `content`, `type?`, `route?`, `biz_id?`                   | `sent`, `failed` |
+
+### Grafana 看板（M3）
+- 看板 JSON：`server/grafana/moochub-analytics-dashboard.json`
+- 数据源：MySQL（指向 `event_stats_hourly` 所在库）
+- 导入方式：Grafana -> Dashboards -> Import -> 上传 JSON -> 选择数据源
 
 ---
 

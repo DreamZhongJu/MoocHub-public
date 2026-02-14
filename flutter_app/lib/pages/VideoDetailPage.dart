@@ -1,6 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/VideoModel.dart';
+import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
@@ -21,6 +22,7 @@ class VideoDetailPage extends StatefulWidget {
 class _VideoDetailPageState extends State<VideoDetailPage> {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+  final AnalyticsService _analyticsService = AnalyticsService();
   VideoModel? _video;
   bool _loading = true;
   bool _error = false;
@@ -34,6 +36,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   Timer? _progressTimer;
   VideoPlayerController? _videoController;
   bool _playEventSent = false;
+  bool _completeEventSent = false;
 
   @override
   void initState() {
@@ -87,6 +90,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
 
       _playEventSent = false;
+      _completeEventSent = false;
       _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
       await _videoController!.initialize();
       await _videoController!.setPlaybackSpeed(_playbackSpeed);
@@ -130,6 +134,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (controller == null || !controller.value.isInitialized) return;
     if (controller.value.isPlaying) {
       _maybeReportPlayEvent();
+      _maybeReportCompleteEvent();
       return;
     }
     _saveProgress();
@@ -187,15 +192,37 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
     if (position < 10 && percent < 5) return;
 
-    try {
-      await _apiService.postForm<Map<String, dynamic>>(
-        '/events/play',
-        data: {'video_id': widget.videoId.toString()},
-        fromJson: (raw) => raw as Map<String, dynamic>,
-      );
+    final ok = await _analyticsService.trackPlayStart(
+      videoId: widget.videoId,
+      scene: 'video_detail',
+      position: position,
+    );
+    if (ok) {
       _playEventSent = true;
-    } catch (_) {
-      // ignore
+    }
+  }
+
+  Future<void> _maybeReportCompleteEvent() async {
+    if (_completeEventSent) return;
+    final controller = _videoController;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final duration = controller.value.duration.inSeconds;
+    if (duration <= 0) return;
+
+    final position = controller.value.position.inSeconds
+        .clamp(0, duration)
+        .toInt();
+    final percent = position / duration * 100;
+    if (percent < 90) return;
+
+    final ok = await _analyticsService.trackPlayComplete(
+      videoId: widget.videoId,
+      scene: 'video_detail',
+      position: position,
+    );
+    if (ok) {
+      _completeEventSent = true;
     }
   }
 
@@ -219,7 +246,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
 
       final controller = _videoController;
-      if (controller != null && controller.value.isInitialized && lastSeconds > 0) {
+      if (controller != null &&
+          controller.value.isInitialized &&
+          lastSeconds > 0) {
         final duration = controller.value.duration.inSeconds;
         if (lastSeconds < duration) {
           await controller.seekTo(Duration(seconds: lastSeconds));
@@ -300,9 +329,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const ListTile(
-                title: Text('播放设置'),
-              ),
+              const ListTile(title: Text('播放设置')),
               ListTile(
                 title: const Text('倍速'),
                 subtitle: Text('${_playbackSpeed}x'),

@@ -100,6 +100,9 @@ func Router() *gin.Engine {
 		user.POST("/progress", middleware.AuthMiddleware(), controllers.ProgressController{}.UpsertProgress)
 		user.GET("/progress/:video_id", middleware.AuthMiddleware(), controllers.ProgressController{}.GetProgress)
 		user.GET("/progress/latest", middleware.AuthMiddleware(), controllers.ProgressController{}.GetLatestProgress)
+		user.POST("/events/exposure", controllers.EventsController{}.Exposure)
+		user.POST("/events/click", controllers.EventsController{}.Click)
+		user.POST("/events/complete", controllers.EventsController{}.Complete)
 		user.POST("/events/play", controllers.EventsController{}.Play)
 		user.GET("/points/balance", middleware.AuthMiddleware(), controllers.PointsController{}.GetBalance)
 		user.GET("/points/transactions", middleware.AuthMiddleware(), controllers.PointsController{}.GetTransactions)
@@ -117,6 +120,9 @@ func Router() *gin.Engine {
 		}
 		admin := user.Group("/admin", middleware.AdminMiddleware())
 		{
+			admin.GET("/analytics/overview", controllers.AdminAnalyticsController{}.Overview)
+			admin.GET("/analytics/trend", controllers.AdminAnalyticsController{}.Trend)
+			admin.GET("/analytics/top", controllers.AdminAnalyticsController{}.Top)
 			admin.POST("/courses", controllers.AdminController{}.CreateCourse)
 			admin.PUT("/courses/:id", controllers.AdminController{}.UpdateCourse)
 			admin.DELETE("/courses/:id", controllers.AdminController{}.DeleteCourse)

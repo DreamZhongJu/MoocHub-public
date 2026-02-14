@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"MOOCHUB-server/cache"
@@ -98,6 +98,7 @@ func main() {
 
 	workers.StartProgressWorker()
 	workers.StartPlayWorker()
+	workers.StartEventAnalyticsWorker()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")
