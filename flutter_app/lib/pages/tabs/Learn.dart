@@ -1,6 +1,7 @@
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
+import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 
@@ -18,6 +19,7 @@ class LearnPageState extends State<LearnPage>
 
   bool _loading = true;
   bool _loggedIn = false;
+  int _userId = 0;
   int _balance = 0;
 
   bool _loadingChats = false;
@@ -25,6 +27,10 @@ class LearnPageState extends State<LearnPage>
   int _chatUnreadTotal = 0;
   List<_ConversationItem> _chatItems = [];
   Set<String> _hiddenConversationIds = <String>{};
+
+  bool _weakNetwork = false;
+  bool _usingOfflineCache = false;
+  String _networkHint = '';
 
   @override
   void initState() {
@@ -54,10 +60,75 @@ class LearnPageState extends State<LearnPage>
     await _loadData();
   }
 
+  String _balanceCacheKey() => 'learn_points_balance_v1_$_userId';
+  String _chatCacheKey() => 'learn_chat_list_v1_$_userId';
+
+  Future<bool> _applyBalanceCache({Duration? maxAge}) async {
+    final payload = await _storage.getOfflinePayload(
+      _balanceCacheKey(),
+      maxAge: maxAge,
+    );
+    if (payload == null) return false;
+    final raw = payload['balance'];
+    int value = 0;
+    if (raw is num) {
+      value = raw.toInt();
+    } else {
+      value = int.tryParse(raw?.toString() ?? '') ?? 0;
+    }
+    if (!mounted) return true;
+    setState(() {
+      _balance = value;
+    });
+    return true;
+  }
+
+  Future<void> _saveBalanceCache(int balance) async {
+    await _storage.saveOfflinePayload(_balanceCacheKey(), {'balance': balance});
+  }
+
+  Future<bool> _applyChatCache({Duration? maxAge}) async {
+    final payload = await _storage.getOfflinePayload(
+      _chatCacheKey(),
+      maxAge: maxAge,
+    );
+    if (payload == null) return false;
+    final raw = payload['items'];
+    if (raw is! List) return false;
+    final items = <_ConversationItem>[];
+    for (final item in raw) {
+      if (item is Map) {
+        final parsed = _ConversationItem.fromJson(
+          Map<String, dynamic>.from(item),
+        );
+        if (!_hiddenConversationIds.contains(parsed.id)) {
+          items.add(parsed);
+        }
+      }
+    }
+    if (items.isEmpty) return false;
+    if (!mounted) return true;
+
+    final unread = items.fold<int>(0, (prev, e) => prev + e.unread);
+    setState(() {
+      _chatItems = items;
+      _chatUnreadTotal = unread;
+      _loadingChats = false;
+    });
+    return true;
+  }
+
+  Future<void> _saveChatCache(List<_ConversationItem> items) async {
+    await _storage.saveOfflinePayload(_chatCacheKey(), {
+      'items': items.map((e) => e.toJson()).toList(),
+    });
+  }
+
   Future<void> _loadData() async {
     final token = await _storage.getUserToken();
     final loggedIn =
         token != null && token.toString().isNotEmpty && token != 'null';
+    final userId = await _storage.getUserId();
     if (!loggedIn) {
       if (mounted) {
         setState(() {
@@ -68,43 +139,62 @@ class LearnPageState extends State<LearnPage>
           _chatUnreadTotal = 0;
           _loadingChats = false;
           _errorChats = false;
+          _weakNetwork = false;
+          _usingOfflineCache = false;
+          _networkHint = '';
         });
       }
       return;
     }
 
+    _userId = userId ?? 0;
+    if (mounted) {
+      setState(() {
+        _loggedIn = true;
+        _weakNetwork = false;
+        _usingOfflineCache = false;
+        _networkHint = '';
+      });
+    }
+
     try {
-      final balanceResp = await _api.get<Map<String, dynamic>>(
+      final balanceResp = await _api.getWithRetry<Map<String, dynamic>>(
         '/points/balance',
         fromJson: (data) => Map<String, dynamic>.from(data as Map),
+        retries: 2,
+        baseDelay: const Duration(milliseconds: 300),
       );
       final balance =
           (balanceResp.data['points_balance'] as num?)?.toInt() ?? 0;
-
       if (mounted) {
         setState(() {
-          _loggedIn = true;
           _balance = balance;
-          _loading = false;
         });
       }
-
-      await _loadHiddenConversationIds();
-      await _loadChats();
-    } catch (e) {
+      await _saveBalanceCache(balance);
+    } catch (_) {
+      final loaded = await _applyBalanceCache(maxAge: const Duration(days: 3));
+      if (mounted && loaded) {
+        setState(() {
+          _weakNetwork = true;
+          _usingOfflineCache = true;
+          _networkHint = '网络较弱，积分数据来自离线缓存';
+        });
+      }
+    } finally {
       if (mounted) {
         setState(() {
-          _loggedIn = true;
           _loading = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('积分加载失败: $e')));
       }
     }
+
+    await _loadHiddenConversationIds();
+    await _loadChats();
   }
 
   Future<void> _loadChats() async {
+    bool usedCache = false;
     if (mounted) {
       setState(() {
         _loadingChats = true;
@@ -112,15 +202,23 @@ class LearnPageState extends State<LearnPage>
       });
     }
 
+    usedCache = await _applyChatCache(maxAge: const Duration(hours: 6));
+    if (usedCache && mounted) {
+      setState(() {
+        _usingOfflineCache = true;
+      });
+    }
+
     try {
-      final convResp = await _api.get<Map<String, dynamic>>(
+      final convResp = await _api.getWithRetry<Map<String, dynamic>>(
         '/chat/conversations',
         queryParameters: const {'page': 1, 'page_size': 8},
         fromJson: (data) => Map<String, dynamic>.from(data as Map),
+        retries: 2,
+        baseDelay: const Duration(milliseconds: 320),
       );
 
       final convData = convResp.data;
-
       final rawItems = convData['items'] as List<dynamic>? ?? [];
       final items = rawItems
           .whereType<Map>()
@@ -128,11 +226,7 @@ class LearnPageState extends State<LearnPage>
           .where((e) => !_hiddenConversationIds.contains(e.id))
           .toList();
 
-      final unreadInVisibleList = items.fold<int>(
-        0,
-        (prev, e) => prev + e.unread,
-      );
-      final unread = unreadInVisibleList;
+      final unread = items.fold<int>(0, (prev, e) => prev + e.unread);
 
       if (mounted) {
         setState(() {
@@ -140,13 +234,23 @@ class LearnPageState extends State<LearnPage>
           _chatUnreadTotal = unread;
           _loadingChats = false;
           _errorChats = false;
+          _weakNetwork = false;
+          _usingOfflineCache = false;
+          _networkHint = '';
         });
       }
+      await _saveChatCache(items);
     } catch (_) {
+      final fallback = usedCache
+          ? true
+          : await _applyChatCache(maxAge: const Duration(days: 3));
       if (mounted) {
         setState(() {
           _loadingChats = false;
-          _errorChats = true;
+          _errorChats = !fallback;
+          _weakNetwork = true;
+          _usingOfflineCache = fallback;
+          _networkHint = fallback ? '网络较弱，聊天列表来自离线缓存' : '聊天列表加载失败，请下拉重试';
         });
       }
     }
@@ -244,9 +348,8 @@ class LearnPageState extends State<LearnPage>
     }
 
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    final controller = messenger.showSnackBar(
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('会话已隐藏（历史消息不会删除）'),
         action: SnackBarAction(
@@ -258,10 +361,6 @@ class LearnPageState extends State<LearnPage>
         duration: const Duration(seconds: 4),
       ),
     );
-    Future.delayed(const Duration(seconds: 4), () {
-      if (!mounted) return;
-      controller.close();
-    });
   }
 
   Future<void> _restoreConversation(String conversationId) async {
@@ -427,19 +526,28 @@ class LearnPageState extends State<LearnPage>
               ],
             ),
             const SizedBox(height: 10),
-            if (_loadingChats)
-              Row(
-                children: [
-                  TDSkeleton(
-                    animation: TDSkeletonAnimation.gradient,
-                    theme: TDSkeletonTheme.paragraph,
-                  ),
-                ],
+            if (_loadingChats && _chatItems.isEmpty)
+              const AppListSkeleton(
+                itemCount: 3,
+                itemHeight: 76,
+                padding: EdgeInsets.zero,
               )
             else if (_errorChats)
-              const Text('聊天列表加载失败', style: TextStyle(color: Colors.grey))
+              AppEmptyState(
+                icon: Icons.chat_bubble_outline,
+                title: '聊天列表加载失败',
+                subtitle: '请检查网络后重试',
+                actionText: '重试',
+                onAction: _loadChats,
+                margin: EdgeInsets.zero,
+              )
             else if (_chatItems.isEmpty)
-              const Text('暂无会话', style: TextStyle(color: Colors.grey))
+              const AppEmptyState(
+                icon: Icons.forum_outlined,
+                title: '暂无会话',
+                subtitle: '发起私信或加入群聊后会显示在这里',
+                margin: EdgeInsets.zero,
+              )
             else
               Column(
                 children: [
@@ -456,26 +564,16 @@ class LearnPageState extends State<LearnPage>
   }
 
   Widget _buildLoginPrompt() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.lock, size: 48, color: Colors.grey),
-            const SizedBox(height: 12),
-            const Text('登录后查看积分与聊天'),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () async {
-                await Navigator.pushNamed(context, '/login');
-                await _loadData();
-              },
-              child: const Text('去登录'),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.lock_outline,
+      title: '登录后查看学习数据',
+      subtitle: '可查看积分、会话和学习相关功能',
+      actionText: '去登录',
+      onAction: () async {
+        await Navigator.pushNamed(context, '/login');
+        await _loadData();
+      },
+      margin: const EdgeInsets.fromLTRB(16, 40, 16, 0),
     );
   }
 
@@ -483,7 +581,11 @@ class LearnPageState extends State<LearnPage>
   Widget build(BuildContext context) {
     super.build(context);
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton(
+        itemCount: 4,
+        itemHeight: 84,
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+      );
     }
 
     if (!_loggedIn) {
@@ -495,6 +597,13 @@ class LearnPageState extends State<LearnPage>
       child: ListView(
         children: [
           _buildBalanceCard(),
+          if (_weakNetwork || _usingOfflineCache)
+            AppWeakNetworkBanner(
+              text: _networkHint.isNotEmpty
+                  ? _networkHint
+                  : (_usingOfflineCache ? '已展示离线缓存内容' : '当前网络较弱'),
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            ),
           _buildChatSection(),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -532,6 +641,18 @@ class _ConversationItem {
   });
 
   factory _ConversationItem.fromJson(Map<String, dynamic> json) {
+    if (json.containsKey('preview') && json.containsKey('avatar_url')) {
+      return _ConversationItem(
+        id: json['id']?.toString() ?? '',
+        title: json['title']?.toString() ?? '私聊',
+        preview: json['preview']?.toString() ?? '暂无消息',
+        time: json['time']?.toString() ?? '',
+        unread: (json['unread'] as num?)?.toInt() ?? 0,
+        avatarUrl: json['avatar_url']?.toString() ?? '',
+        isGroup: json['is_group'] == true || json['is_group'] == 1,
+      );
+    }
+
     final id = json['id']?.toString() ?? '';
     final type = json['type']?.toString() ?? 'private';
     final title = (json['name']?.toString().trim() ?? '').isEmpty
@@ -553,6 +674,18 @@ class _ConversationItem {
           : avatarUrl,
       isGroup: type == 'group',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'preview': preview,
+      'time': time,
+      'unread': unread,
+      'avatar_url': avatarUrl,
+      'is_group': isGroup ? 1 : 0,
+    };
   }
 
   static String _formatTime(String raw) {

@@ -24,24 +24,33 @@ type Article struct {
 
 func GetArticles(sort string, page string, pageSize string) ([]Article, error) {
 	var articles []Article
-	dbq := db.GetDB()
+	dbq := db.GetDB().Model(&Article{}).Where("status = ?", "published")
 
 	switch sort {
 	case "view_count":
-		dbq = dbq.Order("view_count DESC")
+		dbq = dbq.Order("view_count DESC").Order("id DESC")
 	case "like_count":
-		dbq = dbq.Order("like_count DESC")
+		dbq = dbq.Order("like_count DESC").Order("id DESC")
 	default:
-		dbq = dbq.Order("created_at DESC")
+		dbq = dbq.Order("created_at DESC").Order("id DESC")
 	}
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, err
 	}
+	if pageInt < 1 {
+		pageInt = 1
+	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		return nil, err
+	}
+	if pageSizeInt < 1 {
+		pageSizeInt = 10
+	}
+	if pageSizeInt > 100 {
+		pageSizeInt = 100
 	}
 	offset := (pageInt - 1) * pageSizeInt
 	dbq = dbq.Offset(offset).Limit(pageSizeInt)
@@ -95,4 +104,24 @@ func IncrementArticleLikeCount(articleID int64) (int64, error) {
 		return 0, err
 	}
 	return likeCount, nil
+}
+
+func GetHotArticleIDs(limit int) ([]int64, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	ids := make([]int64, 0, limit)
+	err := db.GetDB().Model(&Article{}).
+		Where("status = ?", "published").
+		Order("view_count DESC").
+		Order("id DESC").
+		Limit(limit).
+		Pluck("id", &ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

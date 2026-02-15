@@ -25,25 +25,34 @@ type Courses struct {
 
 func GetCoursesByCategory(categoryID int64, sort string, page string, pageSize string) ([]Courses, error) {
 	var courses []Courses
-	db := db.GetDB()
+	db := db.GetDB().Model(&Courses{}).Where("status = ?", "published")
 	if categoryID != 0 {
 		db = db.Where("category_id = ?", categoryID)
 	}
 	switch sort {
 	case "view_count":
-		db = db.Order("view_count DESC")
+		db = db.Order("view_count DESC").Order("id DESC")
 	case "favorite_count":
-		db = db.Order("favorite_count DESC")
+		db = db.Order("favorite_count DESC").Order("id DESC")
 	default:
-		db = db.Order("created_at DESC")
+		db = db.Order("created_at DESC").Order("id DESC")
 	}
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, err
 	}
+	if pageInt < 1 {
+		pageInt = 1
+	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		return nil, err
+	}
+	if pageSizeInt < 1 {
+		pageSizeInt = 10
+	}
+	if pageSizeInt > 100 {
+		pageSizeInt = 100
 	}
 	offset := (pageInt - 1) * pageSizeInt
 	db = db.Offset(offset).Limit(pageSizeInt)
@@ -81,4 +90,24 @@ func IncrementCourseViewCount(courseID int64) error {
 	return db.GetDB().Model(&Courses{}).
 		Where("id = ?", courseID).
 		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}
+
+func GetHotCourseIDs(limit int) ([]int64, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	ids := make([]int64, 0, limit)
+	err := db.GetDB().Model(&Courses{}).
+		Where("status = ?", "published").
+		Order("view_count DESC").
+		Order("id DESC").
+		Limit(limit).
+		Pluck("id", &ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

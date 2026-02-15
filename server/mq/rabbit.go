@@ -2,7 +2,9 @@ package mq
 
 import (
 	"MOOCHUB-server/config"
+	"MOOCHUB-server/utils"
 	"context"
+	"strings"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -13,6 +15,7 @@ var ch *amqp.Channel
 
 const (
 	exchangeName = "moochub.events"
+	traceHeader  = "x-trace-id"
 )
 
 func InitRabbitMQ() error {
@@ -37,22 +40,35 @@ func InitRabbitMQ() error {
 }
 
 func Publish(routingKey string, body []byte) error {
+	return PublishWithTrace(routingKey, body, "")
+}
+
+func PublishWithTrace(routingKey string, body []byte, traceID string) error {
 	if ch == nil {
 		return nil
 	}
+	headers := amqp.Table{}
+	if tid := strings.TrimSpace(traceID); tid != "" {
+		headers[traceHeader] = tid
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	return ch.PublishWithContext(
-		ctx,
-		exchangeName,
-		routingKey,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        body,
-		},
-	)
+	return utils.Retry(ctx, 3, 80*time.Millisecond, 500*time.Millisecond, func(err error) bool {
+		return true
+	}, func() error {
+		return ch.PublishWithContext(
+			ctx,
+			exchangeName,
+			routingKey,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: "application/json",
+				Body:        body,
+				Headers:     headers,
+			},
+		)
+	})
 }
 
 func Consume(routingKey, queueName string) (<-chan amqp.Delivery, error) {
@@ -91,4 +107,18 @@ func CloseRabbitMQ() {
 	if conn != nil {
 		_ = conn.Close()
 	}
+}
+
+func TraceIDFromDelivery(msg amqp.Delivery) string {
+	if msg.Headers == nil {
+		return ""
+	}
+	raw, ok := msg.Headers[traceHeader]
+	if !ok {
+		return ""
+	}
+	if s, ok := raw.(string); ok {
+		return strings.TrimSpace(s)
+	}
+	return ""
 }

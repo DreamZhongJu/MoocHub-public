@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"MOOCHUB-server/utils"
 	"reflect"
 
 	"github.com/fatih/structs"
@@ -8,10 +9,11 @@ import (
 )
 
 type JsonStruct struct {
-	Code  int         `json:"Code"`
-	Msg   interface{} `json:"msg"`
-	Data  interface{} `json:"data"`
-	Count int64       `json:"count"`
+	Code    int         `json:"Code"`
+	Msg     interface{} `json:"msg"`
+	Data    interface{} `json:"data"`
+	Count   int64       `json:"count"`
+	TraceID string      `json:"trace_id,omitempty"`
 }
 
 func ReturnSuccess(c *gin.Context, code int, msg interface{}, data interface{}, count int64) {
@@ -30,11 +32,21 @@ func ReturnSuccess(c *gin.Context, code int, msg interface{}, data interface{}, 
 		processedData = data // 非结构体保持原样
 	}
 
-	json := &JsonStruct{Code: code, Msg: msg, Data: processedData, Count: count}
+	json := &JsonStruct{
+		Code:    code,
+		Msg:     msg,
+		Data:    processedData,
+		Count:   count,
+		TraceID: utils.GetTraceID(c),
+	}
 	c.JSON(200, json)
 }
 
 func ReturnError(c *gin.Context, httpCode int, msg interface{}) {
-	json := &JsonStruct{Code: httpCode, Msg: msg}
+	json := &JsonStruct{
+		Code:    httpCode,
+		Msg:     msg,
+		TraceID: utils.GetTraceID(c),
+	}
 	c.JSON(httpCode, json)
 }

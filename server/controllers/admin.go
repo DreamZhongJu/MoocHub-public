@@ -1,4 +1,4 @@
-﻿package controllers
+package controllers
 
 import (
 	"MOOCHUB-server/cache"
@@ -42,6 +42,10 @@ func (ac AdminController) CreateCourse(c *gin.Context) {
 	if err := model.CreateCourse(course); err != nil {
 		ReturnError(c, 500, "创建课程失败："+err.Error())
 		return
+	}
+	if client := cache.Client(); client != nil {
+		ctx := context.Background()
+		_ = cache.DeleteByPattern(ctx, "courses:list:*", 100)
 	}
 	ReturnSuccess(c, 200, "创建成功", gin.H{"course": course}, 0)
 }
@@ -98,10 +102,7 @@ func (ac AdminController) UpdateCourse(c *gin.Context) {
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
 		_ = client.Del(ctx, "courses:detail:"+idStr).Err()
-		iter := client.Scan(ctx, 0, "courses:list:*", 100).Iterator()
-		for iter.Next(ctx) {
-			_ = client.Del(ctx, iter.Val()).Err()
-		}
+		_ = cache.DeleteByPattern(ctx, "courses:list:*", 100)
 	}
 
 	ReturnSuccess(c, 200, "更新成功", nil, 0)
@@ -121,6 +122,11 @@ func (ac AdminController) DeleteCourse(c *gin.Context) {
 	if err := model.DeleteCourse(id); err != nil {
 		ReturnError(c, 500, "删除课程失败："+err.Error())
 		return
+	}
+	if client := cache.Client(); client != nil {
+		ctx := context.Background()
+		_ = client.Del(ctx, "courses:detail:"+idStr).Err()
+		_ = cache.DeleteByPattern(ctx, "courses:list:*", 100)
 	}
 	ReturnSuccess(c, 200, "删除成功", nil, 0)
 }

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/ArticleCard.dart';
+import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
@@ -26,6 +28,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final ApiService _apiService = ApiService();
+  final StorageService _storageService = StorageService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _suggestTimer;
@@ -36,6 +39,9 @@ class _SearchPageState extends State<SearchPage> {
   String _keyword = '';
   String _scope = 'all';
   String _sort = 'default';
+  bool _weakNetwork = false;
+  bool _usingOfflineCache = false;
+  String _networkHint = '';
 
   int _totalCourses = 0;
   int _totalArticles = 0;
@@ -146,6 +152,94 @@ class _SearchPageState extends State<SearchPage> {
     return result;
   }
 
+  String _cacheKey(String keyword, String scope, String sort) {
+    return 'search_v1_${scope}_${sort}_${keyword.toLowerCase()}';
+  }
+
+  Future<bool> _applySearchCache({
+    required String keyword,
+    required String scope,
+    required String sort,
+    Duration? maxAge,
+  }) async {
+    final payload = await _storageService.getOfflinePayload(
+      _cacheKey(keyword, scope, sort),
+      maxAge: maxAge,
+    );
+    if (payload == null) return false;
+
+    final rawCourses = payload['courses'];
+    final rawArticles = payload['articles'];
+    final courses = <CoursesModel>[];
+    if (rawCourses is List) {
+      for (final item in rawCourses) {
+        if (item is Map) {
+          courses.add(
+            CoursesModel.fromJson(
+              _normalizeCourseMap(item.cast<String, dynamic>()),
+            ),
+          );
+        }
+      }
+    }
+    final articles = <ArticleModel>[];
+    if (rawArticles is List) {
+      for (final item in rawArticles) {
+        if (item is Map) {
+          articles.add(
+            ArticleModel.fromJson(
+              _normalizeArticleMap(item.cast<String, dynamic>()),
+            ),
+          );
+        }
+      }
+    }
+
+    if (courses.isEmpty && articles.isEmpty) return false;
+
+    int totalCourses = 0;
+    final totalCoursesRaw = payload['total_courses'];
+    if (totalCoursesRaw is num) {
+      totalCourses = totalCoursesRaw.toInt();
+    } else {
+      totalCourses = int.tryParse(totalCoursesRaw?.toString() ?? '') ?? 0;
+    }
+    int totalArticles = 0;
+    final totalArticlesRaw = payload['total_articles'];
+    if (totalArticlesRaw is num) {
+      totalArticles = totalArticlesRaw.toInt();
+    } else {
+      totalArticles = int.tryParse(totalArticlesRaw?.toString() ?? '') ?? 0;
+    }
+
+    if (!mounted) return true;
+    setState(() {
+      _searched = true;
+      _items = _mixFeedItems(courses, articles);
+      _totalCourses = totalCourses;
+      _totalArticles = totalArticles;
+      _usingOfflineCache = true;
+    });
+    return true;
+  }
+
+  Future<void> _saveSearchCache({
+    required String keyword,
+    required String scope,
+    required String sort,
+    required List<CoursesModel> courses,
+    required List<ArticleModel> articles,
+    required int totalCourses,
+    required int totalArticles,
+  }) async {
+    await _storageService.saveOfflinePayload(_cacheKey(keyword, scope, sort), {
+      'courses': courses.map((e) => e.toJson()).toList(),
+      'articles': articles.map((e) => e.toJson()).toList(),
+      'total_courses': totalCourses,
+      'total_articles': totalArticles,
+    });
+  }
+
   Future<void> _loadSuggestions(String keyword) async {
     try {
       final response = await _apiService.get<Map<String, dynamic>>(
@@ -207,13 +301,16 @@ class _SearchPageState extends State<SearchPage> {
       _keyword = nextKeyword;
       _loading = true;
       _showSuggest = false;
+      _weakNetwork = false;
+      _usingOfflineCache = false;
+      _networkHint = '';
       if (submit) {
         _searched = true;
       }
     });
 
     try {
-      final response = await _apiService.get<Map<String, dynamic>>(
+      final response = await _apiService.getWithRetry<Map<String, dynamic>>(
         '/search',
         queryParameters: {
           'keyword': nextKeyword,
@@ -223,6 +320,8 @@ class _SearchPageState extends State<SearchPage> {
           'page_size': 30,
         },
         fromJson: (raw) => raw as Map<String, dynamic>,
+        retries: 2,
+        baseDelay: const Duration(milliseconds: 320),
       );
 
       final coursesRaw = response.data['courses'];
@@ -268,14 +367,38 @@ class _SearchPageState extends State<SearchPage> {
         _items = _mixFeedItems(courses, articles);
         _totalCourses = totalCourses;
         _totalArticles = totalArticles;
+        _weakNetwork = false;
+        _usingOfflineCache = false;
+        _networkHint = '';
       });
+
+      await _saveSearchCache(
+        keyword: nextKeyword,
+        scope: _scope,
+        sort: _sort,
+        courses: courses,
+        articles: articles,
+        totalCourses: totalCourses,
+        totalArticles: totalArticles,
+      );
     } catch (_) {
+      final cacheLoaded = await _applySearchCache(
+        keyword: nextKeyword,
+        scope: _scope,
+        sort: _sort,
+        maxAge: const Duration(days: 2),
+      );
       if (!mounted) return;
       setState(() {
-        _searched = true;
-        _items = [];
-        _totalCourses = 0;
-        _totalArticles = 0;
+        _weakNetwork = true;
+        _usingOfflineCache = cacheLoaded;
+        _networkHint = cacheLoaded ? '网络较弱，已显示离线缓存结果' : '网络不可用，暂时无法搜索';
+        if (!cacheLoaded) {
+          _searched = true;
+          _items = [];
+          _totalCourses = 0;
+          _totalArticles = 0;
+        }
       });
     } finally {
       if (mounted) {
@@ -414,19 +537,22 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton(itemCount: 6, itemHeight: 168);
     }
     if (!_searched) {
-      return const Center(
-        child: Text('输入关键词后点击搜索', style: TextStyle(color: Colors.grey)),
+      return const AppEmptyState(
+        icon: Icons.search_outlined,
+        title: '输入关键词开始搜索',
+        subtitle: '支持课程、文章和讲师名称',
       );
     }
     if (_items.isEmpty) {
-      return Center(
-        child: Text(
-          '没有找到“$_keyword”相关结果',
-          style: const TextStyle(color: Colors.grey),
-        ),
+      return AppEmptyState(
+        icon: Icons.travel_explore_outlined,
+        title: '没有找到“$_keyword”相关结果',
+        subtitle: _weakNetwork ? '请检查网络后重试' : '试试更短的关键词',
+        actionText: '重新搜索',
+        onAction: () => _search(submit: true),
       );
     }
     return ListView.separated(
@@ -517,6 +643,13 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
           const SizedBox(height: 6),
+          if (_weakNetwork || _usingOfflineCache)
+            AppWeakNetworkBanner(
+              text: _networkHint.isNotEmpty
+                  ? _networkHint
+                  : (_usingOfflineCache ? '已展示离线缓存结果' : '当前网络较弱'),
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            ),
           Expanded(child: _buildBody()),
         ],
       ),

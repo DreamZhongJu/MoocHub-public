@@ -1,27 +1,43 @@
 package router
 
 import (
+	"MOOCHUB-server/config"
 	"MOOCHUB-server/controllers"
 	"MOOCHUB-server/middleware"
+	"MOOCHUB-server/utils"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func Router() *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
 
-	// 配置 CORS 中间件
+	r.Use(middleware.TraceIDMiddleware())
+	r.Use(middleware.RateLimitMiddleware(middleware.RateLimitOptions{
+		Name:          "global",
+		Limit:         config.RateLimitGlobalPerMinute(),
+		Window:        time.Minute,
+		KeyFn:         middleware.KeyByIP,
+		SkipOnNoRedis: true,
+	}))
+	writeLimiter := middleware.RateLimitMiddleware(middleware.RateLimitOptions{
+		Name:          "write",
+		Limit:         config.RateLimitWritePerMinute(),
+		Window:        time.Minute,
+		KeyFn:         middleware.KeyByUserOrIP,
+		SkipOnNoRedis: true,
+	})
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:80", "http://127.0.0.1:80", "http://0.0.0.0:80"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", utils.HeaderTraceID},
+		ExposeHeaders:    []string{"Content-Length", utils.HeaderTraceID},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			// 允许所有本地开发环境的请求（192.168.x.x, 10.x.x.x, 172.16.x.x-172.31.x.x）
 			return strings.HasPrefix(origin, "http://localhost") ||
 				strings.HasPrefix(origin, "http://127.0.0.1") ||
 				strings.HasPrefix(origin, "http://192.168.") ||
@@ -45,18 +61,20 @@ func Router() *gin.Engine {
 		},
 	}))
 
-	// 添加日志和恢复中间件
 	r.Use(middleware.GinLogger(), middleware.GinRecovery(true))
 	r.Static("/uploads", "./uploads")
+
 	user := r.Group("/api/v1")
 	{
 		user.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
-		// user.GET("/test/comments10", controllers.CommentController{}.GetComments10)
-		// user.GET("/comments", controllers.CommentController{}.GetCommentsPaginated) // 可选
-		// user.POST("/getUserTest", controllers.UserController{}.GetUserTest)
-		// user.POST("/login", controllers.UserControllers{}.Login)
-		// user.POST("/sign", controllers.UserControllers{}.Sign)
 		auth := user.Group("/auth")
+		auth.Use(middleware.RateLimitMiddleware(middleware.RateLimitOptions{
+			Name:          "auth",
+			Limit:         config.RateLimitAuthPerMinute(),
+			Window:        time.Minute,
+			KeyFn:         middleware.KeyByIP,
+			SkipOnNoRedis: true,
+		}))
 		{
 			auth.POST("/register", controllers.UserController{}.Register)
 			auth.POST("/login", controllers.UserController{}.Login)
@@ -79,13 +97,14 @@ func Router() *gin.Engine {
 		user.POST("/uploads", middleware.AuthMiddleware(), controllers.UploadController{}.Upload)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)
 		user.GET("/comments", controllers.CommentController{}.GetComments)
-		user.POST("/comments", middleware.AuthMiddleware(), controllers.CommentController{}.CreateComment)
+		user.POST("/comments", middleware.AuthMiddleware(), writeLimiter, middleware.IdempotencyMiddleware(), controllers.CommentController{}.CreateComment)
 		user.POST("/comments/:id/like", middleware.AuthMiddleware(), controllers.CommentController{}.LikeComment)
 		user.POST("/device_tokens", middleware.AuthMiddleware(), controllers.DeviceTokenController{}.Register)
 		user.GET("/messages", middleware.AuthMiddleware(), controllers.MessageController{}.GetMessages)
 		user.GET("/messages/unread_count", middleware.AuthMiddleware(), controllers.MessageController{}.GetUnreadCount)
-		user.POST("/messages/read", middleware.AuthMiddleware(), controllers.MessageController{}.MarkRead)
+		user.POST("/messages/read", middleware.AuthMiddleware(), writeLimiter, middleware.IdempotencyMiddleware(), controllers.MessageController{}.MarkRead)
 		user.POST("/messages/award", middleware.InternalMiddleware(), controllers.MessageController{}.AwardMessage)
+
 		chat := user.Group("/chat", middleware.AuthMiddleware())
 		{
 			chat.GET("/conversations", controllers.ChatController{}.GetConversations)
@@ -93,21 +112,23 @@ func Router() *gin.Engine {
 			chat.POST("/groups", controllers.ChatController{}.CreateGroupConversation)
 			chat.POST("/groups/:id/members", controllers.ChatController{}.AddGroupMembers)
 			chat.GET("/messages", controllers.ChatController{}.GetMessages)
-			chat.POST("/messages", controllers.ChatController{}.SendMessage)
-			chat.POST("/read", controllers.ChatController{}.MarkRead)
+			chat.POST("/messages", writeLimiter, middleware.IdempotencyMiddleware(), controllers.ChatController{}.SendMessage)
+			chat.POST("/read", writeLimiter, middleware.IdempotencyMiddleware(), controllers.ChatController{}.MarkRead)
 			chat.GET("/unread_count", controllers.ChatController{}.GetUnreadCount)
 		}
-		user.POST("/progress", middleware.AuthMiddleware(), controllers.ProgressController{}.UpsertProgress)
+
+		user.POST("/progress", middleware.AuthMiddleware(), writeLimiter, middleware.IdempotencyMiddleware(), controllers.ProgressController{}.UpsertProgress)
 		user.GET("/progress/:video_id", middleware.AuthMiddleware(), controllers.ProgressController{}.GetProgress)
 		user.GET("/progress/latest", middleware.AuthMiddleware(), controllers.ProgressController{}.GetLatestProgress)
 		user.POST("/events/exposure", controllers.EventsController{}.Exposure)
 		user.POST("/events/click", controllers.EventsController{}.Click)
-		user.POST("/events/complete", controllers.EventsController{}.Complete)
-		user.POST("/events/play", controllers.EventsController{}.Play)
+		user.POST("/events/complete", writeLimiter, middleware.IdempotencyMiddleware(), controllers.EventsController{}.Complete)
+		user.POST("/events/play", writeLimiter, middleware.IdempotencyMiddleware(), controllers.EventsController{}.Play)
 		user.GET("/points/balance", middleware.AuthMiddleware(), controllers.PointsController{}.GetBalance)
 		user.GET("/points/transactions", middleware.AuthMiddleware(), controllers.PointsController{}.GetTransactions)
 		user.GET("/points/rank", middleware.AuthMiddleware(), controllers.PointsController{}.GetRank)
 		user.POST("/points/award", middleware.InternalMiddleware(), controllers.PointsController{}.AwardPoints)
+
 		favorite := user.Group("/favorites", middleware.AuthMiddleware())
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)
@@ -118,11 +139,13 @@ func Router() *gin.Engine {
 			favorite.DELETE("/articles/:id", controllers.FavoriteController{}.DeleteFavoriteArticle)
 			favorite.GET("", controllers.FavoriteController{}.GetFavorites)
 		}
+
 		admin := user.Group("/admin", middleware.AdminMiddleware())
 		{
 			admin.GET("/analytics/overview", controllers.AdminAnalyticsController{}.Overview)
 			admin.GET("/analytics/trend", controllers.AdminAnalyticsController{}.Trend)
 			admin.GET("/analytics/top", controllers.AdminAnalyticsController{}.Top)
+			admin.POST("/cache/prewarm", writeLimiter, middleware.IdempotencyMiddleware(), controllers.CacheOpsController{}.Prewarm)
 			admin.POST("/courses", controllers.AdminController{}.CreateCourse)
 			admin.PUT("/courses/:id", controllers.AdminController{}.UpdateCourse)
 			admin.DELETE("/courses/:id", controllers.AdminController{}.DeleteCourse)
@@ -130,7 +153,7 @@ func Router() *gin.Engine {
 			admin.PUT("/videos/:id", controllers.AdminController{}.UpdateVideo)
 			admin.DELETE("/videos/:id", controllers.AdminController{}.DeleteVideo)
 			admin.DELETE("/comments/:id", controllers.AdminController{}.DeleteComment)
-			admin.POST("/push", controllers.PushController{}.Send)
+			admin.POST("/push", writeLimiter, middleware.IdempotencyMiddleware(), controllers.PushController{}.Send)
 		}
 	}
 

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -40,8 +39,6 @@ func ParseToken(tokenString string) (*Claims, error) {
 
 	// 提取实际的token部分
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
-	fmt.Println(tokenString)
-
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})

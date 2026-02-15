@@ -25,13 +25,13 @@ func SearchCourses(keyword string, categoryID int64, sort string, page int, page
 
 	switch sort {
 	case "view_count":
-		query = query.Order("view_count DESC")
+		query = query.Order("view_count DESC").Order("id DESC")
 	case "favorite_count":
-		query = query.Order("favorite_count DESC")
+		query = query.Order("favorite_count DESC").Order("id DESC")
 	case "created_at":
-		query = query.Order("created_at DESC")
+		query = query.Order("created_at DESC").Order("id DESC")
 	default:
-		query = query.Order("view_count DESC").Order("favorite_count DESC").Order("created_at DESC")
+		query = query.Order("view_count DESC").Order("favorite_count DESC").Order("created_at DESC").Order("id DESC")
 	}
 
 	offset := (page - 1) * pageSize
@@ -58,13 +58,13 @@ func SearchArticles(keyword string, sort string, page int, pageSize int) ([]Arti
 
 	switch sort {
 	case "view_count":
-		query = query.Order("view_count DESC")
+		query = query.Order("view_count DESC").Order("id DESC")
 	case "like_count":
-		query = query.Order("like_count DESC")
+		query = query.Order("like_count DESC").Order("id DESC")
 	case "created_at":
-		query = query.Order("created_at DESC")
+		query = query.Order("created_at DESC").Order("id DESC")
 	default:
-		query = query.Order("view_count DESC").Order("like_count DESC").Order("created_at DESC")
+		query = query.Order("view_count DESC").Order("like_count DESC").Order("created_at DESC").Order("id DESC")
 	}
 
 	offset := (page - 1) * pageSize

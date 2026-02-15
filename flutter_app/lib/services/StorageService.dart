@@ -11,6 +11,7 @@ class StorageService {
   static const String _userBox = 'user';
   static const String _cartBox = 'cart';
   static const String _pointsBox = 'points';
+  static const String _offlineBox = 'offline_cache';
 
   bool _initialized = false;
 
@@ -24,6 +25,7 @@ class StorageService {
     await Hive.openBox(_userBox);
     await Hive.openBox(_cartBox);
     await Hive.openBox(_pointsBox);
+    await Hive.openBox(_offlineBox);
 
     _initialized = true;
   }
@@ -232,6 +234,56 @@ class StorageService {
     await Hive.box(_productBox).clear();
     await Hive.box(_categoryBox).clear();
     await Hive.box(_cartBox).clear();
+    await Hive.box(_offlineBox).clear();
+  }
+
+  Future<void> saveOfflinePayload(
+    String key,
+    Map<String, dynamic> payload,
+  ) async {
+    await init();
+    final box = Hive.box(_offlineBox);
+    await box.put(key, {
+      'saved_at': DateTime.now().millisecondsSinceEpoch,
+      'payload': payload,
+    });
+  }
+
+  Future<Map<String, dynamic>?> getOfflinePayload(
+    String key, {
+    Duration? maxAge,
+  }) async {
+    await init();
+    final box = Hive.box(_offlineBox);
+    final raw = box.get(key);
+    if (raw is! Map) return null;
+
+    final savedAtRaw = raw['saved_at'];
+    final payloadRaw = raw['payload'];
+    if (payloadRaw is! Map) return null;
+
+    int savedAt = 0;
+    if (savedAtRaw is num) {
+      savedAt = savedAtRaw.toInt();
+    } else if (savedAtRaw is String) {
+      savedAt = int.tryParse(savedAtRaw) ?? 0;
+    }
+    if (savedAt <= 0) return null;
+
+    if (maxAge != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - savedAt > maxAge.inMilliseconds) {
+        return null;
+      }
+    }
+
+    return Map<String, dynamic>.from(payloadRaw.cast<dynamic, dynamic>());
+  }
+
+  Future<void> removeOfflinePayload(String key) async {
+    await init();
+    final box = Hive.box(_offlineBox);
+    await box.delete(key);
   }
 
   Future<int?> getLastPointsBalance() async {

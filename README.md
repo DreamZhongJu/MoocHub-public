@@ -55,9 +55,62 @@ flutter run
 - `INTERNAL_TOKEN`：内部接口 Token（用于内部接口鉴权）
 - `FCM_SERVICE_ACCOUNT`：Firebase 服务账号 JSON 文件路径
 - `FCM_PROJECT_ID`：Firebase 项目 ID（可选，默认从服务账号读取）
+- `LOG_ACCESS_SAMPLE_RATE`：访问日志采样率（`0~1`，默认 `1`，错误与慢请求不采样）
+- `LOG_SLOW_THRESHOLD_MS`：慢请求阈值（毫秒，默认 `1000`）
+- `RATE_LIMIT_GLOBAL_PER_MIN`：全局请求限流（默认 `300/min`）
+- `RATE_LIMIT_AUTH_PER_MIN`：登录/注册限流（默认 `40/min`）
+- `RATE_LIMIT_WRITE_PER_MIN`：写接口限流（默认 `120/min`）
+- `IDEMPOTENCY_TTL_SEC`：幂等结果缓存 TTL（默认 `600s`）
+- `BREAKER_FAILURE_THRESHOLD`：熔断触发连续失败阈值（默认 `5`）
+- `BREAKER_OPEN_SEC`：熔断打开时长（默认 `30s`）
 - `BACKEND_HOST`：Flutter 端后端地址（assets/.env）
 
 > 为了避免敏感文件入库，建议把 `serviceAccount.json` 放到 `server/secrets/`，并通过启动参数或环境变量加载。
+
+## 统一日志与链路追踪（已接入）
+- 请求可带 `X-Trace-Id`；未传时后端自动生成。
+- 每个响应头都会回传 `X-Trace-Id`，响应 JSON 追加 `trace_id` 字段。
+- HTTP 访问日志统一结构化字段：`trace_id / method / path / status / latency / ip / user_agent / user_id`。
+- MQ 事件（`progress.updated`、`play.view`、`analytics.event`）会透传 `trace_id`，消费者日志可按同一 `trace_id` 串联。
+- 采样策略：成功请求按 `LOG_ACCESS_SAMPLE_RATE` 采样；`4xx/5xx` 与慢请求全量记录。
+
+## 缓存预热 / 热点保护 / 分页索引优化（已接入）
+- 课程列表、课程详情、文章列表、文章详情、分类列表、搜索联想接入缓存。
+- 热点保护：缓存 miss 时加 Redis 锁 + 短等待 + stale 旧值兜底，避免击穿。
+- 预热策略：服务启动后立即预热，之后每 5 分钟自动预热；可通过 `/api/v1/admin/cache/prewarm` 手动触发。
+- 分页排序优化：列表查询补充稳定排序（`... DESC, id DESC`），减少翻页抖动。
+- 索引脚本：`server/scripts/cache_paging_indexes.sql`。
+
+## 限流 / 熔断 / 重试 / 幂等（已接入）
+- 限流：
+  - 全局按 IP 限流（固定窗口，Redis 计数）
+  - 登录注册单独限流
+  - 写接口按用户（未登录回退 IP）限流
+- 熔断：
+  - FCM 发送链路接入熔断
+  - MinIO URL 解析与上传接入熔断
+- 重试：
+  - MQ 发布失败自动重试（指数退避）
+  - FCM 发送在 5xx/429 与网络错误时重试
+  - MinIO 预签名失败自动重试
+- 幂等：
+  - 写接口支持请求头 `Idempotency-Key`
+  - 重复请求返回首次结果，响应头带 `X-Idempotent-Replay: 1`
+
+## 离线缓存 / 弱网策略 / 骨架屏 / 空态统一（Flutter 端，已接入）
+- 离线缓存：
+  - 新增通用离线缓存仓（Hive `offline_cache`），支持 TTL 读取。
+  - 首页推荐流、搜索结果、分类课程列表已接入离线回退。
+- 弱网策略：
+  - `ApiService` 新增 `getWithRetry`（指数退避重试，针对超时/连接异常/429/5xx）。
+  - 页面层在请求失败后优先回退离线缓存，并给出弱网提示。
+- 骨架屏与空态统一：
+  - 新增 `flutter_app/lib/widget/AppStateWidgets.dart`：
+    - `AppGridSkeleton`
+    - `AppListSkeleton`
+    - `AppEmptyState`
+    - `AppWeakNetworkBanner`
+  - 首页、搜索页、分类课程列表、文章列表、消息页、学习页已切换为统一组件。
 
 ## 对象存储
 ### 1) 部署 MinIO
@@ -342,11 +395,11 @@ CREATE TABLE favorite_articles (
 | 11   | 文章发布与查看                       | 文章发布/详情；首页混排（视频+文章）；文章列表 | ✅    |
 | 12   | 搜索与筛选（联想/高亮/排序）         | 搜索接口；过滤/排序；高亮与空结果处理          | ✅    |
 | 12   | 埋点与数据看板（曝光/点击/完播）     | 埋点事件定义；看板指标口径；可视化面板         | ✅    |
-| 12   | 指标告警（Prometheus/Grafana）       | 指标采集；告警规则；可视化面板                 | ⬜    |
-| 12   | 统一日志规范（结构化/链路追踪）      | 结构化字段；trace_id；采样与落盘策略           | ⬜    |
-| 12   | 缓存预热/热点保护/分页索引优化       | 首页/分类预热；热点 key 锁；分页索引优化       | ⬜    |
-| 12   | 限流/熔断/重试/幂等设计              | 限流策略；熔断与重试；幂等 key 与去重          | ⬜    |
-| 12   | 离线缓存/弱网策略/骨架屏/空态统一    | 本地缓存策略；弱网重试；统一骨架屏与空态组件   | ⬜    |
+| 12   | 指标告警（Prometheus/Grafana）       | 指标采集；告警规则；可视化面板                 | ✅    |
+| 12   | 统一日志规范（结构化/链路追踪）      | 结构化字段；trace_id；采样与落盘策略           | ✅    |
+| 12   | 缓存预热/热点保护/分页索引优化       | 首页/分类预热；热点 key 锁；分页索引优化       | ✅    |
+| 12   | 限流/熔断/重试/幂等设计              | 限流策略；熔断与重试；幂等 key 与去重          | ✅    |
+| 12   | 离线缓存/弱网策略/骨架屏/空态统一    | 本地缓存策略；弱网重试；统一骨架屏与空态组件   | ✅    |
 | 12   | CI/CD/自动化测试/代码规范/静态检查   | lint/format 规范；自动化测试流水线；构建与发布 | ⬜    |
 | 12   | 安全与风控（限流/鉴权/审计）         | 鉴权强化；审计日志；风控规则                   | ⬜    |
 | 12   | 个性化推荐（DIN）                    | 埋点采样；训练与评估；在线召回与排序           | ⬜    |
@@ -418,12 +471,12 @@ CREATE TABLE favorite_articles (
 | GET  | `/progress/latest`     | 登录 | -                                                   | `video`, `progress`                     |
 
 ### 埋点事件（M1）
-| 方法 | 路径                | 权限 | 请求参数                                                                | 响应             |
-| ---- | ------------------- | ---- | ----------------------------------------------------------------------- | ---------------- |
-| POST | `/events/exposure`  | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
-| POST | `/events/click`     | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
-| POST | `/events/complete`  | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?`     | `skipped`（去重） |
-| POST | `/events/play`      | 无   | `video_id`, `scene?`, `session_id?`, `position?`                        | `skipped`（去重） |
+| 方法 | 路径               | 权限 | 请求参数                                                           | 响应              |
+| ---- | ------------------ | ---- | ------------------------------------------------------------------ | ----------------- |
+| POST | `/events/exposure` | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?` | `skipped`（去重） |
+| POST | `/events/click`    | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?` | `skipped`（去重） |
+| POST | `/events/complete` | 无   | `content_type`, `content_id`, `scene?`, `session_id?`, `position?` | `skipped`（去重） |
+| POST | `/events/play`     | 无   | `video_id`, `scene?`, `session_id?`, `position?`                   | `skipped`（去重） |
 
 > 事件会异步写入 `event_logs`，并聚合到 `event_stats_hourly`（PV/UV）。
 
@@ -468,19 +521,20 @@ CREATE TABLE favorite_articles (
 | POST | `/uploads` | 登录 | `file`(multipart), `dir?` | `key`, `url` |
 
 ### 管理端（MVP）
-| 方法   | 路径                   | 权限   | 请求参数                                                                                    | 响应             |
-| ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------- | ---------------- |
-| GET    | `/admin/analytics/overview` | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                  | 汇总指标（曝光/点击/完播/CTR） |
-| GET    | `/admin/analytics/trend`    | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                  | 小时趋势（PV/UV/CTR/完播率）   |
-| GET    | `/admin/analytics/top`      | 管理员 | `from?`, `to?`, `event_type?`, `content_type?`, `scene?`, `limit?`                        | Top 内容（按 PV）              |
-| POST   | `/admin/courses`       | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course`         |
-| PUT    | `/admin/courses/{id}`  | 管理员 | 可选字段                                                                                    | -                |
-| DELETE | `/admin/courses/{id}`  | 管理员 | -                                                                                           | -                |
-| POST   | `/admin/videos`        | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`          |
-| PUT    | `/admin/videos/{id}`   | 管理员 | 可选字段                                                                                    | -                |
-| DELETE | `/admin/videos/{id}`   | 管理员 | -                                                                                           | -                |
-| DELETE | `/admin/comments/{id}` | 管理员 | -                                                                                           | -                |
-| POST   | `/admin/push`          | 管理员 | `user_id?`, `user_ids?`, `title`, `content`, `type?`, `route?`, `biz_id?`                   | `sent`, `failed` |
+| 方法   | 路径                        | 权限   | 请求参数                                                                                    | 响应                           |
+| ------ | --------------------------- | ------ | ------------------------------------------------------------------------------------------- | ------------------------------ |
+| GET    | `/admin/analytics/overview` | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                   | 汇总指标（曝光/点击/完播/CTR） |
+| GET    | `/admin/analytics/trend`    | 管理员 | `from?`, `to?`, `content_type?`, `scene?`                                                   | 小时趋势（PV/UV/CTR/完播率）   |
+| GET    | `/admin/analytics/top`      | 管理员 | `from?`, `to?`, `event_type?`, `content_type?`, `scene?`, `limit?`                          | Top 内容（按 PV）              |
+| POST   | `/admin/cache/prewarm`      | 管理员 | `trigger?`                                                                                  | 手动触发缓存预热               |
+| POST   | `/admin/courses`            | 管理员 | `category_id`, `title`, `summary`, `cover_url`, `instructor_name`, `level`, `status`        | `course`                       |
+| PUT    | `/admin/courses/{id}`       | 管理员 | 可选字段                                                                                    | -                              |
+| DELETE | `/admin/courses/{id}`       | 管理员 | -                                                                                           | -                              |
+| POST   | `/admin/videos`             | 管理员 | `course_id`, `title`, `description`, `duration_sec`, `video_url`, `thumb_url`, `sort_order` | `video`                        |
+| PUT    | `/admin/videos/{id}`        | 管理员 | 可选字段                                                                                    | -                              |
+| DELETE | `/admin/videos/{id}`        | 管理员 | -                                                                                           | -                              |
+| DELETE | `/admin/comments/{id}`      | 管理员 | -                                                                                           | -                              |
+| POST   | `/admin/push`               | 管理员 | `user_id?`, `user_ids?`, `title`, `content`, `type?`, `route?`, `biz_id?`                   | `sent`, `failed`               |
 
 ### Grafana 看板（M3）
 - 看板 JSON：`server/grafana/moochub-analytics-dashboard.json`

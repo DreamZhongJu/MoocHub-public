@@ -2,7 +2,9 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func envOrDefault(key, fallback string) string {
@@ -117,4 +119,82 @@ func FCMServiceAccountPath() string {
 
 func FCMProjectID() string {
 	return envOrDefault("FCM_PROJECT_ID", "")
+}
+
+func LogAccessSampleRate() float64 {
+	v := strings.TrimSpace(envOrDefault("LOG_ACCESS_SAMPLE_RATE", "1"))
+	rate, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return 1
+	}
+	if rate < 0 {
+		return 0
+	}
+	if rate > 1 {
+		return 1
+	}
+	return rate
+}
+
+func LogSlowRequestThreshold() time.Duration {
+	v := strings.TrimSpace(envOrDefault("LOG_SLOW_THRESHOLD_MS", "1000"))
+	ms, err := strconv.Atoi(v)
+	if err != nil || ms <= 0 {
+		return time.Second
+	}
+	return time.Duration(ms) * time.Millisecond
+}
+
+func RateLimitGlobalPerMinute() int {
+	v := strings.TrimSpace(envOrDefault("RATE_LIMIT_GLOBAL_PER_MIN", "300"))
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return 300
+	}
+	return n
+}
+
+func RateLimitAuthPerMinute() int {
+	v := strings.TrimSpace(envOrDefault("RATE_LIMIT_AUTH_PER_MIN", "40"))
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return 40
+	}
+	return n
+}
+
+func RateLimitWritePerMinute() int {
+	v := strings.TrimSpace(envOrDefault("RATE_LIMIT_WRITE_PER_MIN", "120"))
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return 120
+	}
+	return n
+}
+
+func IdempotencyTTL() time.Duration {
+	v := strings.TrimSpace(envOrDefault("IDEMPOTENCY_TTL_SEC", "600"))
+	sec, err := strconv.Atoi(v)
+	if err != nil || sec <= 0 {
+		return 10 * time.Minute
+	}
+	return time.Duration(sec) * time.Second
+}
+
+func BreakerFailureThreshold() int {
+	v := strings.TrimSpace(envOrDefault("BREAKER_FAILURE_THRESHOLD", "5"))
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return 5
+	}
+	return n
+}
+
+func BreakerOpenTimeout() time.Duration {
+	v := strings.TrimSpace(envOrDefault("BREAKER_OPEN_SEC", "30"))
+	sec, err := strconv.Atoi(v)
+	if err != nil || sec <= 0 {
+		return 30 * time.Second
+	}
+	return time.Duration(sec) * time.Second
 }

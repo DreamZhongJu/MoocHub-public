@@ -40,12 +40,20 @@ func StartProgressWorker() {
 
 	go func() {
 		for msg := range msgs {
+			traceID := mq.TraceIDFromDelivery(msg)
+			logger := global.Log.With(
+				zap.String("trace_id", traceID),
+				zap.String("routing_key", msg.RoutingKey),
+			)
+
 			var evt progressEvent
 			if err := json.Unmarshal(msg.Body, &evt); err != nil {
+				logger.Warn("progress worker decode failed", zap.Error(err))
 				_ = msg.Nack(false, false)
 				continue
 			}
 			if evt.UserID == 0 || evt.VideoID == 0 {
+				logger.Warn("progress worker invalid payload", zap.Int64("user_id", evt.UserID), zap.Int64("video_id", evt.VideoID))
 				_ = msg.Nack(false, false)
 				continue
 			}

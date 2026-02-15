@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
 	"MOOCHUB-server/storage"
+	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -125,7 +128,21 @@ func (sc SearchController) Suggest(c *gin.Context) {
 		limit = v
 	}
 
-	suggestions, err := model.SearchSuggestions(keyword, limit)
+	var err error
+	cacheKey := "search:suggest:" + strings.ToLower(keyword) + ":limit:" + strconv.Itoa(limit)
+	suggestions := make([]string, 0)
+	_, _, err = cache.FillJSONWithHotKey(
+		c.Request.Context(),
+		cacheKey,
+		&suggestions,
+		func(ctx context.Context) (interface{}, error) {
+			return model.SearchSuggestions(keyword, limit)
+		},
+		cache.CacheLoadOptions{
+			TTL:      90 * time.Second,
+			StaleTTL: 6 * time.Minute,
+		},
+	)
 	if err != nil {
 		ReturnError(c, 500, "search suggest failed: "+err.Error())
 		return

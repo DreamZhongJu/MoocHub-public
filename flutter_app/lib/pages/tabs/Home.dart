@@ -6,6 +6,7 @@ import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/ArticleCard.dart';
+import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -38,11 +39,15 @@ class HomePageState extends State<HomePage>
   VideoModel? _continueVideo;
   int _continuePositionSec = 0;
   double _continuePercent = 0;
+  bool _weakNetwork = false;
+  bool _usingOfflineCache = false;
+  String _networkHint = '';
   int _mockLoadCursor = 0;
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
   final AnalyticsService _analyticsService = AnalyticsService();
   static const String _homeScene = 'home_feed';
+  static const String _homeFeedCacheKey = 'home_feed_v1_page_1';
   final Set<String> _homeExposedKeys = <String>{};
 
   Duration _nextMockDelay() {
@@ -166,6 +171,63 @@ class HomePageState extends State<HomePage>
       }
     }
     return result;
+  }
+
+  Future<bool> _applyHomeCache({Duration? maxAge}) async {
+    final payload = await _storageService.getOfflinePayload(
+      _homeFeedCacheKey,
+      maxAge: maxAge,
+    );
+    if (payload == null) return false;
+
+    final coursesRaw = payload['courses'];
+    final articlesRaw = payload['articles'];
+
+    final courses = <CoursesModel>[];
+    if (coursesRaw is List) {
+      for (final item in coursesRaw) {
+        if (item is Map) {
+          courses.add(
+            CoursesModel.fromJson(
+              _normalizeCourseMap(item.cast<String, dynamic>()),
+            ),
+          );
+        }
+      }
+    }
+
+    final articles = <ArticleModel>[];
+    if (articlesRaw is List) {
+      for (final item in articlesRaw) {
+        if (item is Map) {
+          articles.add(
+            ArticleModel.fromJson(
+              _normalizeArticleMap(item.cast<String, dynamic>()),
+            ),
+          );
+        }
+      }
+    }
+
+    if (courses.isEmpty && articles.isEmpty) return false;
+    if (!mounted) return true;
+
+    setState(() {
+      _recommendedProducts = courses;
+      _articleItems = articles;
+      _feedItems = _mixFeedItems(courses, articles);
+    });
+    return true;
+  }
+
+  Future<void> _saveHomeCache(
+    List<CoursesModel> courses,
+    List<ArticleModel> articles,
+  ) async {
+    await _storageService.saveOfflinePayload(_homeFeedCacheKey, {
+      'courses': courses.map((e) => e.toJson()).toList(),
+      'articles': articles.map((e) => e.toJson()).toList(),
+    });
   }
 
   Future<void> _loadContinueWatching() async {
@@ -359,10 +421,16 @@ class HomePageState extends State<HomePage>
     if (_isLoadingMore) return;
     if (!reset && !_hasMore) return;
 
+    bool loadMoreFailed = false;
+    bool usedOfflineCache = false;
+
     if (mounted) {
       setState(() {
         if (reset) {
           _isLoading = true;
+          _weakNetwork = false;
+          _usingOfflineCache = false;
+          _networkHint = '';
         } else {
           _isLoadingMore = true;
         }
@@ -374,12 +442,20 @@ class HomePageState extends State<HomePage>
       _hasMore = true;
       _homeExposedKeys.clear();
       _analyticsService.resetSceneExposure(_homeScene);
+      usedOfflineCache = await _applyHomeCache(
+        maxAge: const Duration(hours: 8),
+      );
+      if (usedOfflineCache && mounted) {
+        setState(() {
+          _usingOfflineCache = true;
+        });
+      }
     }
     final startedAt = DateTime.now();
 
     try {
       final results = await Future.wait([
-        _apiService.get<Map<String, dynamic>>(
+        _apiService.getWithRetry<Map<String, dynamic>>(
           '/courses',
           queryParameters: {
             'page': _page,
@@ -387,8 +463,10 @@ class HomePageState extends State<HomePage>
             'sort': 'view_count',
           },
           fromJson: (raw) => raw as Map<String, dynamic>,
+          retries: 2,
+          baseDelay: const Duration(milliseconds: 300),
         ),
-        _apiService.get<Map<String, dynamic>>(
+        _apiService.getWithRetry<Map<String, dynamic>>(
           '/articles',
           queryParameters: {
             'page': _page,
@@ -396,6 +474,8 @@ class HomePageState extends State<HomePage>
             'sort': 'created_at',
           },
           fromJson: (raw) => raw as Map<String, dynamic>,
+          retries: 2,
+          baseDelay: const Duration(milliseconds: 300),
         ),
       ]);
 
@@ -425,12 +505,19 @@ class HomePageState extends State<HomePage>
           if (reset) {
             _recommendedProducts = nextCourses;
             _articleItems = nextArticles;
+            _usingOfflineCache = false;
+            _weakNetwork = false;
+            _networkHint = '';
           } else {
             _recommendedProducts.addAll(nextCourses);
             _articleItems.addAll(nextArticles);
           }
           _feedItems = _mixFeedItems(_recommendedProducts, _articleItems);
         });
+      }
+
+      if (reset) {
+        await _saveHomeCache(nextCourses, nextArticles);
       }
 
       final hasMoreCourses = nextCourses.length == _pageSize;
@@ -442,14 +529,30 @@ class HomePageState extends State<HomePage>
         _page += 1;
       }
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          if (reset) {
-            _recommendedProducts = [];
-            _articleItems = [];
-            _feedItems = [];
-          }
-        });
+      if (reset) {
+        final fallbackLoaded = usedOfflineCache
+            ? true
+            : await _applyHomeCache(maxAge: const Duration(days: 7));
+        if (mounted) {
+          setState(() {
+            _weakNetwork = true;
+            _usingOfflineCache = fallbackLoaded;
+            _networkHint = fallbackLoaded ? '网络较弱，已展示离线缓存内容' : '网络不可用，请下拉重试';
+            if (!fallbackLoaded) {
+              _recommendedProducts = [];
+              _articleItems = [];
+              _feedItems = [];
+            }
+          });
+        }
+      } else {
+        loadMoreFailed = true;
+        if (mounted) {
+          setState(() {
+            _weakNetwork = true;
+            _networkHint = '加载下一页失败，请稍后重试';
+          });
+        }
       }
     } finally {
       await _waitMockLoadingDelay(startedAt);
@@ -463,7 +566,9 @@ class HomePageState extends State<HomePage>
         _refreshController.refreshCompleted();
         _refreshController.resetNoData();
       } else if (fromLoadMore) {
-        if (_hasMore) {
+        if (loadMoreFailed) {
+          _refreshController.loadFailed();
+        } else if (_hasMore) {
           _refreshController.loadComplete();
         } else {
           _refreshController.loadNoData();
@@ -503,19 +608,12 @@ class HomePageState extends State<HomePage>
   }
 
   Widget _buildEmptyRecommended() {
-    return Container(
-      height: 240,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: const Center(
-        child: Text(
-          '暂无推荐内容',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.school_outlined,
+      title: '暂无推荐内容',
+      subtitle: _weakNetwork ? '请检查网络后下拉重试' : '稍后再来看看',
+      actionText: '立即刷新',
+      onAction: () => _loadRecommendedProducts(reset: true),
     );
   }
 
@@ -769,13 +867,6 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildGradientSkeleton(BuildContext context) {
-    return TDSkeleton(
-      animation: TDSkeletonAnimation.gradient,
-      theme: TDSkeletonTheme.paragraph,
-    );
-  }
-
   Widget _buildLoadingMoreSliver() {
     if (!_isLoadingMore) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -783,10 +874,30 @@ class HomePageState extends State<HomePage>
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        child: SizedBox(
-          height: 120,
-          child: Column(children: [_buildGradientSkeleton(context)]),
+        child: const Column(
+          children: [
+            AppShimmerBlock(height: 14),
+            SizedBox(height: 10),
+            AppShimmerBlock(height: 14, width: 220),
+            SizedBox(height: 10),
+            AppShimmerBlock(height: 14),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNetworkStateSliver() {
+    if (!_weakNetwork && !_usingOfflineCache) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    final text = _networkHint.isNotEmpty
+        ? _networkHint
+        : (_usingOfflineCache ? '已展示离线缓存内容' : '当前网络较弱');
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: AppWeakNetworkBanner(text: text),
       ),
     );
   }
@@ -907,6 +1018,7 @@ class HomePageState extends State<HomePage>
                   ),
                 if (_showNotice)
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                _buildNetworkStateSliver(),
                 _buildRecommendedSliver(),
                 _buildLoadingMoreSliver(),
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),

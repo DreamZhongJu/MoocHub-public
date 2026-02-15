@@ -1,19 +1,27 @@
 package notify
 
 import (
+	"MOOCHUB-server/config"
+	"MOOCHUB-server/resilience"
+	"MOOCHUB-server/utils"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
 const fcmScope = "https://www.googleapis.com/auth/firebase.messaging"
+
+var fcmBreaker = resilience.NewCircuitBreaker(config.BreakerFailureThreshold(), config.BreakerOpenTimeout())
 
 type FCMClient struct {
 	projectID  string
@@ -60,6 +68,14 @@ func (c *FCMClient) SendToToken(ctx context.Context, token, title, body string, 
 		return errors.New("token is empty")
 	}
 
+	return fcmBreaker.Execute(func() error {
+		return utils.Retry(ctx, 3, 150*time.Millisecond, 1200*time.Millisecond, shouldRetryFCMError, func() error {
+			return c.sendOnce(ctx, token, title, body, data)
+		})
+	})
+}
+
+func (c *FCMClient) sendOnce(ctx context.Context, token, title, body string, data map[string]string) error {
 	payload := map[string]any{
 		"message": map[string]any{
 			"token": token,
@@ -91,7 +107,35 @@ func (c *FCMClient) SendToToken(ctx context.Context, token, title, body string, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("FCM send failed: %s", resp.Status)
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return &fcmSendError{
+			StatusCode: resp.StatusCode,
+			Body:       string(respBody),
+		}
 	}
 	return nil
+}
+
+type fcmSendError struct {
+	StatusCode int
+	Body       string
+}
+
+func (e *fcmSendError) Error() string {
+	return fmt.Sprintf("FCM send failed: status=%d body=%s", e.StatusCode, e.Body)
+}
+
+func shouldRetryFCMError(err error) bool {
+	var nerr net.Error
+	if errors.As(err, &nerr) {
+		return true
+	}
+	var ferr *fcmSendError
+	if errors.As(err, &ferr) {
+		if ferr.StatusCode == http.StatusTooManyRequests {
+			return true
+		}
+		return ferr.StatusCode >= 500
+	}
+	return false
 }

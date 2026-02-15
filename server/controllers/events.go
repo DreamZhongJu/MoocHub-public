@@ -103,14 +103,14 @@ func (ec EventsController) Play(c *gin.Context) {
 	}
 	data, err := json.Marshal(legacyPayload)
 	if err == nil {
-		err = mq.Publish("play.view", data)
+		err = mq.PublishWithTrace("play.view", data, utils.GetTraceID(c))
 	}
 	if err != nil {
 		ReturnError(c, 500, "publish failed")
 		return
 	}
 
-	if err := publishAnalyticsEvent(payload); err != nil {
+	if err := publishAnalyticsEvent(c, payload); err != nil {
 		ReturnError(c, 500, "publish failed")
 		return
 	}
@@ -168,7 +168,7 @@ func (ec EventsController) trackEvent(c *gin.Context, eventType string) {
 		return
 	}
 
-	if err := publishAnalyticsEvent(payload); err != nil {
+	if err := publishAnalyticsEvent(c, payload); err != nil {
 		ReturnError(c, 500, "publish failed")
 		return
 	}
@@ -176,12 +176,12 @@ func (ec EventsController) trackEvent(c *gin.Context, eventType string) {
 	ReturnSuccess(c, 200, "ok", gin.H{"skipped": false}, 0)
 }
 
-func publishAnalyticsEvent(payload model.AnalyticsEventPayload) error {
+func publishAnalyticsEvent(c *gin.Context, payload model.AnalyticsEventPayload) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	return mq.Publish("analytics.event", data)
+	return mq.PublishWithTrace("analytics.event", data, utils.GetTraceID(c))
 }
 
 func parseOptionalUserID(c *gin.Context) int64 {

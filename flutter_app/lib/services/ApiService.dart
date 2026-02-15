@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/RequestModel.dart';
 import 'package:MoocHub/services/StorageService.dart';
@@ -39,7 +39,6 @@ class ApiService {
     return 'Bearer $token';
   }
 
-
   Future<ApiResponse<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -61,6 +60,48 @@ class ApiService {
       );
     } catch (e) {
       rethrow;
+    }
+  }
+
+  bool _isRetryableGetError(Object error) {
+    if (error is! DioException) return false;
+    final type = error.type;
+    if (type == DioExceptionType.connectionTimeout ||
+        type == DioExceptionType.sendTimeout ||
+        type == DioExceptionType.receiveTimeout ||
+        type == DioExceptionType.connectionError) {
+      return true;
+    }
+    final status = error.response?.statusCode ?? 0;
+    if (status == 429 || status >= 500) {
+      return true;
+    }
+    return error.error is SocketException;
+  }
+
+  Future<ApiResponse<T>> getWithRetry<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic)? fromJson,
+    int retries = 2,
+    Duration baseDelay = const Duration(milliseconds: 300),
+  }) async {
+    int attempt = 0;
+    while (true) {
+      try {
+        return await get<T>(
+          path,
+          queryParameters: queryParameters,
+          fromJson: fromJson,
+        );
+      } catch (error) {
+        if (!_isRetryableGetError(error) || attempt >= retries) {
+          rethrow;
+        }
+        final delay = baseDelay * (1 << attempt);
+        await Future.delayed(delay);
+        attempt += 1;
+      }
     }
   }
 

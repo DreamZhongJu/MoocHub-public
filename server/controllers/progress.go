@@ -5,6 +5,7 @@ import (
 	"MOOCHUB-server/model"
 	"MOOCHUB-server/mq"
 	"MOOCHUB-server/storage"
+	"MOOCHUB-server/utils"
 	"context"
 	"encoding/json"
 	"strconv"
@@ -69,7 +70,7 @@ func (pc ProgressController) UpsertProgress(c *gin.Context) {
 		"occurred_at_unix_sec": time.Now().Unix(),
 	}
 	if data, err := json.Marshal(payload); err == nil {
-		_ = mq.Publish("progress.updated", data)
+		_ = mq.PublishWithTrace("progress.updated", data, utils.GetTraceID(c))
 	}
 
 	ReturnSuccess(c, 200, "更新成功", gin.H{"skipped": false}, 0)

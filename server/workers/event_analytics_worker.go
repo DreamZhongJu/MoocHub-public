@@ -25,12 +25,24 @@ func StartEventAnalyticsWorker() {
 
 	go func() {
 		for msg := range msgs {
+			traceID := mq.TraceIDFromDelivery(msg)
+			logger := global.Log.With(
+				zap.String("trace_id", traceID),
+				zap.String("routing_key", msg.RoutingKey),
+			)
+
 			var evt model.AnalyticsEventPayload
 			if err := json.Unmarshal(msg.Body, &evt); err != nil {
+				logger.Warn("analytics worker decode failed", zap.Error(err))
 				_ = msg.Nack(false, false)
 				continue
 			}
 			if evt.EventType == "" || evt.ContentType == "" || evt.ContentID <= 0 {
+				logger.Warn("analytics worker invalid payload",
+					zap.String("event_type", evt.EventType),
+					zap.String("content_type", evt.ContentType),
+					zap.Int64("content_id", evt.ContentID),
+				)
 				_ = msg.Nack(false, false)
 				continue
 			}
@@ -39,7 +51,7 @@ func StartEventAnalyticsWorker() {
 			}
 
 			if err := model.CreateEventLog(evt); err != nil {
-				global.Log.Error("analytics event log insert failed", zap.Error(err))
+				logger.Error("analytics event log insert failed", zap.Error(err))
 				_ = msg.Nack(false, false)
 				continue
 			}
@@ -53,7 +65,7 @@ func StartEventAnalyticsWorker() {
 			}
 
 			if err := model.AddEventStatsHourly(evt, 1, uvDelta); err != nil {
-				global.Log.Error("analytics hourly stats update failed", zap.Error(err))
+				logger.Error("analytics hourly stats update failed", zap.Error(err))
 				_ = msg.Nack(false, false)
 				continue
 			}

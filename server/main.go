@@ -31,9 +31,14 @@ func main() {
 		panic("鏃犳硶鍒涘缓logs鐩綍: " + err.Error())
 	}
 
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoder := zapcore.NewJSONEncoder(encoderConfig)
+	fileEncoderConfig := zap.NewProductionEncoderConfig()
+	fileEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	fileEncoder := zapcore.NewJSONEncoder(fileEncoderConfig)
+
+	consoleEncoderConfig := zap.NewDevelopmentEncoderConfig()
+	consoleEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	consoleEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
 
 	infoFile, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -52,16 +57,20 @@ func main() {
 	})
 
 	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(infoFile), infoLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), infoLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(errorFile), errorLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(os.Stderr), errorLevel),
+		zapcore.NewCore(fileEncoder, zapcore.AddSync(infoFile), infoLevel),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), infoLevel),
+		zapcore.NewCore(fileEncoder, zapcore.AddSync(errorFile), errorLevel),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stderr), errorLevel),
 	)
 
 	logger := zap.New(core, zap.AddCaller())
 	defer logger.Sync()
 
 	global.Log = logger
+	global.Log.Info("logger initialized",
+		zap.Float64("access_sample_rate", config.LogAccessSampleRate()),
+		zap.Duration("slow_threshold", config.LogSlowRequestThreshold()),
+	)
 	global.Log.Info("鏃ュ織绯荤粺宸插垵濮嬪寲")
 	global.Log.Info("MinIO config loaded",
 		zap.String("endpoint", config.MinioEndpoint()),
@@ -99,6 +108,7 @@ func main() {
 	workers.StartProgressWorker()
 	workers.StartPlayWorker()
 	workers.StartEventAnalyticsWorker()
+	workers.StartCacheWarmupWorker()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")

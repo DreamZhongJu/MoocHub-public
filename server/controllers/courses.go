@@ -5,7 +5,6 @@ import (
 	"MOOCHUB-server/model"
 	"MOOCHUB-server/storage"
 	"context"
-	"encoding/json"
 	"strconv"
 	"time"
 
@@ -14,132 +13,171 @@ import (
 
 type CoursesController struct{}
 
+const (
+	maxCoursePageSize = 50
+)
+
 func (cc CoursesController) GetCourses(c *gin.Context) {
-	categoryIDStr := c.DefaultQuery("category_id", "0")
-	sort := c.DefaultQuery("sort", "default")
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("page_size", "10")
-
-	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
+	categoryID, page, pageSize, sort, err := parseCourseListQuery(c)
 	if err != nil {
-		ReturnError(c, 400, "invalid category_id")
+		ReturnError(c, 400, err.Error())
 		return
 	}
 
-	cacheKey := "courses:list:cat:" + categoryIDStr + ":sort:" + sort + ":page:" + page + ":size:" + pageSize
-	if client := cache.Client(); client != nil {
-		if cached, err := client.Get(context.Background(), cacheKey).Result(); err == nil && cached != "" {
-			var courses []model.Courses
-			if jsonErr := json.Unmarshal([]byte(cached), &courses); jsonErr == nil {
-				ReturnSuccess(c, 200, "获取成功", gin.H{
-					"courses": courses,
-				}, 0)
-				return
-			}
-		}
-	}
-
-	courses, err := model.GetCoursesByCategory(categoryID, sort, page, pageSize)
+	courses, err := loadCourseListWithCache(c.Request.Context(), categoryID, sort, page, pageSize)
 	if err != nil {
-		ReturnError(c, 500, "获取课程列表失败："+err.Error())
+		ReturnError(c, 500, "获取课程列表失败: "+err.Error())
 		return
 	}
-	if client := cache.Client(); client != nil {
-		if data, err := json.Marshal(courses); err == nil {
-			_ = client.Set(context.Background(), cacheKey, string(data), 2*time.Minute).Err()
-		}
-	}
-	ReturnSuccess(c, 200, "获取成功", gin.H{
-		"courses": courses,
-	}, 0)
+	ReturnSuccess(c, 200, "获取成功", gin.H{"courses": courses}, int64(len(courses)))
 }
 
 func (cc CoursesController) GetCourseDetails(c *gin.Context) {
-	id := c.Param("id")
-	idInt, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
+	idInt, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || idInt <= 0 {
 		ReturnError(c, 400, "invalid course id")
 		return
 	}
-	cacheKey := "courses:detail:" + id
-	if client := cache.Client(); client != nil {
-		if cached, err := client.Get(context.Background(), cacheKey).Result(); err == nil && cached != "" {
-			var payload struct {
+
+	cacheKey := "courses:detail:" + strconv.FormatInt(idInt, 10)
+	payload := struct {
+		Courses []model.Courses `json:"courses"`
+		Videos  []model.Video   `json:"videos"`
+	}{}
+
+	_, _, err = cache.FillJSONWithHotKey(
+		c.Request.Context(),
+		cacheKey,
+		&payload,
+		func(ctx context.Context) (interface{}, error) {
+			courses, err := model.GetCoursesDetails(idInt)
+			if err != nil {
+				return nil, err
+			}
+			videos, err := model.GetVideosByCourseID(idInt)
+			if err != nil {
+				return nil, err
+			}
+			return struct {
 				Courses []model.Courses `json:"courses"`
 				Videos  []model.Video   `json:"videos"`
-			}
-			if jsonErr := json.Unmarshal([]byte(cached), &payload); jsonErr == nil {
-				for i := range payload.Videos {
-					if url, err := storage.ResolveObjectURL(payload.Videos[i].VideoURL); err == nil && url != "" {
-						payload.Videos[i].VideoURL = url
-					}
-					if url, err := storage.ResolveObjectURL(payload.Videos[i].ThumbURL); err == nil && url != "" {
-						payload.Videos[i].ThumbURL = url
-					}
-				}
-				ReturnSuccess(c, 200, "获取成功", gin.H{
-					"courses": payload.Courses,
-					"videos":  payload.Videos,
-				}, 0)
-				return
-			}
-		}
+			}{
+				Courses: courses,
+				Videos:  videos,
+			}, nil
+		},
+		cache.CacheLoadOptions{
+			TTL:      2 * time.Minute,
+			StaleTTL: 10 * time.Minute,
+		},
+	)
+	if err != nil {
+		ReturnError(c, 500, "获取课程详情失败: "+err.Error())
+		return
 	}
 
-	course, err := model.GetCoursesDetails(idInt)
-	if err != nil {
-		ReturnError(c, 500, "获取课程详情失败："+err.Error())
-		return
-	}
-	videos, err := model.GetVideosByCourseID(idInt)
-	if err != nil {
-		ReturnError(c, 500, "获取课程视频失败："+err.Error())
-		return
-	}
+	videos := make([]model.Video, len(payload.Videos))
+	copy(videos, payload.Videos)
 	for i := range videos {
-		if url, err := storage.ResolveObjectURL(videos[i].VideoURL); err == nil && url != "" {
+		if url, resolveErr := storage.ResolveObjectURL(videos[i].VideoURL); resolveErr == nil && url != "" {
 			videos[i].VideoURL = url
 		}
-		if url, err := storage.ResolveObjectURL(videos[i].ThumbURL); err == nil && url != "" {
+		if url, resolveErr := storage.ResolveObjectURL(videos[i].ThumbURL); resolveErr == nil && url != "" {
 			videos[i].ThumbURL = url
 		}
 	}
-	if client := cache.Client(); client != nil {
-		payload := struct {
-			Courses []model.Courses `json:"courses"`
-			Videos  []model.Video   `json:"videos"`
-		}{
-			Courses: course,
-			Videos:  videos,
-		}
-		if data, err := json.Marshal(payload); err == nil {
-			_ = client.Set(context.Background(), cacheKey, string(data), 2*time.Minute).Err()
-		}
-	}
+
 	ReturnSuccess(c, 200, "获取成功", gin.H{
-		"courses": course,
+		"courses": payload.Courses,
 		"videos":  videos,
-	}, 0)
+	}, int64(len(payload.Courses)))
 }
 
 func (cc CoursesController) GetCoursesByCategoryID(c *gin.Context) {
-	categoryIDStr := c.Param("id")
-	sort := c.DefaultQuery("sort", "default")
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("page_size", "10")
-
-	categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
-	if err != nil {
+	categoryID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || categoryID <= 0 {
 		ReturnError(c, 400, "invalid category id")
 		return
 	}
-
-	courses, err := model.GetCoursesByCategory(categoryID, sort, page, pageSize)
-	if err != nil {
-		ReturnError(c, 500, "获取课程列表失败："+err.Error())
+	sort := c.DefaultQuery("sort", "default")
+	page, pageSize, pageErr := parsePageAndSize(c.DefaultQuery("page", "1"), c.DefaultQuery("page_size", "10"), maxCoursePageSize)
+	if pageErr != nil {
+		ReturnError(c, 400, pageErr.Error())
 		return
 	}
-	ReturnSuccess(c, 200, "获取成功", gin.H{
-		"courses": courses,
-	}, 0)
+
+	courses, err := loadCourseListWithCache(c.Request.Context(), categoryID, sort, page, pageSize)
+	if err != nil {
+		ReturnError(c, 500, "获取课程列表失败: "+err.Error())
+		return
+	}
+	ReturnSuccess(c, 200, "获取成功", gin.H{"courses": courses}, int64(len(courses)))
+}
+
+func parseCourseListQuery(c *gin.Context) (categoryID int64, page int, pageSize int, sort string, err error) {
+	categoryID, err = strconv.ParseInt(c.DefaultQuery("category_id", "0"), 10, 64)
+	if err != nil || categoryID < 0 {
+		return 0, 0, 0, "", errInvalid("invalid category_id")
+	}
+	sort = c.DefaultQuery("sort", "default")
+	page, pageSize, err = parsePageAndSize(c.DefaultQuery("page", "1"), c.DefaultQuery("page_size", "10"), maxCoursePageSize)
+	if err != nil {
+		return 0, 0, 0, "", err
+	}
+	return categoryID, page, pageSize, sort, nil
+}
+
+func parsePageAndSize(pageRaw string, sizeRaw string, maxSize int) (int, int, error) {
+	page, err := strconv.Atoi(pageRaw)
+	if err != nil || page <= 0 {
+		return 0, 0, errInvalid("invalid page")
+	}
+	size, err := strconv.Atoi(sizeRaw)
+	if err != nil || size <= 0 {
+		return 0, 0, errInvalid("invalid page_size")
+	}
+	if size > maxSize {
+		size = maxSize
+	}
+	return page, size, nil
+}
+
+func loadCourseListWithCache(ctx context.Context, categoryID int64, sort string, page int, pageSize int) ([]model.Courses, error) {
+	cacheKey := buildCourseListCacheKey(categoryID, sort, page, pageSize)
+	courses := make([]model.Courses, 0)
+	_, _, err := cache.FillJSONWithHotKey(
+		ctx,
+		cacheKey,
+		&courses,
+		func(loadCtx context.Context) (interface{}, error) {
+			return model.GetCoursesByCategory(
+				categoryID,
+				sort,
+				strconv.Itoa(page),
+				strconv.Itoa(pageSize),
+			)
+		},
+		cache.CacheLoadOptions{
+			TTL:      2 * time.Minute,
+			StaleTTL: 10 * time.Minute,
+		},
+	)
+	return courses, err
+}
+
+func buildCourseListCacheKey(categoryID int64, sort string, page int, pageSize int) string {
+	return "courses:list:cat:" + strconv.FormatInt(categoryID, 10) +
+		":sort:" + sort +
+		":page:" + strconv.Itoa(page) +
+		":size:" + strconv.Itoa(pageSize)
+}
+
+type invalidParamError struct {
+	msg string
+}
+
+func (e invalidParamError) Error() string { return e.msg }
+
+func errInvalid(msg string) error {
+	return invalidParamError{msg: msg}
 }
