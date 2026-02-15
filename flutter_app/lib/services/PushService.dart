@@ -1,4 +1,3 @@
-﻿import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:MoocHub/routers/navigator_key.dart';
@@ -22,16 +21,22 @@ final AndroidNotificationChannel _importantChannel = AndroidNotificationChannel(
 
 final FlutterLocalNotificationsPlugin _localNotifications =
     FlutterLocalNotificationsPlugin();
+const DarwinInitializationSettings _darwinInitSettings =
+    DarwinInitializationSettings();
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const settings = InitializationSettings(android: androidSettings);
+  const settings = InitializationSettings(
+    android: androidSettings,
+    iOS: _darwinInitSettings,
+  );
   await _localNotifications.initialize(settings);
   final androidPlugin = _localNotifications
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+        AndroidFlutterLocalNotificationsPlugin
+      >();
   await androidPlugin?.createNotificationChannel(_importantChannel);
   await PushService.instance._showLocalNotification(
     message,
@@ -69,7 +74,10 @@ class PushService {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const settings = InitializationSettings(android: androidSettings);
+    const settings = InitializationSettings(
+      android: androidSettings,
+      iOS: _darwinInitSettings,
+    );
     await _localNotifications.initialize(
       settings,
       onDidReceiveNotificationResponse: (response) {
@@ -90,8 +98,10 @@ class PushService {
   Future<void> _requestPermissions() async {
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
 
-    // Android 13+ 需要 POST_NOTIFICATIONS 权限，已在 Manifest 中声明，
-    // 这里不再调用平台方法，避免版本差异导致编译失败。
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final apnsToken = await _messaging.getAPNSToken();
+      debugPrint('APNs token: $apnsToken');
+    }
   }
 
   Future<void> _registerToken() async {
@@ -152,6 +162,11 @@ class PushService {
         importance: Importance.max,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
       ),
     );
 
@@ -236,10 +251,9 @@ class PushService {
         '/device_tokens',
         data: {
           'token': token,
-          'platform':
-              (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-                  ? 'android'
-                  : 'other',
+          'platform': !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+              ? 'ios'
+              : 'android',
         },
       );
       debugPrint('FCM token uploaded');
