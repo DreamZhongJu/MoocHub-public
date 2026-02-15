@@ -82,7 +82,6 @@ func (ec EventsController) Play(c *gin.Context) {
 		UA:                c.GetHeader("User-Agent"),
 		OccurredAtUnixSec: time.Now().Unix(),
 	}
-
 	skipped, err := deduplicateEvent(c, payload)
 	if err != nil {
 		ReturnError(c, 500, "dedup failed")
@@ -156,6 +155,14 @@ func (ec EventsController) trackEvent(c *gin.Context, eventType string) {
 		IP:                c.ClientIP(),
 		UA:                c.GetHeader("User-Agent"),
 		OccurredAtUnixSec: time.Now().Unix(),
+	}
+	if payload.UserID > 0 && payload.ContentType == "course" {
+		switch eventType {
+		case eventTypeClick:
+			trackRecommendInteractionForCourse(payload.UserID, payload.ContentID, "click")
+		case eventTypePlayComplete:
+			trackRecommendInteractionForCourse(payload.UserID, payload.ContentID, "complete")
+		}
 	}
 
 	skipped, err := deduplicateEvent(c, payload)

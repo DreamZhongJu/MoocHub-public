@@ -76,6 +76,7 @@ func (cc CoursesController) GetCourseDetails(c *gin.Context) {
 		return
 	}
 
+	trackRecommendInteractionForCourse(parseOptionalRecommendUserID(c), idInt, "view")
 	videos := make([]model.Video, len(payload.Videos))
 	copy(videos, payload.Videos)
 	for i := range videos {

@@ -87,6 +87,7 @@ func Router() *gin.Engine {
 		user.GET("/categories/:id/courses", controllers.CoursesController{}.GetCoursesByCategoryID)
 		user.GET("/courses", controllers.CoursesController{}.GetCourses)
 		user.GET("/courses/:id", controllers.CoursesController{}.GetCourseDetails)
+		user.GET("/recommend/courses", controllers.RecommendController{}.GetCourseFeed)
 		user.GET("/articles", controllers.ArticlesController{}.GetArticles)
 		user.GET("/articles/:id", controllers.ArticlesController{}.GetArticleDetail)
 		user.POST("/articles/:id/view", controllers.ArticlesController{}.ViewArticle)

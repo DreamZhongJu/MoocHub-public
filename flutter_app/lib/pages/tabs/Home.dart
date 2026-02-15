@@ -9,7 +9,6 @@ import 'package:MoocHub/widget/ArticleCard.dart';
 import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,7 +21,6 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin, RouteAware {
   final ScrollController controller = ScrollController();
-  final RefreshController _refreshController = RefreshController();
   bool showBackTop = false;
   List<CoursesModel> _recommendedProducts = [];
   List<ArticleModel> _articleItems = [];
@@ -43,6 +41,7 @@ class HomePageState extends State<HomePage>
   bool _usingOfflineCache = false;
   String _networkHint = '';
   int _mockLoadCursor = 0;
+  int _recommendSeed = DateTime.now().millisecondsSinceEpoch;
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
   final AnalyticsService _analyticsService = AnalyticsService();
@@ -93,7 +92,6 @@ class HomePageState extends State<HomePage>
   void dispose() {
     routeObserver.unsubscribe(this);
     controller.removeListener(_handleScroll);
-    _refreshController.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -417,8 +415,9 @@ class HomePageState extends State<HomePage>
   Future<void> _loadRecommendedProducts({
     required bool reset,
     bool fromLoadMore = false,
+    bool useOfflineCache = true,
   }) async {
-    if (_isLoadingMore) return;
+    if (!reset && _isLoadingMore) return;
     if (!reset && !_hasMore) return;
 
     bool loadMoreFailed = false;
@@ -428,6 +427,7 @@ class HomePageState extends State<HomePage>
       setState(() {
         if (reset) {
           _isLoading = true;
+          _isLoadingMore = false;
           _weakNetwork = false;
           _usingOfflineCache = false;
           _networkHint = '';
@@ -440,11 +440,14 @@ class HomePageState extends State<HomePage>
     if (reset) {
       _page = 1;
       _hasMore = true;
+      _recommendSeed = DateTime.now().millisecondsSinceEpoch;
       _homeExposedKeys.clear();
       _analyticsService.resetSceneExposure(_homeScene);
-      usedOfflineCache = await _applyHomeCache(
-        maxAge: const Duration(hours: 8),
-      );
+      if (useOfflineCache) {
+        usedOfflineCache = await _applyHomeCache(
+          maxAge: const Duration(hours: 8),
+        );
+      }
       if (usedOfflineCache && mounted) {
         setState(() {
           _usingOfflineCache = true;
@@ -456,11 +459,11 @@ class HomePageState extends State<HomePage>
     try {
       final results = await Future.wait([
         _apiService.getWithRetry<Map<String, dynamic>>(
-          '/courses',
+          '/recommend/courses',
           queryParameters: {
             'page': _page,
             'page_size': _pageSize,
-            'sort': 'view_count',
+            'seed': _recommendSeed,
           },
           fromJson: (raw) => raw as Map<String, dynamic>,
           retries: 2,
@@ -562,17 +565,10 @@ class HomePageState extends State<HomePage>
           _isLoadingMore = false;
         });
       }
-      if (reset) {
-        _refreshController.refreshCompleted();
-        _refreshController.resetNoData();
-      } else if (fromLoadMore) {
-        if (loadMoreFailed) {
-          _refreshController.loadFailed();
-        } else if (_hasMore) {
-          _refreshController.loadComplete();
-        } else {
-          _refreshController.loadNoData();
-        }
+      if (fromLoadMore && loadMoreFailed && mounted) {
+        setState(() {
+          _networkHint = '加载下一页失败，请稍后重试';
+        });
       }
     }
   }
@@ -590,6 +586,10 @@ class HomePageState extends State<HomePage>
         });
       }
       if (_isLoading || _isLoadingMore || !_hasMore) return;
+      if (controller.position.maxScrollExtent <= 0 ||
+          controller.position.pixels <= 0) {
+        return;
+      }
       final remain =
           controller.position.maxScrollExtent - controller.position.pixels;
       if (remain <= 200) {
@@ -983,28 +983,20 @@ class HomePageState extends State<HomePage>
     super.build(context);
     return Stack(
       children: [
-        SmartRefresher(
-          enablePullDown: true,
-          enablePullUp: true,
-          footer: const ClassicFooter(
-            loadStyle: LoadStyle.ShowWhenLoading,
-            noDataText: '没有更多内容了',
-          ),
-          header: const WaterDropHeader(
-            complete: Icon(Icons.done, color: Colors.grey),
-            waterDropColor: Colors.blue,
-          ),
-          controller: _refreshController,
+        RefreshIndicator(
           onRefresh: () async {
-            await _loadRecommendedProducts(reset: true);
-          },
-          onLoading: () async {
-            await _loadRecommendedProducts(reset: false, fromLoadMore: true);
+            await _loadRecommendedProducts(
+              reset: true,
+              useOfflineCache: false,
+            );
           },
           child: ScrollConfiguration(
             behavior: const _NoScrollbarBehavior(),
             child: CustomScrollView(
               controller: controller,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 SliverToBoxAdapter(child: _buildTDesignHeader()),

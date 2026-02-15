@@ -41,6 +41,11 @@ func (pc ProgressController) UpsertProgress(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("user_id")
+	if progress >= 95 {
+		if video, videoErr := model.GetVideoDetails(videoID); videoErr == nil {
+			trackRecommendInteractionForCourse(userID, video.CourseID, "complete")
+		}
+	}
 
 	// 服务端节流：同一用户+视频 10 秒内仅处理一次入库
 	throttleKey := "progress:throttle:" + strconv.FormatInt(userID, 10) + ":" + strconv.FormatInt(videoID, 10)
