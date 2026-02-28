@@ -2,6 +2,14 @@
 
 面向“中国大学 MOOC”风格的在线学习社区（移动端为主）。支持课程浏览、视频播放、评论互动、收藏与学习进度。目标交付：可运行系统 + 规范论文。
 
+## 文档导航
+- 开发流程与 PR 规范：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
+- CI/CD 落地计划：[`doc/CICDPlan.md`](doc/CICDPlan.md)
+- 推送系统说明：[`doc/PushSystem.md`](doc/PushSystem.md)
+- 第三方登录（QQ）：[`doc/ThirdPartyLogin.md`](doc/ThirdPartyLogin.md)
+- 实时聊天方案：[`doc/ChatSystem.md`](doc/ChatSystem.md)
+- 埋点看板方案：[`doc/AnalyticsDashboard.md`](doc/AnalyticsDashboard.md)
+
 ## 项目定位
 - 产品形态：学习社区 + 课程平台
 - 首页风格：类 B 站推荐流（卡片瀑布流 + 热门/继续观看）
@@ -19,7 +27,7 @@
 ## 目录结构
 - `flutter_app/`：Flutter 客户端
 - `server/`：Go 服务端
-- `docs/`：接口与设计文档（预留）
+- `doc/`：技术文档
 
 ## 快速运行
 ### Server
@@ -115,6 +123,8 @@ flutter run
 ## CI/CD 协作规范（私有仓库免费版）
 > 当前仓库为私有且未升级 Team/Enterprise，GitHub 分支保护规则会显示 `Not enforced`。  
 > 因此本项目采用“流程强约束”方式执行门禁。
+
+详细流程见：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
 
 ### 1) 合并门禁（必须执行）
 - 所有代码变更必须走 PR，禁止直接向 `main` 提交。
@@ -666,3 +676,13 @@ CREATE TABLE favorite_articles (
 ---
 
 ## 说明
+- 本仓库当前采用“PR + CI 绿灯后手动合并”的协作模式。
+- 分支与 PR 规范详见：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
+
+## 贡献与协作
+- 分支规范：`feat/*`、`fix/*`、`docs/*`、`chore/*`
+- 每个需求新建分支，合并后删除，不复用历史分支
+- 合并前至少通过：
+  - `CI Check / flutter-check`
+  - `CI Check / server-check`
+- 关键改动建议额外验证 `Build Android` 工作流
