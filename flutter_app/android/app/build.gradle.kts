@@ -57,7 +57,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // CI may not have a production keystore. Fallback to debug signing
+            // so release APK build can still complete and be attached to GitHub Release.
+            signingConfig = if ((keystoreProperties["storeFile"] as String?).isNullOrBlank()) {
+                signingConfigs.getByName("debug")
+            } else {
+                signingConfigs.getByName("release")
+            }
         }
     }
 }
