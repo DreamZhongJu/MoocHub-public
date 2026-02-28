@@ -7,10 +7,10 @@ import (
 )
 
 type favoriteCourses struct {
-	UserID     int       `gorm:"column:user_id" json:"user_id"`
-	CourseID   int64     `gorm:"column:course_id" json:"course_id"`
-	CreatedAt  time.Time `gorm:"column:created_at" json:"created_at"`
-	is_deleted int       `gorm:"column:is_deleted" json:"is_deleted"`
+	UserID    int       `gorm:"column:user_id" json:"user_id"`
+	CourseID  int64     `gorm:"column:course_id" json:"course_id"`
+	CreatedAt time.Time `gorm:"column:created_at" json:"created_at"`
+	IsDeleted int       `gorm:"column:is_deleted" json:"is_deleted"`
 }
 
 func (favoriteCourses) TableName() string {
