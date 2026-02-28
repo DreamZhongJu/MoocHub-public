@@ -200,34 +200,30 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('积分明细'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('积分明细'), centerTitle: true),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : !_loggedIn
-              ? _buildLoginPrompt()
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: ListView(
-                    children: [
-                      _buildBalanceCard(),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-                        child: Text(
-                          '积分流水',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+          ? _buildLoginPrompt()
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView(
+                children: [
+                  _buildBalanceCard(),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      '积分流水',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
-                      _buildTransactions(),
-                    ],
+                    ),
                   ),
-                ),
+                  _buildTransactions(),
+                ],
+              ),
+            ),
     );
   }
 }
-

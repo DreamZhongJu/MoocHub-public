@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
@@ -117,7 +117,8 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (_qqAppId.isEmpty) {
       final fromEnv =
-          (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '').trim();
+          (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
+              .trim();
       debugPrint('[login] reload QQ_APP_ID=$fromEnv');
       if (fromEnv.isNotEmpty) {
         _qqAppId = fromEnv;

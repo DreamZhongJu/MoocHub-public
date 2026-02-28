@@ -32,9 +32,9 @@ class _RegisterPageState extends State<RegisterPage> {
     final password = _passwordController.text.trim();
     final nickname = _nicknameController.text.trim();
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入用户名和密码')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入用户名和密码')));
       return;
     }
 
@@ -72,15 +72,15 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('注册失败：$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('注册失败：$e')));
       }
     } finally {
       if (mounted) {

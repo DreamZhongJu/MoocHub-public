@@ -1,4 +1,4 @@
-﻿import 'package:app_settings/app_settings.dart';
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 
 class NotificationSettingsPage extends StatelessWidget {
@@ -30,7 +30,9 @@ class NotificationSettingsPage extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                     title: const Text('\u6253\u5f00\u901a\u77e5\u8bbe\u7f6e'),
-                    subtitle: const Text('\u8fdb\u5165\u7cfb\u7edf\u901a\u77e5\u8bbe\u7f6e\u9875'),
+                    subtitle: const Text(
+                      '\u8fdb\u5165\u7cfb\u7edf\u901a\u77e5\u8bbe\u7f6e\u9875',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       AppSettings.openAppSettings(
@@ -45,7 +47,9 @@ class NotificationSettingsPage extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                     title: const Text('\u5e94\u7528\u8bbe\u7f6e'),
-                    subtitle: const Text('\u7cfb\u7edf\u5e94\u7528\u8bbe\u7f6e\u9875'),
+                    subtitle: const Text(
+                      '\u7cfb\u7edf\u5e94\u7528\u8bbe\u7f6e\u9875',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       AppSettings.openAppSettings();

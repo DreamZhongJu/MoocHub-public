@@ -1,4 +1,4 @@
-﻿import 'package:MoocHub/config/Config.dart';
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
@@ -36,7 +36,8 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
 
   Future<void> _bootstrap() async {
     final token = await _storageService.getUserToken();
-    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
     if (mounted) {
       setState(() {
         _loggedIn = loggedIn;
@@ -123,9 +124,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   Future<void> _toggleFavorite() async {
     if (!_loggedIn) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先登录')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录')));
       }
       return;
     }
@@ -137,7 +138,8 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       if (_favorite) {
         await _apiService.delete<Map<String, dynamic>>(
           '/favorites/articles/${widget.articleId}',
-          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+          fromJson: (raw) =>
+              (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (mounted) {
           setState(() {
@@ -148,7 +150,8 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         await _apiService.postForm<Map<String, dynamic>>(
           '/favorites/articles',
           data: {'article_id': widget.articleId.toString()},
-          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+          fromJson: (raw) =>
+              (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (mounted) {
           setState(() {
@@ -169,9 +172,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   Future<void> _likeArticle() async {
     if (!_loggedIn) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先登录')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录')));
       }
       return;
     }
@@ -231,15 +234,11 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final article = _article;
     if (article == null) {
-      return const Scaffold(
-        body: Center(child: Text('文章加载失败')),
-      );
+      return const Scaffold(body: Center(child: Text('文章加载失败')));
     }
 
     return Scaffold(
@@ -288,16 +287,15 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: _favoriteLoading ? null : _toggleFavorite,
-                  icon: Icon(_favorite ? Icons.bookmark : Icons.bookmark_border),
+                  icon: Icon(
+                    _favorite ? Icons.bookmark : Icons.bookmark_border,
+                  ),
                   label: Text(_favorite ? '已收藏' : '收藏'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            MarkdownBody(
-              data: article.content,
-              selectable: true,
-            ),
+            MarkdownBody(data: article.content, selectable: true),
           ],
         ),
       ),

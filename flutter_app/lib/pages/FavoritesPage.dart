@@ -1,4 +1,4 @@
-﻿import 'package:MoocHub/model/ArticleModel.dart';
+import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
@@ -42,7 +42,8 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   Future<void> _bootstrap() async {
     final token = await _storageService.getUserToken();
-    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
     if (mounted) {
       setState(() {
         _loggedIn = loggedIn;
@@ -234,7 +235,9 @@ class _FavoritesPageState extends State<FavoritesPage>
       itemBuilder: (context, index) {
         final video = _videos[index];
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: ListTile(
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -252,7 +255,11 @@ class _FavoritesPageState extends State<FavoritesPage>
                       child: const Icon(Icons.play_arrow, size: 20),
                     ),
             ),
-            title: Text(video.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+              video.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             subtitle: Text(
               video.description,
               maxLines: 1,
@@ -301,11 +308,7 @@ class _FavoritesPageState extends State<FavoritesPage>
             onTap: () {
               final id = int.tryParse(article.id);
               if (id == null) return;
-              Navigator.pushNamed(
-                context,
-                '/articleDetail',
-                arguments: id,
-              );
+              Navigator.pushNamed(context, '/articleDetail', arguments: id);
             },
           ),
         );
@@ -352,11 +355,7 @@ class _FavoritesPageState extends State<FavoritesPage>
           ? _buildLoginRequired()
           : TabBarView(
               controller: _tabController,
-              children: [
-                _buildCourses(),
-                _buildVideos(),
-                _buildArticles(),
-              ],
+              children: [_buildCourses(), _buildVideos(), _buildArticles()],
             ),
     );
   }

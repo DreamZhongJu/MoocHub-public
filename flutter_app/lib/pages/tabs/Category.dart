@@ -1,4 +1,4 @@
-﻿import 'package:MoocHub/config/Config.dart';
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CategoriesModel.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
@@ -191,7 +191,10 @@ class _CategoryPageState extends State<CategoryPage>
         style: TDSideBarStyle.normal,
         value: _selectIndex,
         controller: _sideBarController,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 12,
+        ),
         selectedTextStyle: const TextStyle(
           fontSize: 12,
           height: 1.2,

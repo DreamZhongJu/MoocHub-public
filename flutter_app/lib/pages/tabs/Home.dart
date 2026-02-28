@@ -985,10 +985,7 @@ class HomePageState extends State<HomePage>
       children: [
         RefreshIndicator(
           onRefresh: () async {
-            await _loadRecommendedProducts(
-              reset: true,
-              useOfflineCache: false,
-            );
+            await _loadRecommendedProducts(reset: true, useOfflineCache: false);
           },
           child: ScrollConfiguration(
             behavior: const _NoScrollbarBehavior(),

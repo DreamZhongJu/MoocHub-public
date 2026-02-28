@@ -39,8 +39,9 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
     if (input.startsWith('http://') || input.startsWith('https://')) {
       try {
         final uri = Uri.parse(input);
-        final segments =
-            uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+        final segments = uri.pathSegments
+            .where((segment) => segment.isNotEmpty)
+            .toList();
         if (segments.length >= 2) {
           return segments.sublist(1).join('/');
         }
@@ -85,8 +86,9 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('封面上传失败')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('封面上传失败')));
       }
     } finally {
       if (mounted) {
@@ -116,20 +118,23 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
       );
       if (resp.code == 200 || resp.code == 0) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('发布成功')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('发布成功')));
           Navigator.pop(context);
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(resp.msg.toString())));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(resp.msg.toString())));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('发布失败')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('发布失败')));
       }
     } finally {
       if (mounted) {
@@ -150,18 +155,16 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
             TextFormField(
               controller: _titleCtrl,
               decoration: const InputDecoration(labelText: '标题'),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? '请输入标题'
-                  : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? '请输入标题' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _summaryCtrl,
               decoration: const InputDecoration(labelText: '摘要'),
               maxLines: 2,
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? '请输入摘要'
-                  : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? '请输入摘要' : null,
             ),
             const SizedBox(height: 12),
             Row(
@@ -199,9 +202,8 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
                 hintText: '支持 Markdown 语法，例如：\n\n# 标题\n\n- 列表项\n\n**加粗**',
               ),
               maxLines: 10,
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? '请输入内容'
-                  : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? '请输入内容' : null,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
