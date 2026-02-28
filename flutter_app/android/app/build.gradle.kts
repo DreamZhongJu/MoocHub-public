@@ -68,6 +68,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-    // Tencent OpenSDK references OkHttp classes in release builds (R8).
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // Tencent OpenSDK references okhttp3.internal.Version (3.x API surface) in release builds.
+    implementation("com.squareup.okhttp3:okhttp:3.14.9")
 }
