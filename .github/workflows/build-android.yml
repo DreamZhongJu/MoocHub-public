@@ -16,6 +16,17 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+      - name: Write google-services.json
+        run: |
+          if [ -z "${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}" ]; then
+            echo "Missing secret: ANDROID_GOOGLE_SERVICES_JSON"
+            exit 1
+          fi
+          cat > android/app/google-services.json <<'JSON'
+          ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}
+          JSON
+      - name: Check google-services.json
+        run: test -f android/app/google-services.json
       - name: Flutter pub get
         run: flutter pub get
       - name: Build debug apk
