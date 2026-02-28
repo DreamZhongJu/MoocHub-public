@@ -2,6 +2,14 @@
 
 面向“中国大学 MOOC”风格的在线学习社区（移动端为主）。支持课程浏览、视频播放、评论互动、收藏与学习进度。目标交付：可运行系统 + 规范论文。
 
+## 文档导航
+- 开发流程与 PR 规范：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
+- CI/CD 落地计划：[`doc/CICDPlan.md`](doc/CICDPlan.md)
+- 推送系统说明：[`doc/PushSystem.md`](doc/PushSystem.md)
+- 第三方登录（QQ）：[`doc/ThirdPartyLogin.md`](doc/ThirdPartyLogin.md)
+- 实时聊天方案：[`doc/ChatSystem.md`](doc/ChatSystem.md)
+- 埋点看板方案：[`doc/AnalyticsDashboard.md`](doc/AnalyticsDashboard.md)
+
 ## 项目定位
 - 产品形态：学习社区 + 课程平台
 - 首页风格：类 B 站推荐流（卡片瀑布流 + 热门/继续观看）
@@ -19,7 +27,7 @@
 ## 目录结构
 - `flutter_app/`：Flutter 客户端
 - `server/`：Go 服务端
-- `docs/`：接口与设计文档（预留）
+- `doc/`：技术文档
 
 ## 快速运行
 ### Server
@@ -111,6 +119,41 @@ flutter run
     - `AppEmptyState`
     - `AppWeakNetworkBanner`
   - 首页、搜索页、分类课程列表、文章列表、消息页、学习页已切换为统一组件。
+
+## CI/CD 协作规范（私有仓库免费版）
+> 当前仓库为私有且未升级 Team/Enterprise，GitHub 分支保护规则会显示 `Not enforced`。  
+> 因此本项目采用“流程强约束”方式执行门禁。
+
+详细流程见：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
+
+### 1) 合并门禁（必须执行）
+- 所有代码变更必须走 PR，禁止直接向 `main` 提交。
+- PR 合并前必须满足：
+  - `CI Check / flutter-check` 通过
+  - `CI Check / server-check` 通过
+  - `Build Android` 至少手动验证通过一次（关键改动建议每次验证）
+- 至少完成一次代码自检：
+  - Flutter：`flutter format --set-exit-if-changed .`、`flutter analyze`、`flutter test`
+  - Server：`gofmt -w <文件列表>`、`go vet ./...`、`go test ./...`
+
+### 2) PR 的作用
+- 代码评审入口：让改动在合并前可审查、可讨论、可追踪。
+- 质量闸门入口：CI 在 PR 上自动执行，提前发现格式/编译/测试问题。
+- 变更审计入口：保留每次变更的背景、决策与回滚依据。
+
+### 3) CI/CD 建议落地阶段
+- 第 1 阶段（项目启动后尽早）：接入最小 CI（format/lint/build/test）。
+- 第 2 阶段（功能迭代期）：补齐自动化测试、产物构建、缓存与依赖优化。
+- 第 3 阶段（提测/上线前）：接入发布流水线（tag/release）、环境配置与回滚策略。
+- 第 4 阶段（运营期）：补充监控告警、质量阈值、发布节奏与变更审计。
+
+### 4) 当前执行策略（本仓库）
+- 规则“已创建但不强制”，以人工流程保证质量：
+  1. 功能分支开发
+  2. 提交 PR
+  3. 等 CI 全绿
+  4. 审核通过后合并
+  5. 合并后观察 `main` 上工作流与制品
 
 ## 对象存储
 ### 1) 部署 MinIO
@@ -633,3 +676,13 @@ CREATE TABLE favorite_articles (
 ---
 
 ## 说明
+- 本仓库当前采用“PR + CI 绿灯后手动合并”的协作模式。
+- 分支与 PR 规范详见：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
+
+## 贡献与协作
+- 分支规范：`feat/*`、`fix/*`、`docs/*`、`chore/*`
+- 每个需求新建分支，合并后删除，不复用历史分支
+- 合并前至少通过：
+  - `CI Check / flutter-check`
+  - `CI Check / server-check`
+- 关键改动建议额外验证 `Build Android` 工作流
