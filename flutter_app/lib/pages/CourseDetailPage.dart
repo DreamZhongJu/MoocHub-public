@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
@@ -90,7 +90,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
   Future<void> _bootstrap() async {
     final token = await _storageService.getUserToken();
-    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
     if (mounted) {
       setState(() {
         _loggedIn = loggedIn;
@@ -102,7 +103,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   }
 
   void _initTencent() {
-    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '').trim();
+    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
+        .trim();
     if (_qqAppId.isNotEmpty && !kIsWeb) {
       _tencent = TencentKitPlatform.instance;
       _tencent!.registerApp(appId: _qqAppId);
@@ -113,17 +115,17 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   void _handleTencentResp(TencentResp resp) {
     if (resp is TencentShareMsgResp && mounted) {
       if (resp.isSuccessful) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('分享成功')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('分享成功')));
       } else if (resp.isCancelled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已取消分享')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已取消分享')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(resp.msg ?? '分享失败')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(resp.msg ?? '分享失败')));
       }
     }
   }
@@ -147,7 +149,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
       if (response.code == 0 || response.code == 200) {
         final data = response.data;
-        final rawCourses = data is Map<String, dynamic> ? data['courses'] : null;
+        final rawCourses = data is Map<String, dynamic>
+            ? data['courses']
+            : null;
         if (rawCourses is List && rawCourses.isNotEmpty) {
           final first = rawCourses.first;
           if (first is Map<String, dynamic>) {
@@ -221,9 +225,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   Future<void> _toggleFavorite() async {
     if (!_loggedIn) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先登录')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请先登录')));
       }
       return;
     }
@@ -243,7 +247,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         final resp = await _apiService.postForm<Map<String, dynamic>>(
           '/favorites/courses',
           data: {'course_id': widget.courseId.toString()},
-          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+          fromJson: (raw) =>
+              (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (resp.code != 0 && resp.code != 200) {
           throw Exception(resp.msg);
@@ -251,7 +256,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       } else {
         final resp = await _apiService.delete<Map<String, dynamic>>(
           '/favorites/courses/${widget.courseId}',
-          fromJson: (raw) => (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
+          fromJson: (raw) =>
+              (raw as Map<String, dynamic>?) ?? <String, dynamic>{},
         );
         if (resp.code != 0 && resp.code != 200) {
           throw Exception(resp.msg);
@@ -279,9 +285,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
   void _showShareSheet() {
     if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Web 不支持 QQ 分享')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Web 不支持 QQ 分享')));
       return;
     }
     showModalBottomSheet(
@@ -322,17 +328,17 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       return;
     }
     if (_tencent == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QQ SDK 未初始化')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('QQ SDK 未初始化')));
       return;
     }
     final installed = await _tencent!.isQQInstalled();
     if (!installed) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未检测到 QQ 客户端')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('未检测到 QQ 客户端')));
       }
       return;
     }
@@ -561,11 +567,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             if (id == null) {
               return;
             }
-            Navigator.pushNamed(
-              context,
-              '/videoDetail',
-              arguments: id,
-            );
+            Navigator.pushNamed(context, '/videoDetail', arguments: id);
           },
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,9 +707,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             Expanded(
               child: TDTabBarView(
                 children: [
-                  SingleChildScrollView(
-                    child: _buildProductInfo(),
-                  ),
+                  SingleChildScrollView(child: _buildProductInfo()),
                   CommentsPanel(
                     targetType: 'course',
                     targetId: widget.courseId,
@@ -723,6 +723,3 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
   }
 }
-
-
-

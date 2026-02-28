@@ -1,0 +1,49 @@
+name: CI Check
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  server-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+      - name: Go fmt check
+        run: |
+          UNFORMATTED=$(gofmt -l $(find . -name "*.go"))
+          if [ -n "$UNFORMATTED" ]; then
+            echo "Unformatted files:"
+            echo "$UNFORMATTED"
+            exit 1
+          fi
+      - name: Go vet
+        run: go vet ./...
+      - name: Go test
+        run: go test ./...
+
+  flutter-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Dart format check
+        run: dart format --set-exit-if-changed .
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      - name: Flutter test
+        run: flutter test

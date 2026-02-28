@@ -76,10 +76,7 @@ class _SplashPageState extends State<SplashPage> {
               const SizedBox(height: 6),
               const Text(
                 '在线学习社区',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF6B7280),
-                ),
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
               ),
               const Spacer(flex: 2),
               const Padding(
@@ -89,7 +86,9 @@ class _SplashPageState extends State<SplashPage> {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2F6DFF)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF2F6DFF),
+                    ),
                   ),
                 ),
               ),

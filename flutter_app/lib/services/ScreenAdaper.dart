@@ -10,8 +10,8 @@ class ScreenAdapter {
       builder: (context, _) => child,
     );
   }
-  static double width(BuildContext context) =>
-      MediaQuery.sizeOf(context).width;
+
+  static double width(BuildContext context) => MediaQuery.sizeOf(context).width;
 
   static double height(BuildContext context) =>
       MediaQuery.sizeOf(context).height;
