@@ -5,6 +5,7 @@
 ## 文档导航
 - 开发流程与 PR 规范：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
 - CI/CD 落地计划：[`doc/CICDPlan.md`](doc/CICDPlan.md)
+- 版本更新日志：[`CHANGELOG.md`](CHANGELOG.md)
 - 推送系统说明：[`doc/PushSystem.md`](doc/PushSystem.md)
 - 第三方登录（QQ）：[`doc/ThirdPartyLogin.md`](doc/ThirdPartyLogin.md)
 - 实时聊天方案：[`doc/ChatSystem.md`](doc/ChatSystem.md)
