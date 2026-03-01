@@ -1,6 +1,75 @@
-﻿# MoocHub
+﻿<div align="center">
+
+# MoocHub
+
+湖北大学计算机专业毕业设计项目（Flutter + Go）
+
+[![License](https://img.shields.io/github/license/DreamZhongJu/MoocHub)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/DreamZhongJu/MoocHub)](https://github.com/DreamZhongJu/MoocHub/commits/main)
+[![Repo Stars](https://img.shields.io/github/stars/DreamZhongJu/MoocHub?style=social)](https://github.com/DreamZhongJu/MoocHub/stargazers)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/DreamZhongJu/MoocHub/pulls)
+[![CI Check](https://img.shields.io/github/actions/workflow/status/DreamZhongJu/MoocHub/ci-check.yml?branch=main&label=CI)](https://github.com/DreamZhongJu/MoocHub/actions/workflows/ci-check.yml)
+[![Android Build](https://img.shields.io/github/actions/workflow/status/DreamZhongJu/MoocHub/build-android.yml?branch=main&label=Android%20Build)](https://github.com/DreamZhongJu/MoocHub/actions/workflows/build-android.yml)
+
+[快速开始](#快速运行) | [文档导航](#文档导航) | [技术栈](#技术栈) | [开发流程](doc/DevWorkflow.md) | [更新日志](CHANGELOG.md)
+
+</div>
 
 面向“中国大学 MOOC”风格的在线学习社区（移动端为主）。支持课程浏览、视频播放、评论互动、收藏与学习进度。目标交付：可运行系统 + 规范论文。
+
+## 核心能力
+- 多端学习体验：课程浏览、视频播放、评论互动、收藏和学习进度
+- 推荐与运营能力：埋点看板、推荐系统、缓存预热、热点保护
+- 稳定性工程：限流、熔断、重试、幂等、结构化日志与 trace
+- 客户端体验：离线缓存、弱网重试、统一骨架屏/空态
+- 工程协作：CI/CD、PR 流程、版本管理、Release 产物
+
+## 导航目录
+- [功能截图](#功能截图)
+- [系统架构图](#系统架构图)
+- [版本节奏](#版本节奏)
+- [文档导航](#文档导航)
+- [快速运行](#快速运行)
+- [API 文档](#api-文档)
+- [TODO List](#todo-list)
+- [贡献与协作](#贡献与协作)
+
+## 功能截图
+> 当前先放统一展示区位，后续可替换成真实页面截图（首页/课程详情/消息/学习页）。
+
+<div align="center">
+  <img src="./flutter_app/assets/icon.png" alt="MoocHub App Icon" width="96" />
+</div>
+
+| 首页推荐流                 | 学习页进度                  | 消息页                         |
+| -------------------------- | --------------------------- | ------------------------------ |
+| `doc/screenshots/home.png` | `doc/screenshots/study.png` | `doc/screenshots/messages.png` |
+
+| 管理后台                    | 数据看板                      | 搜索与文章                           |
+| --------------------------- | ----------------------------- | ------------------------------------ |
+| `doc/screenshots/admin.png` | `doc/screenshots/grafana.png` | `doc/screenshots/search_article.png` |
+
+## 系统架构图
+```mermaid
+flowchart LR
+  A[Flutter App] --> B[Go API Server]
+  B --> C[(MySQL)]
+  B --> D[(MongoDB)]
+  B --> E[(Redis)]
+  B --> F[(RabbitMQ)]
+  B --> G[(MinIO)]
+  H[Grafana] --> C
+  I[Prometheus] --> B
+```
+
+## 版本节奏
+| 轨道       | 说明                                      | 入口                                                                        |
+| ---------- | ----------------------------------------- | --------------------------------------------------------------------------- |
+| 需求规划   | TODO 拆分、Issue 管理、迭代范围冻结       | [Issues](https://github.com/DreamZhongJu/MoocHub/issues)                    |
+| 开发联调   | 功能分支开发 + PR 评审 + CI 门禁          | [Pull Requests](https://github.com/DreamZhongJu/MoocHub/pulls)              |
+| 持续集成   | Flutter/Go 检查、Android 构建、格式与测试 | [Actions](https://github.com/DreamZhongJu/MoocHub/actions)                  |
+| 版本发布   | Tag + Release + 变更说明 + APK 产物       | [Releases](https://github.com/DreamZhongJu/MoocHub/releases)                |
+| 里程碑追踪 | 版本目标、已完成事项、下一阶段计划        | [CHANGELOG.md](CHANGELOG.md) / [doc/CompletedTodo.md](doc/CompletedTodo.md) |
 
 ## 文档导航
 - 开发流程与 PR 规范：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
@@ -663,3 +732,14 @@ CREATE TABLE favorite_articles (
   - `CI Check / flutter-check`
   - `CI Check / server-check`
 - 关键改动建议额外验证 `Build Android` 工作流
+
+## 贡献者
+<a href="https://github.com/DreamZhongJu/MoocHub/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=DreamZhongJu/MoocHub" alt="contributors" />
+</a>
+
+## 协作看板
+- 项目规划：[`README.md`](README.md) / [`doc/CompletedTodo.md`](doc/CompletedTodo.md)
+- 任务协同：GitHub Issues + Projects（Sprint 迭代）
+- 代码协同：功能分支 -> PR -> CI 通过 -> 合并主干
+- 版本协同：`CHANGELOG.md` 维护发布说明，`release.yml` 负责发布流程
