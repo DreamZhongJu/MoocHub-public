@@ -35,8 +35,12 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('AppWeakNetworkBanner displays message', (WidgetTester tester) async {
-    await tester.pumpWidget(_wrap(const AppWeakNetworkBanner(text: '网络较弱，已显示缓存')));
+  testWidgets('AppWeakNetworkBanner displays message', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(const AppWeakNetworkBanner(text: '网络较弱，已显示缓存')),
+    );
 
     expect(find.text('网络较弱，已显示缓存'), findsOneWidget);
     expect(find.byIcon(Icons.wifi_tethering_error_rounded), findsOneWidget);
@@ -52,7 +56,9 @@ void main() {
     expect(find.byType(ListView), findsOneWidget);
   });
 
-  testWidgets('AppGridSkeleton renders grid container', (WidgetTester tester) async {
+  testWidgets('AppGridSkeleton renders grid container', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(const AppGridSkeleton(itemCount: 6, crossAxisCount: 2)),
     );
