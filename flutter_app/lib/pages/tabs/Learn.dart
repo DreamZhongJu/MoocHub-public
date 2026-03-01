@@ -469,25 +469,26 @@ class LearnPageState extends State<LearnPage>
   }
 
   Widget _buildChatItem(_ConversationItem item) {
-    final screenWidth = MediaQuery.of(context).size.width;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: TDSwipeCell(
-        slidableKey: ValueKey('learn_chat_${item.id}'),
-        groupTag: 'learn_chat_list',
-        right: TDSwipeCellPanel(
-          extentRatio: 72 / screenWidth,
-          dragDismissible: false,
-          onDismissed: (_) => _hideConversation(item),
-          children: [
-            TDSwipeCellAction(
-              backgroundColor: TDTheme.of(context).errorNormalColor,
-              label: '隐藏',
-              onPressed: (_) => _hideConversation(item),
+      child: Dismissible(
+        key: ValueKey('learn_chat_${item.id}'),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 16),
+          color: TDTheme.of(context).errorNormalColor,
+          child: const Text(
+            'Hide',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
-          ],
+          ),
         ),
-        cell: _buildChatCell(item),
+        onDismissed: (_) => _hideConversation(item),
+        child: _buildChatCell(item),
       ),
     );
   }

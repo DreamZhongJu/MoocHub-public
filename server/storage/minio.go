@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 	"strings"
 	"sync"
@@ -60,7 +61,7 @@ func ResolveObjectURL(raw string) (string, error) {
 		return "", err
 	}
 	if !config.MinioUsePresign() {
-		return fmt.Sprintf("%s/%s", bucket, key), nil
+		return buildMinioObjectURL(bucket, key), nil
 	}
 	var signed string
 	err = minioBreaker.Execute(func() error {
@@ -81,6 +82,25 @@ func ResolveObjectURL(raw string) (string, error) {
 		return "", err
 	}
 	return signed, nil
+}
+
+func buildMinioObjectURL(bucket, key string) string {
+	endpoint := strings.TrimSpace(config.MinioEndpoint())
+	if endpoint == "" {
+		return fmt.Sprintf("/%s/%s", bucket, key)
+	}
+	if strings.HasPrefix(endpoint, "http://") || strings.HasPrefix(endpoint, "https://") {
+		return strings.TrimRight(endpoint, "/") + "/" + bucket + "/" + strings.TrimLeft(key, "/")
+	}
+	scheme := "http"
+	if config.MinioSecure() {
+		scheme = "https"
+	}
+	hostPort := endpoint
+	if host, _, err := net.SplitHostPort(endpoint); err == nil && (host == "" || host == "0.0.0.0") {
+		hostPort = "127.0.0.1:" + strings.Split(endpoint, ":")[1]
+	}
+	return scheme + "://" + strings.TrimRight(hostPort, "/") + "/" + bucket + "/" + strings.TrimLeft(key, "/")
 }
 
 func PutObject(key string, reader io.Reader, size int64, contentType string) (string, string, error) {

@@ -27,7 +27,7 @@ class _ArticleListPageState extends State<ArticleListPage> {
 
   int _page = 1;
   static const int _pageSize = 10;
-  static const String _cacheKey = 'article_list_v1_page_1';
+  static const String _cacheKey = 'article_list_v2_page_1';
 
   @override
   void initState() {
@@ -222,6 +222,13 @@ class _ArticleListPageState extends State<ArticleListPage> {
                   width: 52,
                   height: 52,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 52,
+                    height: 52,
+                    color: Colors.grey.shade300,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image_outlined, size: 16),
+                  ),
                 ),
         ),
         title: Text(

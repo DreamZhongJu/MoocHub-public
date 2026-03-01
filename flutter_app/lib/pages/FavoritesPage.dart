@@ -247,6 +247,16 @@ class _FavoritesPageState extends State<FavoritesPage>
                       width: 60,
                       height: 40,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 60,
+                        height: 40,
+                        color: Colors.grey.shade300,
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          size: 18,
+                        ),
+                      ),
                     )
                   : Container(
                       width: 60,

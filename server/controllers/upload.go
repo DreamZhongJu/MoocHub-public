@@ -4,6 +4,7 @@ import (
 	"MOOCHUB-server/storage"
 	"crypto/rand"
 	"encoding/hex"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -23,6 +24,15 @@ func (uc UploadController) Upload(c *gin.Context) {
 	dir := strings.TrimSpace(c.DefaultPostForm("dir", "articles"))
 	if dir == "" {
 		dir = "articles"
+	}
+	dir = strings.Trim(dir, "/")
+
+	if isVideoDir(dir) {
+		role := strings.ToLower(strings.TrimSpace(c.GetString("user_role")))
+		if role != "admin" && role != "teacher" {
+			ReturnError(c, 403, "only teacher/admin can upload video files")
+			return
+		}
 	}
 
 	ext := filepath.Ext(file.Filename)
@@ -57,4 +67,30 @@ func buildObjectKey(dir, ext string) string {
 	_, _ = rand.Read(buf)
 	suffix := hex.EncodeToString(buf)
 	return strings.Trim(dir, "/") + "/" + now.Format("20060102") + "/" + now.Format("150405") + "_" + suffix + ext
+}
+
+func isVideoDir(dir string) bool {
+	return dir == "videos" || strings.HasPrefix(dir, "videos/")
+}
+
+// ServeUpload 优先读取本地 uploads 目录；不存在时回退到 MinIO 对象。
+func (uc UploadController) ServeUpload(c *gin.Context) {
+	objectPath := strings.TrimPrefix(c.Param("filepath"), "/")
+	if objectPath == "" {
+		c.Status(404)
+		return
+	}
+
+	localPath := filepath.Join("uploads", filepath.FromSlash(objectPath))
+	if stat, err := os.Stat(localPath); err == nil && !stat.IsDir() {
+		c.File(localPath)
+		return
+	}
+
+	url, err := storage.ResolveObjectURL(objectPath)
+	if err != nil || strings.TrimSpace(url) == "" {
+		c.Status(404)
+		return
+	}
+	c.Redirect(302, url)
 }
