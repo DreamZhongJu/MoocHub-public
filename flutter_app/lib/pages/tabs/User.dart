@@ -266,7 +266,10 @@ class _UserPageState extends State<UserPage>
             _loadUser();
           },
           footer: _buildLinksFooter,
-          isAdmin: _currentRole().toLowerCase().trim() == 'admin',
+          canManageContent: () {
+            final role = _currentRole().toLowerCase().trim();
+            return role == 'admin' || role == 'teacher';
+          }(),
         ),
       ),
     );
@@ -461,12 +464,12 @@ class SettingsPage extends StatelessWidget {
     super.key,
     required this.onSwitchAccount,
     required this.footer,
-    this.isAdmin = false,
+    this.canManageContent = false,
   });
 
   final Future<void> Function() onSwitchAccount;
   final Widget Function(BuildContext context) footer;
-  final bool isAdmin;
+  final bool canManageContent;
 
   @override
   Widget build(BuildContext context) {
@@ -510,14 +513,14 @@ class SettingsPage extends StatelessWidget {
                       Navigator.pushNamed(context, '/notificationSettings');
                     },
                   ),
-                  if (isAdmin) const Divider(height: 1),
-                  if (isAdmin)
+                  if (canManageContent) const Divider(height: 1),
+                  if (canManageContent)
                     ListTile(
                       leading: Icon(
                         Icons.admin_panel_settings,
                         color: theme.colorScheme.primary,
                       ),
-                      title: const Text('管理后台'),
+                      title: const Text('课程管理后台'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.pushNamed(context, '/admin');

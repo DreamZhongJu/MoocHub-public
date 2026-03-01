@@ -46,7 +46,7 @@ class HomePageState extends State<HomePage>
   final ApiService _apiService = ApiService();
   final AnalyticsService _analyticsService = AnalyticsService();
   static const String _homeScene = 'home_feed';
-  static const String _homeFeedCacheKey = 'home_feed_v1_page_1';
+  static const String _homeFeedCacheKey = 'home_feed_v2_page_1';
   final Set<String> _homeExposedKeys = <String>{};
 
   Duration _nextMockDelay() {
@@ -336,8 +336,11 @@ class HomePageState extends State<HomePage>
         ? '未开始'
         : '${_continuePercent.toStringAsFixed(1)}%';
 
+    final maxWidth = MediaQuery.of(context).size.width - 32;
+    final cardWidth = maxWidth.clamp(220.0, 360.0);
+
     return Container(
-      width: 320,
+      width: cardWidth,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFF0F7F6),
@@ -354,6 +357,13 @@ class HomePageState extends State<HomePage>
                     width: 88,
                     height: 50,
                     fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 88,
+                      height: 50,
+                      color: Colors.grey.shade300,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.broken_image_outlined, size: 18),
+                    ),
                   )
                 : Container(
                     width: 88,

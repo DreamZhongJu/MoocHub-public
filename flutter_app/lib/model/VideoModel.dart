@@ -1,3 +1,5 @@
+import 'package:MoocHub/config/Config.dart';
+
 class VideoModel {
   final String id;
   final String courseId;
@@ -26,8 +28,8 @@ class VideoModel {
       title: _stringify(json['title']),
       description: _stringify(json['description']),
       durationSec: _intify(json['duration_sec']),
-      videoUrl: _stringify(json['video_url']),
-      thumbUrl: _stringify(json['thumb_url']),
+      videoUrl: Config.resolveImage(_stringify(json['video_url'])),
+      thumbUrl: Config.resolveImage(_stringify(json['thumb_url'])),
       sortOrder: _intify(json['sort_order']),
     );
   }

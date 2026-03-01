@@ -62,7 +62,7 @@ func Router() *gin.Engine {
 	}))
 
 	r.Use(middleware.GinLogger(), middleware.GinRecovery(true))
-	r.Static("/uploads", "./uploads")
+	r.GET("/uploads/*filepath", controllers.UploadController{}.ServeUpload)
 
 	user := r.Group("/api/v1")
 	{
@@ -141,20 +141,23 @@ func Router() *gin.Engine {
 			favorite.GET("", controllers.FavoriteController{}.GetFavorites)
 		}
 
-		admin := user.Group("/admin", middleware.AdminMiddleware())
+		admin := user.Group("/admin", middleware.AuthMiddleware())
 		{
-			admin.GET("/analytics/overview", controllers.AdminAnalyticsController{}.Overview)
-			admin.GET("/analytics/trend", controllers.AdminAnalyticsController{}.Trend)
-			admin.GET("/analytics/top", controllers.AdminAnalyticsController{}.Top)
-			admin.POST("/cache/prewarm", writeLimiter, middleware.IdempotencyMiddleware(), controllers.CacheOpsController{}.Prewarm)
-			admin.POST("/courses", controllers.AdminController{}.CreateCourse)
-			admin.PUT("/courses/:id", controllers.AdminController{}.UpdateCourse)
-			admin.DELETE("/courses/:id", controllers.AdminController{}.DeleteCourse)
-			admin.POST("/videos", controllers.AdminController{}.CreateVideo)
-			admin.PUT("/videos/:id", controllers.AdminController{}.UpdateVideo)
-			admin.DELETE("/videos/:id", controllers.AdminController{}.DeleteVideo)
-			admin.DELETE("/comments/:id", controllers.AdminController{}.DeleteComment)
-			admin.POST("/push", writeLimiter, middleware.IdempotencyMiddleware(), controllers.PushController{}.Send)
+			// teacher/admin 可新建课程与视频
+			admin.POST("/courses", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.CreateCourse)
+			admin.POST("/videos", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.CreateVideo)
+
+			// 管理能力仅 admin 可用
+			admin.GET("/analytics/overview", middleware.AdminMiddleware(), controllers.AdminAnalyticsController{}.Overview)
+			admin.GET("/analytics/trend", middleware.AdminMiddleware(), controllers.AdminAnalyticsController{}.Trend)
+			admin.GET("/analytics/top", middleware.AdminMiddleware(), controllers.AdminAnalyticsController{}.Top)
+			admin.POST("/cache/prewarm", middleware.AdminMiddleware(), writeLimiter, middleware.IdempotencyMiddleware(), controllers.CacheOpsController{}.Prewarm)
+			admin.PUT("/courses/:id", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.UpdateCourse)
+			admin.DELETE("/courses/:id", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.DeleteCourse)
+			admin.PUT("/videos/:id", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.UpdateVideo)
+			admin.DELETE("/videos/:id", middleware.RoleMiddleware("admin", "teacher"), controllers.AdminController{}.DeleteVideo)
+			admin.DELETE("/comments/:id", middleware.AdminMiddleware(), controllers.AdminController{}.DeleteComment)
+			admin.POST("/push", middleware.AdminMiddleware(), writeLimiter, middleware.IdempotencyMiddleware(), controllers.PushController{}.Send)
 		}
 	}
 

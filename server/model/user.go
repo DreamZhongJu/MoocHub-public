@@ -3,6 +3,7 @@ package model
 import (
 	"MOOCHUB-server/db"
 	"errors"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -43,6 +44,14 @@ func UsersRegister(username, password, nickname, role string) (Users, error) {
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return Users{}, err
+	}
+
+	role = strings.ToLower(strings.TrimSpace(role))
+	if role == "" {
+		role = "student"
+	}
+	if role != "student" && role != "teacher" && role != "admin" {
+		return Users{}, errors.New("invalid role")
 	}
 
 	user := Users{

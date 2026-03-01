@@ -1,6 +1,8 @@
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -15,17 +17,22 @@ class _AdminHomePageState extends State<AdminHomePage>
   final StorageService _storageService = StorageService();
   String? _role;
   bool _loadingRole = true;
-  late TabController _tabController;
+  TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
     _loadRole();
   }
 
   Future<void> _loadRole() async {
-    final role = await _storageService.getUserRole();
+    final role = (await _storageService.getUserRole() ?? '')
+        .toLowerCase()
+        .trim();
+    final tabLength = role == 'admin' ? 5 : 2;
+    _tabController?.dispose();
+    _tabController = TabController(length: tabLength, vsync: this);
+
     if (mounted) {
       setState(() {
         _role = role;
@@ -34,37 +41,39 @@ class _AdminHomePageState extends State<AdminHomePage>
     }
   }
 
-  bool get _isAdmin => (_role ?? '').toLowerCase() == 'admin';
+  bool get _isAdmin => (_role ?? '') == 'admin';
+  bool get _isTeacher => (_role ?? '') == 'teacher';
+  bool get _canManageContent => _isAdmin || _isTeacher;
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingRole) {
+    if (_loadingRole || _tabController == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (!_isAdmin) {
+    if (!_canManageContent) {
       return Scaffold(
-        appBar: AppBar(title: const Text('管理后台')),
+        appBar: AppBar(title: const Text('Course Console')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.lock, size: 48, color: Colors.grey),
               const SizedBox(height: 8),
-              const Text('当前账号无管理权限'),
+              const Text('This account has no course manage permission'),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () async {
                   await Navigator.pushNamed(context, '/login');
                   await _loadRole();
                 },
-                child: const Text('切换账号'),
+                child: const Text('Switch account'),
               ),
             ],
           ),
@@ -74,27 +83,31 @@ class _AdminHomePageState extends State<AdminHomePage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('管理后台'),
+        title: const Text('Course Console'),
         bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '课程'),
-            Tab(text: '视频'),
-            Tab(text: '分类'),
-            Tab(text: '评论'),
-            Tab(text: '用户'),
-          ],
+          controller: _tabController!,
+          tabs: _isAdmin
+              ? const [
+                  Tab(text: 'Courses'),
+                  Tab(text: 'Videos'),
+                  Tab(text: 'Categories'),
+                  Tab(text: 'Comments'),
+                  Tab(text: 'Users'),
+                ]
+              : const [Tab(text: 'Courses'), Tab(text: 'Videos')],
         ),
       ),
       body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _AdminCoursesTab(),
-          _AdminVideosTab(),
-          _AdminCategoriesTab(),
-          _AdminCommentsTab(),
-          _AdminUsersTab(),
-        ],
+        controller: _tabController!,
+        children: _isAdmin
+            ? const [
+                _AdminCoursesTab(),
+                _AdminVideosTab(),
+                _AdminCategoriesTab(),
+                _AdminCommentsTab(),
+                _AdminUsersTab(),
+              ]
+            : const [_AdminCoursesTab(), _AdminVideosTab()],
       ),
     );
   }
@@ -109,9 +122,53 @@ class _AdminCoursesTab extends StatefulWidget {
 
 class _AdminCoursesTabState extends State<_AdminCoursesTab> {
   final ApiService _apiService = ApiService();
+  final ImagePicker _picker = ImagePicker();
   bool _loading = true;
   bool _error = false;
   List<Map<String, dynamic>> _items = [];
+
+  Future<String> _uploadFile({required XFile file, required String dir}) async {
+    final formData = FormData.fromMap({
+      'dir': dir,
+      'file': await MultipartFile.fromFile(file.path, filename: file.name),
+    });
+    final resp = await _apiService.postMultipart<Map<String, dynamic>>(
+      '/uploads',
+      data: formData,
+      fromJson: (raw) =>
+          raw is Map<String, dynamic> ? raw : <String, dynamic>{},
+    );
+    if (resp.code != 0 && resp.code != 200) {
+      throw Exception(resp.msg);
+    }
+    final key = resp.data['key']?.toString() ?? '';
+    if (key.isEmpty) {
+      throw Exception('upload key empty');
+    }
+    return key;
+  }
+
+  Future<void> _pickAndUploadCover(TextEditingController coverCtrl) async {
+    final file = await _picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Uploading cover...')));
+    try {
+      final key = await _uploadFile(file: file, dir: 'articles');
+      coverCtrl.text = key;
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Cover uploaded')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cover upload failed: $e')));
+    }
+  }
 
   @override
   void initState() {
@@ -211,6 +268,17 @@ class _AdminCoursesTabState extends State<_AdminCoursesTab> {
                 TextField(
                   controller: coverCtrl,
                   decoration: const InputDecoration(labelText: '封面URL/Key'),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await _pickAndUploadCover(coverCtrl);
+                    },
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Upload cover'),
+                  ),
                 ),
                 TextField(
                   controller: instructorCtrl,
@@ -449,11 +517,77 @@ class _AdminVideosTab extends StatefulWidget {
 
 class _AdminVideosTabState extends State<_AdminVideosTab> {
   final ApiService _apiService = ApiService();
+  final ImagePicker _picker = ImagePicker();
   final TextEditingController _courseIdCtrl = TextEditingController();
   bool _loading = false;
   bool _error = false;
   String? _courseTitle;
   List<Map<String, dynamic>> _videos = [];
+
+  Future<String> _uploadFile({required XFile file, required String dir}) async {
+    final formData = FormData.fromMap({
+      'dir': dir,
+      'file': await MultipartFile.fromFile(file.path, filename: file.name),
+    });
+    final resp = await _apiService.postMultipart<Map<String, dynamic>>(
+      '/uploads',
+      data: formData,
+      fromJson: (raw) =>
+          raw is Map<String, dynamic> ? raw : <String, dynamic>{},
+    );
+    if (resp.code != 0 && resp.code != 200) {
+      throw Exception(resp.msg);
+    }
+    final key = resp.data['key']?.toString() ?? '';
+    if (key.isEmpty) {
+      throw Exception('upload key empty');
+    }
+    return key;
+  }
+
+  Future<void> _pickAndUploadVideo(TextEditingController videoCtrl) async {
+    final file = await _picker.pickVideo(source: ImageSource.gallery);
+    if (file == null) return;
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Uploading video...')));
+    try {
+      final key = await _uploadFile(file: file, dir: 'videos');
+      videoCtrl.text = key;
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Video uploaded')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Video upload failed: $e')));
+    }
+  }
+
+  Future<void> _pickAndUploadThumb(TextEditingController thumbCtrl) async {
+    final file = await _picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Uploading thumbnail...')));
+    try {
+      final key = await _uploadFile(file: file, dir: 'articles');
+      thumbCtrl.text = key;
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Thumbnail uploaded')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Thumbnail upload failed: $e')));
+    }
+  }
 
   String _normalizeObjectKey(String value) {
     final text = value.trim();
@@ -593,9 +727,31 @@ class _AdminVideosTabState extends State<_AdminVideosTab> {
                   controller: videoUrlCtrl,
                   decoration: const InputDecoration(labelText: '视频URL/Key'),
                 ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await _pickAndUploadVideo(videoUrlCtrl);
+                    },
+                    icon: const Icon(Icons.video_file_outlined),
+                    label: const Text('Upload video'),
+                  ),
+                ),
                 TextField(
                   controller: thumbUrlCtrl,
                   decoration: const InputDecoration(labelText: '封面URL/Key'),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await _pickAndUploadThumb(thumbUrlCtrl);
+                    },
+                    icon: const Icon(Icons.image_outlined),
+                    label: const Text('Upload thumbnail'),
+                  ),
                 ),
                 TextField(
                   controller: sortCtrl,

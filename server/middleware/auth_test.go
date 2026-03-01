@@ -73,3 +73,25 @@ func TestAdminMiddleware_RejectsNonAdmin(t *testing.T) {
 		t.Fatalf("expected 403, got %d", w.Code)
 	}
 }
+
+func TestRoleMiddleware_AllowsTeacher(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	token, err := utils.GenerateToken(10, "teacher")
+	if err != nil {
+		t.Fatalf("generate token: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/publish", RoleMiddleware("admin", "teacher"), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/publish", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+}

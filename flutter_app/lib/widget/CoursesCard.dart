@@ -117,6 +117,13 @@ class CoursesCard extends StatelessWidget {
                         width: double.infinity,
                         height: imageHeight,
                         fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: double.infinity,
+                          height: imageHeight,
+                          color: Colors.grey.shade300,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.broken_image_outlined),
+                        ),
                       ),
                       Positioned(
                         left: 8,

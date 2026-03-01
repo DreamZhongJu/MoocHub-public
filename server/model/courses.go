@@ -71,6 +71,12 @@ func GetCoursesDetails(ID int64) ([]Courses, error) {
 	return courses, nil
 }
 
+func GetCourseByID(id int64) (Courses, error) {
+	var course Courses
+	err := db.GetDB().Where("id = ?", id).First(&course).Error
+	return course, err
+}
+
 func CreateCourse(course *Courses) error {
 	return db.GetDB().Create(course).Error
 }

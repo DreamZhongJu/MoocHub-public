@@ -3,6 +3,7 @@ package controllers
 import (
 	"MOOCHUB-server/model"
 	"MOOCHUB-server/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -26,9 +27,13 @@ func (u UserController) Register(c *gin.Context) {
 	userName := c.DefaultPostForm("username", "")
 	password := c.DefaultPostForm("password", "")
 	nickName := c.DefaultPostForm("nickname", "")
-	role := c.DefaultPostForm("role", "student")
+	role := normalizeRegisterRole(c.DefaultPostForm("role", "student"))
 	if userName == "" || password == "" || nickName == "" {
 		ReturnError(c, 400, "参数不能为空")
+		return
+	}
+	if role != "student" && role != "teacher" {
+		ReturnError(c, 400, "role 仅支持 student 或 teacher")
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -52,6 +57,14 @@ func (u UserController) Register(c *gin.Context) {
 		"token": token,
 	}, 0)
 	return
+}
+
+func normalizeRegisterRole(role string) string {
+	role = strings.TrimSpace(strings.ToLower(role))
+	if role == "" {
+		return "student"
+	}
+	return role
 }
 
 func (u UserController) Login(c *gin.Context) {

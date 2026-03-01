@@ -16,27 +16,75 @@ class Config {
     if (url == null || url.isEmpty) {
       return '';
     }
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    final raw = url.trim();
+    if (raw.isEmpty) return '';
+
+    if (raw.startsWith('file://')) {
       try {
-        final uri = Uri.parse(url);
+        final uri = Uri.parse(raw);
+        return _resolveLocalPath(uri.path);
+      } catch (_) {
+        return '';
+      }
+    }
+
+    if (raw.startsWith('/thumbs/') ||
+        raw.startsWith('/videos/') ||
+        raw.startsWith('/articles/')) {
+      return '$imageHost/uploads$raw';
+    }
+    if (raw.startsWith('thumbs/') ||
+        raw.startsWith('videos/') ||
+        raw.startsWith('articles/')) {
+      return '$imageHost/uploads/$raw';
+    }
+
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      try {
+        final uri = Uri.parse(raw);
+        if (_needsUploadsPrefix(uri.path)) {
+          return uri.replace(path: '/uploads${uri.path}').toString();
+        }
         final hasAmzSignature = uri.queryParameters.keys.any(
           (key) => key.toLowerCase().startsWith('x-amz-'),
         );
         if (hasAmzSignature) {
-          return url;
+          return raw;
         }
         if (uri.host == '127.0.0.1' || uri.host == 'localhost') {
           final ip = dotenv.env['BACKEND_IP'] ?? '127.0.0.1';
           return uri.replace(host: ip).toString();
         }
       } catch (_) {
-        return url;
+        return raw;
       }
-      return url;
+      return raw;
     }
-    if (url.startsWith('/')) {
-      return '$imageHost$url';
+    if (raw.startsWith('/')) {
+      return '$imageHost$raw';
     }
-    return '$imageHost/$url';
+    return '$imageHost/$raw';
+  }
+
+  static String _resolveLocalPath(String path) {
+    final normalized = path.trim();
+    if (normalized.isEmpty) return '';
+    if (normalized.startsWith('/thumbs/') ||
+        normalized.startsWith('/videos/') ||
+        normalized.startsWith('/articles/')) {
+      return '$imageHost/uploads$normalized';
+    }
+    if (normalized.startsWith('/uploads/')) {
+      return '$imageHost$normalized';
+    }
+    return '$imageHost/$normalized';
+  }
+
+  static bool _needsUploadsPrefix(String path) {
+    if (path.isEmpty) return false;
+    if (path.startsWith('/uploads/')) return false;
+    return path.startsWith('/thumbs/') ||
+        path.startsWith('/videos/') ||
+        path.startsWith('/articles/');
   }
 }
