@@ -95,6 +95,7 @@ func Router() *gin.Engine {
 		user.POST("/articles", middleware.AuthMiddleware(), controllers.ArticlesController{}.CreateArticle)
 		user.GET("/search", controllers.SearchController{}.Search)
 		user.GET("/search/suggest", controllers.SearchController{}.Suggest)
+		user.POST("/ai/query", controllers.AIController{}.Query)
 		user.POST("/uploads", middleware.AuthMiddleware(), controllers.UploadController{}.Upload)
 		user.GET("/videos/:id", controllers.VideoController{}.GetVideoDetails)
 		user.GET("/comments", controllers.CommentController{}.GetComments)

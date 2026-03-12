@@ -10,8 +10,16 @@ func LightRAGSyncURL() string {
 	return envOrDefault("LIGHTRAG_SYNC_URL", "")
 }
 
+func LightRAGQueryURL() string {
+	return envOrDefault("LIGHTRAG_QUERY_URL", "")
+}
+
 func LightRAGSyncToken() string {
 	return envOrDefault("LIGHTRAG_SYNC_TOKEN", "")
+}
+
+func LightRAGQueryToken() string {
+	return envOrDefault("LIGHTRAG_QUERY_TOKEN", "")
 }
 
 func LightRAGSyncTimeout() time.Duration {
@@ -19,6 +27,15 @@ func LightRAGSyncTimeout() time.Duration {
 	ms, err := strconv.Atoi(v)
 	if err != nil || ms <= 0 {
 		return 5 * time.Second
+	}
+	return time.Duration(ms) * time.Millisecond
+}
+
+func LightRAGQueryTimeout() time.Duration {
+	v := strings.TrimSpace(envOrDefault("LIGHTRAG_QUERY_TIMEOUT_MS", "8000"))
+	ms, err := strconv.Atoi(v)
+	if err != nil || ms <= 0 {
+		return 8 * time.Second
 	}
 	return time.Duration(ms) * time.Millisecond
 }
