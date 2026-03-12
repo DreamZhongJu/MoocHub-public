@@ -155,7 +155,7 @@ flutter run
 - `LIGHTRAG_SYNC_MAX_RETRY`：LightRAG 同步最大重试次数（默认 `3`，超限后进入死信队列）
 - `LIGHTRAG_QUERY_URL`：LightRAG 查询接口地址（未配置时 `/api/v1/ai/query` 返回 `503`）
 - `LIGHTRAG_QUERY_TOKEN`：LightRAG 查询接口 Bearer Token（可选）
-- `LIGHTRAG_QUERY_TIMEOUT_MS`：LightRAG 查询超时（毫秒，默认 `8000`）
+- `LIGHTRAG_QUERY_TIMEOUT_MS`：LightRAG 查询超时（毫秒，默认 `120000`）
 - `FCM_SERVICE_ACCOUNT`：Firebase 服务账号 JSON 文件路径
 - `FCM_PROJECT_ID`：Firebase 项目 ID（可选，默认从服务账号读取）
 - `LOG_ACCESS_SAMPLE_RATE`：访问日志采样率（`0~1`，默认 `1`，错误与慢请求不采样）

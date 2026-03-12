@@ -32,10 +32,10 @@ func LightRAGSyncTimeout() time.Duration {
 }
 
 func LightRAGQueryTimeout() time.Duration {
-	v := strings.TrimSpace(envOrDefault("LIGHTRAG_QUERY_TIMEOUT_MS", "8000"))
+	v := strings.TrimSpace(envOrDefault("LIGHTRAG_QUERY_TIMEOUT_MS", "120000"))
 	ms, err := strconv.Atoi(v)
 	if err != nil || ms <= 0 {
-		return 8 * time.Second
+		return 120 * time.Second
 	}
 	return time.Duration(ms) * time.Millisecond
 }

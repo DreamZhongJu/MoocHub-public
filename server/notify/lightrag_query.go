@@ -1,6 +1,8 @@
 package notify
 
 import (
+	"MOOCHUB-server/db"
+	"MOOCHUB-server/model"
 	"MOOCHUB-server/resilience"
 	"MOOCHUB-server/utils"
 	"bytes"
@@ -15,6 +17,8 @@ import (
 	"strings"
 	"time"
 )
+
+const lightRAGSnippetLimit = 320
 
 type LightRAGQueryClient struct {
 	endpoint          string
@@ -106,7 +110,7 @@ type lightRAGNativeReferenceID struct {
 
 func NewLightRAGQueryClient(endpoint, token string, timeout time.Duration, failureThreshold int, openTimeout time.Duration) *LightRAGQueryClient {
 	if timeout <= 0 {
-		timeout = 8 * time.Second
+		timeout = 120 * time.Second
 	}
 	trimmed := strings.TrimSpace(endpoint)
 	return &LightRAGQueryClient{
@@ -169,7 +173,7 @@ func (c *LightRAGQueryClient) Query(ctx context.Context, req LightRAGQueryReques
 
 func (c *LightRAGQueryClient) queryOnce(ctx context.Context, req LightRAGQueryRequest) (*LightRAGQueryResponse, error) {
 	nativeReq := lightRAGNativeQueryRequest{
-		Query:             req.Query,
+		Query:             buildLightRAGScopedQuery(req),
 		Mode:              req.Mode,
 		TopK:              req.TopK,
 		IncludeReferences: true,
@@ -189,6 +193,36 @@ func (c *LightRAGQueryClient) queryOnce(ctx context.Context, req LightRAGQueryRe
 	}
 
 	return buildUnifiedLightRAGQueryResponse(req, queryResp, dataResp), nil
+}
+
+func buildLightRAGScopedQuery(req LightRAGQueryRequest) string {
+	query := strings.TrimSpace(req.Query)
+	if query == "" {
+		return ""
+	}
+
+	switch req.Scope {
+	case "article":
+		if req.ArticleID > 0 {
+			return fmt.Sprintf(
+				"[scope=article:%d]\n请仅基于 article:%d 对应的知识内容回答，不要混入其他文章或课程内容。\n问题：%s",
+				req.ArticleID,
+				req.ArticleID,
+				query,
+			)
+		}
+	case "course":
+		if req.CourseID > 0 {
+			return fmt.Sprintf(
+				"[scope=course:%d]\n请仅基于 course:%d 对应的课程与视频知识回答，不要混入其他课程或文章内容。\n问题：%s",
+				req.CourseID,
+				req.CourseID,
+				query,
+			)
+		}
+	}
+
+	return query
 }
 
 func (c *LightRAGQueryClient) doQueryRequest(ctx context.Context, endpoint string, req lightRAGNativeQueryRequest) (*lightRAGNativeQueryResponse, error) {
@@ -285,13 +319,13 @@ func mergeLightRAGSources(queryResp *lightRAGNativeQueryResponse, dataResp *ligh
 				SourceID:   filePath,
 				SourceType: sourceType,
 				BizID:      bizID,
-				Title:      filePath,
+				Title:      resolveLightRAGSourceTitle(sourceType, bizID, filePath),
 				SourceURL:  buildSourceURL(sourceType, bizID),
 			}
 			sources[filePath] = item
 		}
 		if item.Snippet == "" && strings.TrimSpace(snippet) != "" {
-			item.Snippet = strings.TrimSpace(snippet)
+			item.Snippet = trimLightRAGSnippet(snippet)
 		}
 	}
 
@@ -312,6 +346,43 @@ func mergeLightRAGSources(queryResp *lightRAGNativeQueryResponse, dataResp *ligh
 		items = append(items, *item)
 	}
 	return items
+}
+
+func resolveLightRAGSourceTitle(sourceType string, bizID int64, fallback string) string {
+	fallback = strings.TrimSpace(fallback)
+	if bizID <= 0 || db.GetDB() == nil {
+		return fallback
+	}
+	switch sourceType {
+	case "article":
+		article, err := model.GetArticleByID(bizID)
+		if err == nil && strings.TrimSpace(article.Title) != "" {
+			return strings.TrimSpace(article.Title)
+		}
+	case "course":
+		course, err := model.GetCourseByID(bizID)
+		if err == nil && strings.TrimSpace(course.Title) != "" {
+			return strings.TrimSpace(course.Title)
+		}
+	case "video":
+		video, err := model.GetVideoDetails(bizID)
+		if err == nil && strings.TrimSpace(video.Title) != "" {
+			return strings.TrimSpace(video.Title)
+		}
+	}
+	return fallback
+}
+
+func trimLightRAGSnippet(snippet string) string {
+	snippet = strings.TrimSpace(snippet)
+	if snippet == "" {
+		return ""
+	}
+	runes := []rune(snippet)
+	if len(runes) <= lightRAGSnippetLimit {
+		return snippet
+	}
+	return strings.TrimSpace(string(runes[:lightRAGSnippetLimit])) + "..."
 }
 
 func collectLightRAGEntities(dataResp *lightRAGNativeQueryDataResponse) []string {

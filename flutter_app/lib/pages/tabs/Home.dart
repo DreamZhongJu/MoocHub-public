@@ -40,7 +40,6 @@ class HomePageState extends State<HomePage>
   bool _weakNetwork = false;
   bool _usingOfflineCache = false;
   String _networkHint = '';
-  int _mockLoadCursor = 0;
   int _recommendSeed = DateTime.now().millisecondsSinceEpoch;
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
@@ -48,28 +47,6 @@ class HomePageState extends State<HomePage>
   static const String _homeScene = 'home_feed';
   static const String _homeFeedCacheKey = 'home_feed_v2_page_1';
   final Set<String> _homeExposedKeys = <String>{};
-
-  Duration _nextMockDelay() {
-    const fastDelaysMs = <int>[120, 180, 260];
-    const slowDelaysMs = <int>[680, 920, 760];
-
-    // 3 次快 -> 3 次慢，循环切换，模拟“时快时慢”的加载体验。
-    final inSlowPhase = ((_mockLoadCursor ~/ 3) % 2) == 1;
-    final indexInPhase = _mockLoadCursor % 3;
-    _mockLoadCursor += 1;
-    final ms = inSlowPhase
-        ? slowDelaysMs[indexInPhase]
-        : fastDelaysMs[indexInPhase];
-    return Duration(milliseconds: ms);
-  }
-
-  Future<void> _waitMockLoadingDelay(DateTime startedAt) async {
-    final target = _nextMockDelay();
-    final elapsed = DateTime.now().difference(startedAt);
-    if (elapsed < target) {
-      await Future.delayed(target - elapsed);
-    }
-  }
 
   @override
   void initState() {
@@ -352,18 +329,11 @@ class HomePageState extends State<HomePage>
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: video.thumbUrl.isNotEmpty
-                ? Image.network(
-                    video.thumbUrl,
+                ? TDImage(
+                    imgUrl: video.thumbUrl,
                     width: 88,
                     height: 50,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 88,
-                      height: 50,
-                      color: Colors.grey.shade300,
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.broken_image_outlined, size: 18),
-                    ),
                   )
                 : Container(
                     width: 88,
@@ -464,8 +434,6 @@ class HomePageState extends State<HomePage>
         });
       }
     }
-    final startedAt = DateTime.now();
-
     try {
       final results = await Future.wait([
         _apiService.getWithRetry<Map<String, dynamic>>(
@@ -568,7 +536,6 @@ class HomePageState extends State<HomePage>
         }
       }
     } finally {
-      await _waitMockLoadingDelay(startedAt);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -791,14 +758,16 @@ class HomePageState extends State<HomePage>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  colorScheme.primary.withOpacity(0.12),
-                  colorScheme.primary.withOpacity(0.04),
+                  colorScheme.primary.withValues(alpha: 0.12),
+                  colorScheme.primary.withValues(alpha: 0.04),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

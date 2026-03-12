@@ -3,15 +3,16 @@ import 'dart:async';
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CoursesModel.dart';
 import 'package:MoocHub/model/VideoModel.dart';
+import 'package:MoocHub/pages/ArticleDetailPage.dart';
+import 'package:MoocHub/pages/VideoDetailPage.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:badges/badges.dart' as badges;
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tencent_kit/tencent_kit.dart';
@@ -28,17 +29,26 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage> {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+  final TextEditingController _aiQuestionController = TextEditingController();
   CoursesModel? _product;
   List<VideoModel> _videos = [];
   bool _isLoading = true;
   bool _loadError = false;
-  int _selectedImageIndex = 0;
   List<String> _imageUrls = [];
   bool _disposed = false;
   bool _favoriteLoading = false;
   bool _isFavorite = false;
   int _favoriteCount = 0;
   bool _loggedIn = false;
+  bool _aiLoading = false;
+  String _aiError = '';
+  String _aiAnswer = '';
+  String _aiTaskLabel = '';
+  List<_CourseAISource> _aiSources = const [];
+  List<String> _aiEntities = const [];
+  bool _aiExpanded = false;
+
+  static const int _aiPreviewChars = 1200;
 
   late final String _qqAppId;
   TencentKitPlatform? _tencent;
@@ -85,6 +95,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   void dispose() {
     _disposed = true;
     _qqShareSub?.cancel();
+    _aiQuestionController.dispose();
     super.dispose();
   }
 
@@ -149,9 +160,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
       if (response.code == 0 || response.code == 200) {
         final data = response.data;
-        final rawCourses = data is Map<String, dynamic>
-            ? data['courses']
-            : null;
+        final rawCourses = data['courses'];
         if (rawCourses is List && rawCourses.isNotEmpty) {
           final first = rawCourses.first;
           if (first is Map<String, dynamic>) {
@@ -360,6 +369,403 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
   }
 
+  Future<void> _submitAIQuery({
+    String? questionOverride,
+    String? taskLabel,
+    bool syncInput = false,
+  }) async {
+    final question = (questionOverride ?? _aiQuestionController.text).trim();
+    if (question.isEmpty || _aiLoading) return;
+    if (syncInput && questionOverride != null) {
+      _aiQuestionController.text = question;
+    }
+    FocusScope.of(context).unfocus();
+    _safeSetState(() {
+      _aiLoading = true;
+      _aiError = '';
+      _aiTaskLabel = taskLabel ?? '自定义提问';
+    });
+    try {
+      final resp = await _apiService.post<Map<String, dynamic>>(
+        '/ai/query',
+        data: {
+          'query': question,
+          'mode': 'local',
+          'scope': 'course',
+          'course_id': widget.courseId,
+          'top_k': 5,
+        },
+        fromJson: (raw) => raw as Map<String, dynamic>,
+      );
+      final data = resp.data;
+      final rawSources = data['sources'];
+      final rawEntities = data['entities'];
+      _safeSetState(() {
+        _aiAnswer = (data['answer']?.toString() ?? '').trim();
+        _aiExpanded = false;
+        _aiSources = rawSources is List
+            ? rawSources
+                  .where((item) => item is Map)
+                  .map(
+                    (item) => _CourseAISource.fromJson(
+                      Map<String, dynamic>.from(item as Map),
+                    ),
+                  )
+                  .toList()
+            : const [];
+        _aiEntities = rawEntities is List
+            ? rawEntities
+                  .map((e) => e.toString())
+                  .where((e) => e.isNotEmpty)
+                  .toList()
+            : const [];
+      });
+    } catch (_) {
+      _safeSetState(() {
+        _aiError = '问答请求失败，请稍后重试';
+      });
+    } finally {
+      _safeSetState(() {
+        _aiLoading = false;
+      });
+    }
+  }
+
+  Future<void> _summarizeCourse() {
+    return _submitAIQuery(
+      questionOverride: '请基于当前课程内容输出一份课程总结，包含 5 个核心知识点和 3 条学习建议。',
+      taskLabel: '课程总结',
+      syncInput: true,
+    );
+  }
+
+  Future<void> _generatePracticeQuestions() {
+    return _submitAIQuery(
+      questionOverride: '请基于当前课程生成 6 道练习题，其中包含 3 道选择题、2 道简答题和 1 道判断题，并附参考答案。',
+      taskLabel: '生成练习题',
+      syncInput: true,
+    );
+  }
+
+  Future<void> _openAISource(_CourseAISource source) async {
+    if (source.sourceType == 'course' && source.bizId > 0) {
+      if (source.bizId == widget.courseId) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CourseDetailPage(courseId: source.bizId),
+        ),
+      );
+      return;
+    }
+    if (source.sourceType == 'article' && source.bizId > 0) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ArticleDetailPage(articleId: source.bizId),
+        ),
+      );
+      return;
+    }
+    if (source.sourceType == 'video' && source.bizId > 0) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => VideoDetailPage(videoId: source.bizId),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('当前来源暂不支持跳转')));
+  }
+
+  String _sourceTypeLabel(String sourceType) {
+    switch (sourceType) {
+      case 'course':
+        return '课程';
+      case 'video':
+        return '视频';
+      case 'article':
+        return '文章';
+      default:
+        return '来源';
+    }
+  }
+
+  Color _sourceTypeColor(String sourceType) {
+    switch (sourceType) {
+      case 'course':
+        return const Color(0xFF1B9AAA);
+      case 'video':
+        return const Color(0xFF7C4DFF);
+      case 'article':
+        return const Color(0xFFFF7A45);
+      default:
+        return const Color(0xFF7A7F87);
+    }
+  }
+
+  String _buildPreviewText(String text, int maxChars) {
+    if (text.length <= maxChars) return text;
+    return '${text.substring(0, maxChars).trimRight()}\n\n...';
+  }
+
+  List<String> _splitMarkdownSegments(String content) {
+    final normalized = content.replaceAll('\r\n', '\n').trim();
+    if (normalized.isEmpty) return const [];
+
+    final parts = normalized
+        .split(RegExp(r'\n\s*\n'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return const [];
+
+    const maxSegmentLength = 420;
+    final segments = <String>[];
+    for (final part in parts) {
+      if (part.length <= maxSegmentLength || part.contains('\n')) {
+        segments.add(part);
+        continue;
+      }
+      for (var i = 0; i < part.length; i += maxSegmentLength) {
+        final end = (i + maxSegmentLength).clamp(0, part.length);
+        segments.add(part.substring(i, end).trim());
+      }
+    }
+    return segments.where((part) => part.isNotEmpty).toList();
+  }
+
+  Widget _buildMarkdownBlock({
+    required String content,
+    required bool expanded,
+    required VoidCallback onToggle,
+    required int previewChars,
+    String expandLabel = '展开完整回答',
+    String collapseLabel = '收起',
+  }) {
+    if (content.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final shouldCollapse = content.length > previewChars;
+    final visibleContent = !shouldCollapse || expanded
+        ? content
+        : _buildPreviewText(content, previewChars);
+
+    final segments = _splitMarkdownSegments(visibleContent);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...segments.map(
+          (segment) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: MarkdownBody(data: segment, selectable: false),
+          ),
+        ),
+        if (shouldCollapse)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton(
+              onPressed: onToggle,
+              child: Text(expanded ? collapseLabel : expandLabel),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAISection() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7ECF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'LightRAG 问答',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '基于当前课程及视频知识提问，结果附带引用来源。',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _aiQuestionController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: '例如：这门课如何解释 IOC 和 Bean 容器？',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _aiLoading ? null : _summarizeCourse,
+                icon: const Icon(Icons.menu_book_outlined, size: 18),
+                label: const Text('课程总结'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _aiLoading ? null : _generatePracticeQuestions,
+                icon: const Icon(Icons.quiz_outlined, size: 18),
+                label: const Text('生成练习题'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _aiLoading ? null : () => _submitAIQuery(),
+              child: Text(_aiLoading ? '回答生成中...' : '开始提问'),
+            ),
+          ),
+          if (_aiError.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(_aiError, style: const TextStyle(color: Colors.red)),
+          ],
+          if (_aiAnswer.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text(
+                  '??',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                if (_aiTaskLabel.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B9AAA).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _aiTaskLabel,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1B9AAA),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildMarkdownBlock(
+              content: _aiAnswer,
+              expanded: _aiExpanded,
+              onToggle: () {
+                _safeSetState(() {
+                  _aiExpanded = !_aiExpanded;
+                });
+              },
+              previewChars: _aiPreviewChars,
+            ),
+          ],
+          if (_aiEntities.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              '识别到的实体',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _aiEntities
+                  .map((item) => Chip(label: Text(item)))
+                  .toList(),
+            ),
+          ],
+          if (_aiSources.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              '引用来源',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            ..._aiSources.map(
+              (source) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _sourceTypeColor(
+                            source.sourceType,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          _sourceTypeLabel(source.sourceType),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _sourceTypeColor(source.sourceType),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          source.title.isEmpty ? source.sourceId : source.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: source.snippet.isEmpty
+                      ? Text(source.sourceId)
+                      : Text(
+                          source.snippet,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _openAISource(source),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildImageGallery() {
     if (_isLoading) {
       return Padding(
@@ -465,7 +871,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B9AAA).withOpacity(0.12),
+                  color: const Color(0xFF1B9AAA).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Row(
@@ -533,6 +939,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           _buildSpecItem('概述', product.summary),
           _buildSpecItem('老师', product.instructorName),
           _buildSpecItem('级别', product.level),
+          _buildAISection(),
           const SizedBox(height: 24),
           const Text(
             '视频列表',
@@ -720,6 +1127,37 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CourseAISource {
+  final String sourceId;
+  final String sourceType;
+  final int bizId;
+  final String title;
+  final String sourceUrl;
+  final String snippet;
+
+  const _CourseAISource({
+    required this.sourceId,
+    required this.sourceType,
+    required this.bizId,
+    required this.title,
+    required this.sourceUrl,
+    required this.snippet,
+  });
+
+  factory _CourseAISource.fromJson(Map<String, dynamic> json) {
+    return _CourseAISource(
+      sourceId: json['source_id']?.toString() ?? '',
+      sourceType: json['source_type']?.toString() ?? '',
+      bizId: json['biz_id'] is num
+          ? (json['biz_id'] as num).toInt()
+          : int.tryParse(json['biz_id']?.toString() ?? '') ?? 0,
+      title: json['title']?.toString() ?? '',
+      sourceUrl: json['source_url']?.toString() ?? '',
+      snippet: json['snippet']?.toString() ?? '',
     );
   }
 }

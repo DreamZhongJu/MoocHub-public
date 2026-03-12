@@ -1,5 +1,6 @@
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/ArticleModel.dart';
+import 'package:MoocHub/pages/CourseDetailPage.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class ArticleDetailPage extends StatefulWidget {
 class _ArticleDetailPageState extends State<ArticleDetailPage> {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+  final TextEditingController _aiQuestionController = TextEditingController();
   bool _loading = true;
   ArticleModel? _article;
   bool _viewRecorded = false;
@@ -26,6 +28,17 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   bool _favoriteLoading = false;
   bool _likeLoading = false;
   bool _loggedIn = false;
+  bool _aiLoading = false;
+  String _aiError = '';
+  String _aiAnswer = '';
+  String _aiTaskLabel = '';
+  List<_ArticleAISource> _aiSources = const [];
+  List<String> _aiEntities = const [];
+  bool _articleExpanded = false;
+  bool _aiExpanded = false;
+
+  static const int _articlePreviewChars = 1800;
+  static const int _aiPreviewChars = 1200;
 
   @override
   void initState() {
@@ -43,6 +56,12 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         _loggedIn = loggedIn;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _aiQuestionController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDetail() async {
@@ -231,6 +250,402 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     );
   }
 
+  Future<void> _submitAIQuery({
+    String? questionOverride,
+    String? taskLabel,
+    bool syncInput = false,
+  }) async {
+    final question = (questionOverride ?? _aiQuestionController.text).trim();
+    if (question.isEmpty || _aiLoading) return;
+    if (syncInput && questionOverride != null) {
+      _aiQuestionController.text = question;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _aiLoading = true;
+      _aiError = '';
+      _aiTaskLabel = taskLabel ?? '自定义提问';
+    });
+    try {
+      final resp = await _apiService.post<Map<String, dynamic>>(
+        '/ai/query',
+        data: {
+          'query': question,
+          'mode': 'local',
+          'scope': 'article',
+          'article_id': widget.articleId,
+          'top_k': 5,
+        },
+        fromJson: (raw) => raw as Map<String, dynamic>,
+      );
+      final data = resp.data;
+      final rawSources = data['sources'];
+      final rawEntities = data['entities'];
+      if (!mounted) return;
+      setState(() {
+        _aiAnswer = (data['answer']?.toString() ?? '').trim();
+        _aiExpanded = false;
+        _aiSources = rawSources is List
+            ? rawSources
+                  .where((item) => item is Map)
+                  .map(
+                    (item) => _ArticleAISource.fromJson(
+                      Map<String, dynamic>.from(item as Map),
+                    ),
+                  )
+                  .toList()
+            : const [];
+        _aiEntities = rawEntities is List
+            ? rawEntities
+                  .map((e) => e.toString())
+                  .where((e) => e.isNotEmpty)
+                  .toList()
+            : const [];
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _aiError = '问答请求失败，请稍后重试';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _aiLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _summarizeArticle() {
+    return _submitAIQuery(
+      questionOverride: '请基于当前文章提炼 5 条核心要点，并按有序列表输出，每条不超过 40 字。',
+      taskLabel: '提炼要点',
+      syncInput: true,
+    );
+  }
+
+  Future<void> _generatePracticeQuestions() {
+    return _submitAIQuery(
+      questionOverride: '请基于当前文章生成 5 道练习题，其中包含 3 道简答题和 2 道判断题，并附参考答案。',
+      taskLabel: '生成练习题',
+      syncInput: true,
+    );
+  }
+
+  Future<void> _openAISource(_ArticleAISource source) async {
+    if (source.sourceType == 'article' && source.bizId > 0) {
+      if (source.bizId == widget.articleId) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ArticleDetailPage(articleId: source.bizId),
+        ),
+      );
+      return;
+    }
+    if (source.sourceType == 'course' && source.bizId > 0) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CourseDetailPage(courseId: source.bizId),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('当前来源暂不支持跳转')));
+  }
+
+  String _sourceTypeLabel(String sourceType) {
+    switch (sourceType) {
+      case 'course':
+        return '课程';
+      case 'video':
+        return '视频';
+      case 'article':
+        return '文章';
+      default:
+        return '来源';
+    }
+  }
+
+  Color _sourceTypeColor(String sourceType) {
+    switch (sourceType) {
+      case 'course':
+        return const Color(0xFF1B9AAA);
+      case 'video':
+        return const Color(0xFF7C4DFF);
+      case 'article':
+        return const Color(0xFFFF7A45);
+      default:
+        return const Color(0xFF7A7F87);
+    }
+  }
+
+  String _buildPreviewText(String text, int maxChars) {
+    if (text.length <= maxChars) return text;
+    return '${text.substring(0, maxChars).trimRight()}\n\n...';
+  }
+
+  List<String> _splitMarkdownSegments(String content) {
+    final normalized = content.replaceAll('\r\n', '\n').trim();
+    if (normalized.isEmpty) return const [];
+
+    final parts = normalized
+        .split(RegExp(r'\n\s*\n'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return const [];
+
+    const maxSegmentLength = 420;
+    final segments = <String>[];
+    for (final part in parts) {
+      if (part.length <= maxSegmentLength || part.contains('\n')) {
+        segments.add(part);
+        continue;
+      }
+      for (var i = 0; i < part.length; i += maxSegmentLength) {
+        final end = (i + maxSegmentLength).clamp(0, part.length);
+        segments.add(part.substring(i, end).trim());
+      }
+    }
+    return segments.where((part) => part.isNotEmpty).toList();
+  }
+
+  Widget _buildMarkdownBlock({
+    required String content,
+    required bool expanded,
+    required VoidCallback onToggle,
+    required int previewChars,
+    String expandLabel = '展开全文',
+    String collapseLabel = '收起',
+  }) {
+    if (content.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final shouldCollapse = content.length > previewChars;
+    final visibleContent = !shouldCollapse || expanded
+        ? content
+        : _buildPreviewText(content, previewChars);
+
+    final segments = _splitMarkdownSegments(visibleContent);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...segments.map(
+          (segment) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: MarkdownBody(data: segment, selectable: false),
+          ),
+        ),
+        if (shouldCollapse)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton(
+              onPressed: onToggle,
+              child: Text(expanded ? collapseLabel : expandLabel),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAISection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7ECF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'LightRAG 问答',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '基于当前文章内容提问，回答会附带引用来源。',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _aiQuestionController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: '例如：这篇文章如何解释汉朝的建立过程？',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _aiLoading ? null : _summarizeArticle,
+                icon: const Icon(Icons.summarize_outlined, size: 18),
+                label: const Text('提炼要点'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _aiLoading ? null : _generatePracticeQuestions,
+                icon: const Icon(Icons.quiz_outlined, size: 18),
+                label: const Text('生成练习题'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _aiLoading ? null : () => _submitAIQuery(),
+                  child: Text(_aiLoading ? '回答生成中...' : '开始提问'),
+                ),
+              ),
+            ],
+          ),
+          if (_aiError.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(_aiError, style: const TextStyle(color: Colors.red)),
+          ],
+          if (_aiAnswer.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text(
+                  '??',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                if (_aiTaskLabel.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B9AAA).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _aiTaskLabel,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1B9AAA),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildMarkdownBlock(
+              content: _aiAnswer,
+              expanded: _aiExpanded,
+              onToggle: () {
+                setState(() {
+                  _aiExpanded = !_aiExpanded;
+                });
+              },
+              previewChars: _aiPreviewChars,
+              expandLabel: '展开完整回答',
+            ),
+          ],
+          if (_aiEntities.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              '识别到的实体',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _aiEntities
+                  .map((item) => Chip(label: Text(item)))
+                  .toList(),
+            ),
+          ],
+          if (_aiSources.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              '引用来源',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            ..._aiSources.map(
+              (source) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _sourceTypeColor(
+                            source.sourceType,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          _sourceTypeLabel(source.sourceType),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _sourceTypeColor(source.sourceType),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          source.title.isEmpty ? source.sourceId : source.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: source.snippet.isEmpty
+                      ? Text(source.sourceId)
+                      : Text(
+                          source.snippet,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _openAISource(source),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -295,10 +710,52 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
               ],
             ),
             const SizedBox(height: 16),
-            MarkdownBody(data: article.content, selectable: true),
+            _buildMarkdownBlock(
+              content: article.content,
+              expanded: _articleExpanded,
+              onToggle: () {
+                setState(() {
+                  _articleExpanded = !_articleExpanded;
+                });
+              },
+              previewChars: _articlePreviewChars,
+            ),
+            const SizedBox(height: 24),
+            _buildAISection(),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ArticleAISource {
+  final String sourceId;
+  final String sourceType;
+  final int bizId;
+  final String title;
+  final String sourceUrl;
+  final String snippet;
+
+  const _ArticleAISource({
+    required this.sourceId,
+    required this.sourceType,
+    required this.bizId,
+    required this.title,
+    required this.sourceUrl,
+    required this.snippet,
+  });
+
+  factory _ArticleAISource.fromJson(Map<String, dynamic> json) {
+    return _ArticleAISource(
+      sourceId: json['source_id']?.toString() ?? '',
+      sourceType: json['source_type']?.toString() ?? '',
+      bizId: json['biz_id'] is num
+          ? (json['biz_id'] as num).toInt()
+          : int.tryParse(json['biz_id']?.toString() ?? '') ?? 0,
+      title: json['title']?.toString() ?? '',
+      sourceUrl: json['source_url']?.toString() ?? '',
+      snippet: json['snippet']?.toString() ?? '',
     );
   }
 }

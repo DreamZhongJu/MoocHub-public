@@ -107,3 +107,53 @@ func TestDeriveLightRAGQueryDataEndpoint(t *testing.T) {
 		t.Fatalf("unexpected empty endpoint derivation")
 	}
 }
+
+func TestTrimLightRAGSnippet(t *testing.T) {
+	short := "short snippet"
+	if got := trimLightRAGSnippet(short); got != short {
+		t.Fatalf("expected short snippet to remain unchanged, got %q", got)
+	}
+
+	long := strings.Repeat("a", lightRAGSnippetLimit+12)
+	got := trimLightRAGSnippet(long)
+	if !strings.HasSuffix(got, "...") {
+		t.Fatalf("expected ellipsis suffix, got %q", got)
+	}
+	if len([]rune(got)) != lightRAGSnippetLimit+3 {
+		t.Fatalf("unexpected trimmed length: %d", len([]rune(got)))
+	}
+}
+
+func TestBuildLightRAGScopedQuery(t *testing.T) {
+	t.Run("article scope", func(t *testing.T) {
+		got := buildLightRAGScopedQuery(LightRAGQueryRequest{
+			Query:     "生成练习题",
+			Scope:     "article",
+			ArticleID: 3,
+		})
+		if !strings.Contains(got, "[scope=article:3]") {
+			t.Fatalf("expected article scope marker, got %q", got)
+		}
+		if !strings.Contains(got, "问题：生成练习题") {
+			t.Fatalf("expected question content, got %q", got)
+		}
+	})
+
+	t.Run("course scope", func(t *testing.T) {
+		got := buildLightRAGScopedQuery(LightRAGQueryRequest{
+			Query:    "课程总结",
+			Scope:    "course",
+			CourseID: 12,
+		})
+		if !strings.Contains(got, "[scope=course:12]") {
+			t.Fatalf("expected course scope marker, got %q", got)
+		}
+	})
+
+	t.Run("default passthrough", func(t *testing.T) {
+		got := buildLightRAGScopedQuery(LightRAGQueryRequest{Query: "普通问题"})
+		if got != "普通问题" {
+			t.Fatalf("expected original query, got %q", got)
+		}
+	})
+}
