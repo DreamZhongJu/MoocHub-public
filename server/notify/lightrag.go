@@ -1,6 +1,7 @@
 package notify
 
 import (
+	"MOOCHUB-server/model"
 	"MOOCHUB-server/resilience"
 	"MOOCHUB-server/utils"
 	"bytes"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"time"
 )
+
+var ErrLightRAGDeleteUnsupported = errors.New("LightRAG native delete is not supported without doc id mapping")
 
 type LightRAGSyncClient struct {
 	endpoint   string
@@ -29,6 +32,11 @@ type LightRAGSyncRequest struct {
 	Action     string `json:"action"`
 	Status     string `json:"status,omitempty"`
 	Source     any    `json:"source,omitempty"`
+}
+
+type lightRAGNativeTextRequest struct {
+	Text       string `json:"text"`
+	FileSource string `json:"file_source"`
 }
 
 func NewLightRAGSyncClient(endpoint, token string, timeout time.Duration, failureThreshold int, openTimeout time.Duration) *LightRAGSyncClient {
@@ -59,18 +67,91 @@ func (c *LightRAGSyncClient) Sync(ctx context.Context, req LightRAGSyncRequest) 
 	if req.SourceType == "" || req.BizID <= 0 || req.Action == "" {
 		return errors.New("invalid LightRAG sync request")
 	}
+	if req.Action == "delete" {
+		return ErrLightRAGDeleteUnsupported
+	}
+
+	nativeReq, err := buildLightRAGNativeTextRequest(req)
+	if err != nil {
+		return err
+	}
 
 	if c.breaker == nil {
-		return c.syncOnce(ctx, req)
+		return c.syncOnce(ctx, nativeReq)
 	}
 	return c.breaker.Execute(func() error {
 		return utils.Retry(ctx, 3, 150*time.Millisecond, 1200*time.Millisecond, shouldRetryLightRAGError, func() error {
-			return c.syncOnce(ctx, req)
+			return c.syncOnce(ctx, nativeReq)
 		})
 	})
 }
 
-func (c *LightRAGSyncClient) syncOnce(ctx context.Context, req LightRAGSyncRequest) error {
+func buildLightRAGNativeTextRequest(req LightRAGSyncRequest) (lightRAGNativeTextRequest, error) {
+	src, err := normalizeKnowledgeSource(req.Source)
+	if err != nil {
+		return lightRAGNativeTextRequest{}, err
+	}
+	text := buildLightRAGSyncText(src)
+	if strings.TrimSpace(text) == "" {
+		return lightRAGNativeTextRequest{}, errors.New("knowledge source content is empty")
+	}
+	return lightRAGNativeTextRequest{
+		Text:       text,
+		FileSource: strings.TrimSpace(req.SourceID),
+	}, nil
+}
+
+func normalizeKnowledgeSource(source any) (*model.KnowledgeSource, error) {
+	if source == nil {
+		return nil, errors.New("knowledge source is nil")
+	}
+	if ks, ok := source.(*model.KnowledgeSource); ok && ks != nil {
+		return ks, nil
+	}
+	if ks, ok := source.(model.KnowledgeSource); ok {
+		return &ks, nil
+	}
+	body, err := json.Marshal(source)
+	if err != nil {
+		return nil, err
+	}
+	var ks model.KnowledgeSource
+	if err := json.Unmarshal(body, &ks); err != nil {
+		return nil, err
+	}
+	return &ks, nil
+}
+
+func buildLightRAGSyncText(src *model.KnowledgeSource) string {
+	parts := make([]string, 0, 8)
+	if v := strings.TrimSpace(src.Title); v != "" {
+		parts = append(parts, "Title: "+v)
+	}
+	if v := strings.TrimSpace(src.Summary); v != "" {
+		parts = append(parts, "Summary: "+v)
+	}
+	if v := strings.TrimSpace(src.Content); v != "" {
+		parts = append(parts, "Content:\n"+v)
+	}
+	if len(src.Tags) > 0 {
+		filtered := make([]string, 0, len(src.Tags))
+		for _, tag := range src.Tags {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				filtered = append(filtered, tag)
+			}
+		}
+		if len(filtered) > 0 {
+			parts = append(parts, "Tags: "+strings.Join(filtered, ", "))
+		}
+	}
+	if v := strings.TrimSpace(src.SourceURL); v != "" {
+		parts = append(parts, "SourceURL: "+v)
+	}
+	return strings.TrimSpace(strings.Join(parts, "\n\n"))
+}
+
+func (c *LightRAGSyncClient) syncOnce(ctx context.Context, req lightRAGNativeTextRequest) error {
 	bodyBytes, err := json.Marshal(req)
 	if err != nil {
 		return err
@@ -81,7 +162,7 @@ func (c *LightRAGSyncClient) syncOnce(ctx context.Context, req LightRAGSyncReque
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	if c.token != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+c.token)
+		httpReq.Header.Set("X-API-Key", c.token)
 	}
 
 	resp, err := c.httpClient.Do(httpReq)

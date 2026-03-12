@@ -5,30 +5,57 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
 
-func TestLightRAGQueryClientQuery_SendsRequestAndParsesResponse(t *testing.T) {
-	var gotAuth string
-	var gotReq LightRAGQueryRequest
+func TestLightRAGQueryClientQuery_AdaptsNativeResponses(t *testing.T) {
+	var gotAPIKey string
+	var gotPaths []string
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotAuth = r.Header.Get("Authorization")
-		if err := json.NewDecoder(r.Body).Decode(&gotReq); err != nil {
-			t.Fatalf("decode request: %v", err)
+		gotAPIKey = r.Header.Get("X-API-Key")
+		gotPaths = append(gotPaths, r.URL.Path)
+		switch r.URL.Path {
+		case "/query":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"response": "IOC 是控制反转。",
+				"references": []map[string]any{
+					{
+						"reference_id": "ref_1",
+						"file_path":    "course:1",
+						"content":      []string{"Spring 的 IOC 容器负责 Bean 的创建。"},
+					},
+				},
+			})
+		case "/query/data":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"status":  "success",
+				"message": "ok",
+				"data": map[string]any{
+					"entities": []map[string]any{
+						{"entity_name": "IOC", "file_path": "course:1", "reference_id": "ref_1"},
+						{"entity_name": "Bean", "file_path": "course:1", "reference_id": "ref_1"},
+					},
+					"chunks": []map[string]any{
+						{"content": "Spring 的 IOC 容器负责 Bean 的创建。", "file_path": "course:1", "chunk_id": "chunk-1", "reference_id": "ref_1"},
+					},
+					"references": []map[string]any{
+						{"reference_id": "ref_1", "file_path": "course:1"},
+					},
+				},
+				"metadata": map[string]any{
+					"query_mode": "local",
+				},
+			})
+		default:
+			http.NotFound(w, r)
 		}
-		_ = json.NewEncoder(w).Encode(LightRAGQueryResponse{
-			Answer:   "IOC 是一种控制反转思想。",
-			ModeUsed: "local",
-			Sources: []LightRAGQuerySource{
-				{SourceID: "course:1", SourceType: "course", BizID: 1, Title: "Spring Boot"},
-			},
-		})
 	}))
 	defer srv.Close()
 
-	client := NewLightRAGQueryClient(srv.URL, "query-token", 2*time.Second, 5, 30*time.Second)
+	client := NewLightRAGQueryClient(srv.URL+"/query", "query-token", 2*time.Second, 5, 30*time.Second)
 	resp, err := client.Query(context.Background(), LightRAGQueryRequest{
 		Query:    "什么是 IOC",
 		Mode:     "local",
@@ -41,14 +68,26 @@ func TestLightRAGQueryClientQuery_SendsRequestAndParsesResponse(t *testing.T) {
 		t.Fatalf("query failed: %v", err)
 	}
 
-	if gotAuth != "Bearer query-token" {
-		t.Fatalf("unexpected auth header: %s", gotAuth)
+	if gotAPIKey != "query-token" {
+		t.Fatalf("unexpected api key header: %s", gotAPIKey)
 	}
-	if gotReq.Query != "什么是 IOC" || gotReq.Mode != "local" || gotReq.Scope != "course" || gotReq.CourseID != 1 {
-		t.Fatalf("unexpected request payload: %#v", gotReq)
+	if len(gotPaths) != 2 || gotPaths[0] != "/query" || gotPaths[1] != "/query/data" {
+		t.Fatalf("unexpected request paths: %#v", gotPaths)
 	}
-	if resp.Answer == "" || resp.ModeUsed != "local" || len(resp.Sources) != 1 {
-		t.Fatalf("unexpected response payload: %#v", resp)
+	if resp.Answer != "IOC 是控制反转。" {
+		t.Fatalf("unexpected answer: %#v", resp)
+	}
+	if resp.ModeUsed != "local" {
+		t.Fatalf("unexpected mode: %#v", resp)
+	}
+	if len(resp.Entities) != 2 || resp.Entities[0] != "IOC" {
+		t.Fatalf("unexpected entities: %#v", resp.Entities)
+	}
+	if len(resp.Sources) != 1 || resp.Sources[0].SourceID != "course:1" || resp.Sources[0].SourceURL != "/api/v1/courses/1" {
+		t.Fatalf("unexpected sources: %#v", resp.Sources)
+	}
+	if resp.Raw == nil {
+		t.Fatalf("expected raw payload")
 	}
 }
 
@@ -56,5 +95,15 @@ func TestLightRAGQueryClientQuery_RejectsEmptyEndpoint(t *testing.T) {
 	client := NewLightRAGQueryClient("", "", time.Second, 5, 30*time.Second)
 	if _, err := client.Query(context.Background(), LightRAGQueryRequest{Query: "test"}); err == nil {
 		t.Fatal("expected error for empty endpoint")
+	}
+}
+
+func TestDeriveLightRAGQueryDataEndpoint(t *testing.T) {
+	got := deriveLightRAGQueryDataEndpoint("http://127.0.0.1:9621/query")
+	if got != "http://127.0.0.1:9621/query/data" {
+		t.Fatalf("unexpected endpoint: %s", got)
+	}
+	if strings.TrimSpace(deriveLightRAGQueryDataEndpoint("")) != "/data" {
+		t.Fatalf("unexpected empty endpoint derivation")
 	}
 }

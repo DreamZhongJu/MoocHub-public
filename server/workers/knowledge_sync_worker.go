@@ -79,6 +79,15 @@ func StartKnowledgeSyncWorker() {
 			err = client.Sync(ctx, req)
 			cancel()
 			if err != nil {
+				if errors.Is(err, notify.ErrLightRAGDeleteUnsupported) {
+					logger.Warn("knowledge sync delete skipped: native LightRAG delete requires doc id mapping",
+						zap.String("source_type", evt.SourceType),
+						zap.Int64("biz_id", evt.BizID),
+						zap.String("action", evt.Action),
+					)
+					_ = msg.Ack(false)
+					continue
+				}
 				logger.Error("knowledge sync send failed",
 					zap.String("source_type", evt.SourceType),
 					zap.Int64("biz_id", evt.BizID),

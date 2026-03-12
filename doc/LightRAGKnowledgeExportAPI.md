@@ -203,6 +203,8 @@ GET /api/v1/internal/knowledge/sources/article/789
 - `knowledge.sync` 同步失败后，不会无限重回主队列
 - worker 会按 `LIGHTRAG_SYNC_MAX_RETRY` 做有界重试
 - 超过重试上限后，消息会进入死信队列 `moochub.knowledge.sync.dead`
+- 当前直接适配 LightRAG 原生 `/documents/text`
+- 由于 LightRAG 原生删除依赖 `doc_ids`，而当前系统尚未维护 `source_id -> doc_id` 映射，所以 `delete` 事件暂时会记录日志并跳过，不做伪删除
 
 这样做的目的有两个：
 
