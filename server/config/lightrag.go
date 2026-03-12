@@ -22,3 +22,12 @@ func LightRAGSyncTimeout() time.Duration {
 	}
 	return time.Duration(ms) * time.Millisecond
 }
+
+func LightRAGSyncMaxRetry() int {
+	v := strings.TrimSpace(envOrDefault("LIGHTRAG_SYNC_MAX_RETRY", "3"))
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 0 {
+		return 3
+	}
+	return n
+}

@@ -44,12 +44,19 @@ func Publish(routingKey string, body []byte) error {
 }
 
 func PublishWithTrace(routingKey string, body []byte, traceID string) error {
+	return PublishWithHeaders(routingKey, body, traceID, nil)
+}
+
+func PublishWithHeaders(routingKey string, body []byte, traceID string, extraHeaders amqp.Table) error {
 	if ch == nil {
 		return nil
 	}
 	headers := amqp.Table{}
 	if tid := strings.TrimSpace(traceID); tid != "" {
 		headers[traceHeader] = tid
+	}
+	for k, v := range extraHeaders {
+		headers[k] = v
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

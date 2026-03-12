@@ -3,6 +3,8 @@ package workers
 import (
 	"MOOCHUB-server/mq"
 	"testing"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func TestBuildLightRAGSyncRequest_DeleteKeepsMinimalPayload(t *testing.T) {
@@ -23,5 +25,16 @@ func TestBuildLightRAGSyncRequest_DeleteKeepsMinimalPayload(t *testing.T) {
 	}
 	if req.SourceID != "article:9" {
 		t.Fatalf("unexpected source id: %s", req.SourceID)
+	}
+}
+
+func TestRetryCountFromDelivery_ReadsHeader(t *testing.T) {
+	msg := amqp.Delivery{
+		Headers: amqp.Table{
+			"x-retry-count": int32(2),
+		},
+	}
+	if got := mq.RetryCountFromDelivery(msg); got != 2 {
+		t.Fatalf("expected retry count 2, got %d", got)
 	}
 }

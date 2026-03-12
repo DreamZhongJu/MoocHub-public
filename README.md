@@ -138,6 +138,7 @@ flutter run
 - `LIGHTRAG_SYNC_URL`：LightRAG 同步接口地址（未配置时知识同步 worker 不启动）
 - `LIGHTRAG_SYNC_TOKEN`：LightRAG 同步接口 Bearer Token（可选）
 - `LIGHTRAG_SYNC_TIMEOUT_MS`：LightRAG 同步请求超时（毫秒，默认 `5000`）
+- `LIGHTRAG_SYNC_MAX_RETRY`：LightRAG 同步最大重试次数（默认 `3`，超限后进入死信队列）
 - `FCM_SERVICE_ACCOUNT`：Firebase 服务账号 JSON 文件路径
 - `FCM_PROJECT_ID`：Firebase 项目 ID（可选，默认从服务账号读取）
 - `LOG_ACCESS_SAMPLE_RATE`：访问日志采样率（`0~1`，默认 `1`，错误与慢请求不采样）

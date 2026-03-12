@@ -29,7 +29,8 @@ func StartKnowledgeSyncWorker() {
 		config.BreakerOpenTimeout(),
 	)
 
-	msgs, err := mq.Consume(mq.KnowledgeSyncRoutingKey, "moochub.knowledge.sync")
+	maxRetry := config.LightRAGSyncMaxRetry()
+	msgs, err := mq.ConsumeKnowledgeSync()
 	if err != nil {
 		global.Log.Error("knowledge sync worker consume failed", zap.Error(err))
 		return
@@ -38,15 +39,22 @@ func StartKnowledgeSyncWorker() {
 	go func() {
 		for msg := range msgs {
 			traceID := mq.TraceIDFromDelivery(msg)
+			retryCount := mq.RetryCountFromDelivery(msg)
 			logger := global.Log.With(
 				zap.String("trace_id", traceID),
 				zap.String("routing_key", msg.RoutingKey),
+				zap.Int("retry_count", retryCount),
 			)
 
 			var evt mq.KnowledgeSyncPayload
 			if err := json.Unmarshal(msg.Body, &evt); err != nil {
 				logger.Warn("knowledge sync decode failed", zap.Error(err))
-				_ = msg.Nack(false, false)
+				if err := deadLetterKnowledgeSync(msg.Body, traceID, retryCount); err != nil {
+					logger.Error("knowledge sync dead-letter publish failed", zap.Error(err))
+					_ = msg.Nack(false, true)
+					continue
+				}
+				_ = msg.Ack(false)
 				continue
 			}
 
@@ -58,7 +66,12 @@ func StartKnowledgeSyncWorker() {
 					zap.String("action", evt.Action),
 					zap.Error(err),
 				)
-				_ = msg.Nack(false, false)
+				if err := deadLetterKnowledgeSync(msg.Body, traceID, retryCount); err != nil {
+					logger.Error("knowledge sync dead-letter publish failed", zap.Error(err))
+					_ = msg.Nack(false, true)
+					continue
+				}
+				_ = msg.Ack(false)
 				continue
 			}
 
@@ -72,7 +85,33 @@ func StartKnowledgeSyncWorker() {
 					zap.String("action", evt.Action),
 					zap.Error(err),
 				)
-				_ = msg.Nack(false, true)
+				if retryCount >= maxRetry {
+					if err := deadLetterKnowledgeSync(msg.Body, traceID, retryCount); err != nil {
+						logger.Error("knowledge sync dead-letter publish failed", zap.Error(err))
+						_ = msg.Nack(false, true)
+						continue
+					}
+					logger.Warn("knowledge sync moved to dead queue",
+						zap.String("source_type", evt.SourceType),
+						zap.Int64("biz_id", evt.BizID),
+						zap.String("action", evt.Action),
+					)
+					_ = msg.Ack(false)
+					continue
+				}
+
+				if err := mq.PublishKnowledgeSyncRetryWithTrace(evt, traceID, retryCount+1); err != nil {
+					logger.Error("knowledge sync retry publish failed", zap.Error(err))
+					_ = msg.Nack(false, true)
+					continue
+				}
+				logger.Warn("knowledge sync scheduled retry",
+					zap.String("source_type", evt.SourceType),
+					zap.Int64("biz_id", evt.BizID),
+					zap.String("action", evt.Action),
+					zap.Int("next_retry_count", retryCount+1),
+				)
+				_ = msg.Ack(false)
 				continue
 			}
 
@@ -107,4 +146,8 @@ func buildLightRAGSyncRequest(evt mq.KnowledgeSyncPayload) (notify.LightRAGSyncR
 		req.Status = source.Status
 	}
 	return req, nil
+}
+
+func deadLetterKnowledgeSync(body []byte, traceID string, retryCount int) error {
+	return mq.PublishKnowledgeSyncDeadWithTrace(body, traceID, retryCount)
 }
