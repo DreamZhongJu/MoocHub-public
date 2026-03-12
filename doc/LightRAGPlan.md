@@ -156,6 +156,12 @@ MoocHub 当前已经具备较完整的数据与业务底座：
 - Go 服务调用 LightRAG 服务查询结果
 - Go 服务统一封装后返回给 Flutter
 
+当前项目的骨架实现是：
+
+- Go 服务发布 `knowledge.sync` 事件
+- 若配置了 `LIGHTRAG_SYNC_URL`，则后端 worker 会把事件转发给外部 LightRAG 服务
+- 若未配置 `LIGHTRAG_SYNC_URL`，worker 不启动，主业务链路不受影响
+
 ## 7. 按论文路线设计索引，不按普通 chunk 方案设计
 
 ### 7.1 LightRAG 索引对象

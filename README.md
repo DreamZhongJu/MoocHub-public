@@ -135,6 +135,9 @@ flutter run
 - `REDIS_DB`：Redis DB（默认 0）
 - `RABBITMQ_URL`：RabbitMQ 连接（示例：`amqp://guest:guest@127.0.0.1:5672/`）
 - `INTERNAL_TOKEN`：内部接口 Token（用于内部接口鉴权）
+- `LIGHTRAG_SYNC_URL`：LightRAG 同步接口地址（未配置时知识同步 worker 不启动）
+- `LIGHTRAG_SYNC_TOKEN`：LightRAG 同步接口 Bearer Token（可选）
+- `LIGHTRAG_SYNC_TIMEOUT_MS`：LightRAG 同步请求超时（毫秒，默认 `5000`）
 - `FCM_SERVICE_ACCOUNT`：Firebase 服务账号 JSON 文件路径
 - `FCM_PROJECT_ID`：Firebase 项目 ID（可选，默认从服务账号读取）
 - `LOG_ACCESS_SAMPLE_RATE`：访问日志采样率（`0~1`，默认 `1`，错误与慢请求不采样）

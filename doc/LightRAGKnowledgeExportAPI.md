@@ -184,3 +184,25 @@ GET /api/v1/internal/knowledge/sources/article/789
 ```
 
 这样后续 LightRAG 服务就可以做到“事件驱动 + 单条拉取”。
+
+## 9. 与知识同步事件的关系
+
+当前后端已经补上 `knowledge.sync` 事件骨架：
+
+- 课程创建 / 更新 / 删除
+- 视频创建 / 更新 / 删除
+- 文章创建（发布）
+
+如果配置了以下环境变量：
+
+- `LIGHTRAG_SYNC_URL`
+- `LIGHTRAG_SYNC_TOKEN`（可选）
+- `LIGHTRAG_SYNC_TIMEOUT_MS`（可选）
+
+则后端 worker 会消费 `knowledge.sync` 事件，并把单条知识源内容转发给外部 LightRAG 服务。
+
+如果**没有配置** `LIGHTRAG_SYNC_URL`：
+
+- worker 不启动
+- 主业务不报错
+- 你仍然可以通过本文档中的导出接口手动拉取知识源，后续再做 LightRAG 建库

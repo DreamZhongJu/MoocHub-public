@@ -109,6 +109,7 @@ func main() {
 	workers.StartPlayWorker()
 	workers.StartEventAnalyticsWorker()
 	workers.StartCacheWarmupWorker()
+	workers.StartKnowledgeSyncWorker()
 
 	r := router.Router()
 	r.Run("0.0.0.0:3000")
