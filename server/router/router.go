@@ -130,6 +130,13 @@ func Router() *gin.Engine {
 		user.GET("/points/rank", middleware.AuthMiddleware(), controllers.PointsController{}.GetRank)
 		user.POST("/points/award", middleware.InternalMiddleware(), controllers.PointsController{}.AwardPoints)
 
+		internal := user.Group("/internal", middleware.InternalMiddleware())
+		{
+			internal.GET("/knowledge/sources", controllers.KnowledgeController{}.ExportSources)
+			internal.GET("/knowledge/sources/:type", controllers.KnowledgeController{}.ListSources)
+			internal.GET("/knowledge/sources/:type/:id", controllers.KnowledgeController{}.GetSourceDetail)
+		}
+
 		favorite := user.Group("/favorites", middleware.AuthMiddleware())
 		{
 			favorite.POST("/courses", controllers.FavoriteController{}.ToggleFavorite)

@@ -80,12 +80,15 @@ flowchart LR
 - 第三方登录（QQ）：[`doc/ThirdPartyLogin.md`](doc/ThirdPartyLogin.md)
 - 实时聊天方案：[`doc/ChatSystem.md`](doc/ChatSystem.md)
 - 埋点看板方案：[`doc/AnalyticsDashboard.md`](doc/AnalyticsDashboard.md)
+- LightRAG 接入路线：[`doc/LightRAGPlan.md`](doc/LightRAGPlan.md)
+- LightRAG 任务拆解：[`doc/LightRAGTaskBreakdown.md`](doc/LightRAGTaskBreakdown.md)
+- LightRAG 导出接口：[`doc/LightRAGKnowledgeExportAPI.md`](doc/LightRAGKnowledgeExportAPI.md)
 
 ## 项目定位
 - 产品形态：学习社区 + 课程平台
 - 首页风格：类 B 站推荐流（卡片瀑布流 + 热门/继续观看）
 - MVP 功能：课程/视频/评论/收藏/进度/用户中心
-- 中后期：个性化推荐（DIN）、AI 问答、管理后台
+- 当前深化方向：已完成功能稳定化 + LightRAG 路线接入 + 论文实验材料整理
 
 ## 技术栈
 - 客户端：Flutter
@@ -479,39 +482,23 @@ CREATE TABLE favorite_articles (
 状态说明：✅ 已实现 / ⬜ 未实现 / 🟡 部分完成
 
 说明：
+- 当前阶段不再新增业务功能，重点是已完成功能深化 + LightRAG 论文亮点落地
 - 已完成事项已单独整理到：[`doc/CompletedTodo.md`](doc/CompletedTodo.md)
 - 当前开发排期与迭代追踪以 GitHub `Issues + Projects` 为准
 
 | 阶段 | 事项                                 | 细节 TODO                                                           | 状态 |
 | ---- | ------------------------------------ | ------------------------------------------------------------------- | ---- |
-| 4    | API 文档完善                         | 补齐错误码/鉴权/分页规则/示例请求与响应                             | 🟡    |
-| 9    | 测试体系（单元/接口/集成/回归）      | 核心业务单测；接口测试脚本；回归清单                                | 🟡    |
-| 9    | 演示数据与脚本                       | 课程/视频/评论/用户一键生成；导入说明                               | 🟡    |
-| 10   | Redis 深度结合（缓存击穿/预热/统计） | 预热策略；热点 key 保护；缓存一致性与失效策略                       | 🟡    |
-| 10   | RabbitMQ 深度结合（重试/死信/监控）  | 重试/死信队列；消费幂等；监控与告警                                 | 🟡    |
-| 11   | UI 深度优化（品牌色/动效/空态）      | 统一色板与排版；动效规范；空态与骨架屏                              | 🟡    |
-| 11   | 教师角色与课程发布                   | 新增 teacher 角色；teacher/admin 可新建课程并上传视频（含权限校验） | ✅    |
-| 12   | CI/CD/自动化测试/代码规范/静态检查   | lint/format 规范；自动化测试流水线；构建与发布                      | ⬜    |
-| 12   | 安全与风控（限流/鉴权/审计）         | 鉴权强化；审计日志；风控规则                                        | ⬜    |
-| 12   | 学习计划与打卡（可选）               | 日/周目标；连续打卡；提醒与激励                                     | ⬜    |
-| 12   | 章节测验与错题本（可选）             | 章节题库；自动判分；错题回练与统计                                  | ⬜    |
-| 12   | 视频时间轴笔记（可选）               | 时间点笔记；回看定位；导出与检索                                    | ⬜    |
-| 12   | 学习路径与专题合集（可选）           | 路线编排；阶段任务；完成进度可视化                                  | ⬜    |
-| 12   | 证书与成就系统（可选）               | 完课证书；成就徽章；分享海报                                        | ⬜    |
-| 12   | 稍后再学（统一待办）（可选）         | 课程/视频/文章统一收藏；跨端同步                                    | ⬜    |
-| 12   | 搜索增强（容错与权重）（可选）       | 拼音/错别字召回；多因子排序；搜索日志学习                           | ⬜    |
-| 12   | A/B 实验平台（可选）                 | 实验分流；指标对比；灰度开关                                        | ⬜    |
-| 12   | 内容治理与审核（可选）               | 敏感词；举报流程；后台审核与处罚                                    | ⬜    |
-| 12   | LangChain 智能问答（可选）           | 课程/文章 RAG 检索问答；引用来源展示；会话上下文                    | ⬜    |
-| 12   | LangChain 内容总结（可选）           | 课程要点提炼；章节摘要；学习卡片生成                                | ⬜    |
-| 12   | LangChain 自动出题（可选）           | 按章节生成题目；答案与解析；错题讲解                                | ⬜    |
-| 12   | LangChain 语义搜索增强（可选）       | 向量召回 + 关键词混排；结果重排                                     | ⬜    |
-| 12   | LangChain 学习助手运营看板（可选）   | 调用量/耗时/命中率/成本统计；Prompt 版本管理                        | ⬜    |
+| 12   | LightRAG 知识库接入                  | 课程/文章标准导出、图索引构建、增量更新（[#29](https://github.com/DreamZhongJu/MoocHub/issues/29) / [#30](https://github.com/DreamZhongJu/MoocHub/issues/30)） | ⬜    |
+| 12   | LightRAG 智能问答                    | 多模式检索、课程/文章问答、引用来源展示（[#31](https://github.com/DreamZhongJu/MoocHub/issues/31) / [#32](https://github.com/DreamZhongJu/MoocHub/issues/32)） | ⬜    |
+| 12   | LightRAG 内容总结                    | 课程要点提炼、章节摘要、学习卡片生成（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
+| 12   | LightRAG 自动出题                    | 按章节生成题目、答案与解析、错题讲解（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
+| 12   | LightRAG 语义搜索增强                | 语义召回 + 关键词混排 + 结果重排（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
+| 12   | LightRAG 评估与成本看板              | 命中率/延迟/成本统计、论文实验材料整理（[#34](https://github.com/DreamZhongJu/MoocHub/issues/34)） | ⬜    |
 | 13   | 论文与答辩材料                       | 论文初稿/修订；PPT；演示脚本                                        | ⬜    |
 
 ---
 
-## DIN 落地实施路线（细化）
+## DIN 落地实施路线（已完成基础版，保留过程记录）
 
 > 目标：在“热门推荐”基线之上，提升首页点击率（CTR）和完播率（Completion Rate）。
 

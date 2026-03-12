@@ -3,6 +3,7 @@ package controllers
 import (
 	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
+	"MOOCHUB-server/mq"
 	"context"
 	"errors"
 	"fmt"
@@ -96,6 +97,7 @@ func (ac AdminController) CreateCourse(c *gin.Context) {
 		ReturnError(c, 500, "创建课程失败: "+err.Error())
 		return
 	}
+	publishCourseKnowledgeSync(c, course, mq.KnowledgeSyncActionUpsert)
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
 		_ = cache.DeleteByPattern(ctx, "courses:list:*", 100)
@@ -179,6 +181,10 @@ func (ac AdminController) UpdateCourse(c *gin.Context) {
 		ReturnError(c, 500, "更新课程失败: "+err.Error())
 		return
 	}
+	updatedCourse, err := model.GetCourseByID(id)
+	if err == nil {
+		publishCourseKnowledgeSync(c, &updatedCourse, mq.KnowledgeSyncActionUpsert)
+	}
 
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
@@ -222,6 +228,7 @@ func (ac AdminController) DeleteCourse(c *gin.Context) {
 		ReturnError(c, 500, "删除课程失败: "+err.Error())
 		return
 	}
+	publishKnowledgeSyncEvent(c, model.KnowledgeSourceTypeCourse, id, mq.KnowledgeSyncActionDelete, "", nil)
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
 		_ = client.Del(ctx, "courses:detail:"+idStr).Err()
@@ -289,6 +296,11 @@ func (ac AdminController) CreateVideo(c *gin.Context) {
 		ReturnError(c, 500, "创建视频失败: "+err.Error())
 		return
 	}
+	courseStatus := "published"
+	if course, courseErr := model.GetCourseByID(courseID); courseErr == nil {
+		courseStatus = course.Status
+	}
+	publishVideoKnowledgeSync(c, video, courseStatus, mq.KnowledgeSyncActionUpsert)
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
 		_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", courseID)).Err()
@@ -396,6 +408,14 @@ func (ac AdminController) UpdateVideo(c *gin.Context) {
 		ReturnError(c, 500, "更新视频失败: "+err.Error())
 		return
 	}
+	updatedVideo, videoErr := model.GetVideoDetails(id)
+	if videoErr == nil {
+		courseStatus := "published"
+		if course, courseErr := model.GetCourseByID(updatedVideo.CourseID); courseErr == nil {
+			courseStatus = course.Status
+		}
+		publishVideoKnowledgeSync(c, &updatedVideo, courseStatus, mq.KnowledgeSyncActionUpsert)
+	}
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
 		if oldCourseID != 0 {
@@ -447,6 +467,9 @@ func (ac AdminController) DeleteVideo(c *gin.Context) {
 		ReturnError(c, 500, "删除视频失败: "+err.Error())
 		return
 	}
+	publishKnowledgeSyncEvent(c, model.KnowledgeSourceTypeVideo, id, mq.KnowledgeSyncActionDelete, "", map[string]any{
+		"course_id": courseID,
+	})
 	if client := cache.Client(); client != nil && courseID != 0 {
 		ctx := context.Background()
 		_ = client.Del(ctx, fmt.Sprintf("courses:detail:%d", courseID)).Err()

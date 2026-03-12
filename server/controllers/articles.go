@@ -3,6 +3,7 @@ package controllers
 import (
 	"MOOCHUB-server/cache"
 	"MOOCHUB-server/model"
+	"MOOCHUB-server/mq"
 	"MOOCHUB-server/storage"
 	"context"
 	"strconv"
@@ -112,6 +113,7 @@ func (ac ArticlesController) CreateArticle(c *gin.Context) {
 		ReturnError(c, 500, "create article failed: "+err.Error())
 		return
 	}
+	publishArticleKnowledgeSync(c, article, mq.KnowledgeSyncActionUpsert)
 
 	if client := cache.Client(); client != nil {
 		ctx := context.Background()
