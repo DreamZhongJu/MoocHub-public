@@ -112,6 +112,20 @@ cd server
  go run main.go
 ```
 
+如果当前要联调 LightRAG，可直接用启动脚本：
+
+```powershell
+cd server
+./scripts/start_server_with_lightrag.ps1
+```
+
+Linux/macOS:
+
+```bash
+cd server
+bash ./scripts/start_server_with_lightrag.sh
+```
+
 ### Flutter
 ```bash
 cd flutter_app
