@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MoocHub 微服务架构图</title>
+  <style>
+    :root{
+      --title:#163041;
+      --text:#0f3c4d;
+      --muted:#5b6a78;
+
+      --client-bg:#e8f7f5;
+      --gw-bg:#e9f2ff;
+      --data-bg:#eef7ff;
+      --infra-bg:#f4f6f8;
+
+      --layer-stroke:#7aa3b7;
+      --node-fill:#ffffff;
+      --node-stroke:#2f6f7f;
+
+      --accent:#1aa6a6;
+      --link:#3a7ea6;
+      --link-soft:#7fb6d6;
+    }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+      background:#fff;
+      color:var(--text);
+    }
+    .wrap{
+      max-width: 1560px;
+      margin:0 auto;
+      padding:16px 12px 24px;
+    }
+    .hint{
+      margin:10px 0 0;
+      font-size:12px;
+      color:var(--muted);
+    }
+    svg{ width:100%; height:auto; display:block; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <svg viewBox="0 0 1520 720" role="img" aria-label="MoocHub 微服务架构图">
+    <defs>
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b2a3a" flood-opacity="0.15"/>
+      </filter>
+
+      <style><![CDATA[
+        .title { font-size: 28px; font-weight: 800; fill: var(--title); }
+        .layerLabel { font-size: 15px; font-weight: 700; fill: var(--title); }
+        .layerBox { stroke: var(--layer-stroke); stroke-width: 2; rx: 18; ry: 18; }
+        .node { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: 2; rx: 14; ry: 14; filter:url(#shadow); cursor:pointer; }
+        .nodeText { font-size: 14px; font-weight: 700; fill: var(--text); text-anchor: middle; dominant-baseline: middle; }
+        .nodeSub { font-size: 11px; font-weight: 500; fill: #4b6676; text-anchor: middle; dominant-baseline: middle; }
+      ]]></style>
+    </defs>
+
+    <!-- ===== title ===== -->
+    <text x="760" y="44" class="title" text-anchor="middle">MoocHub 微服务架构图</text>
+
+    <!-- ===== layers (top-down) ===== -->
+    <!-- Layout constants:
+         canvas: 1280 x 920
+         layers: x=60 w=1160
+         layer heights: 170, 170, 210, 240
+         gaps: 22
+    -->
+
+    <!-- Client Layer -->
+    <g id="layer-client">
+      <rect x="40" y="72" width="1440" height="122" class="layerBox" fill="var(--client-bg)"></rect>
+      <text x="70" y="98" class="layerLabel">客户端层</text>
+
+      <!-- nodes: equal size -->
+      <!-- node size -->
+      <!-- w=200 h=64 -->
+      <g class="nodeGroup" transform="translate(230,118)">
+        <rect class="node" width="220" height="56"></rect>
+        <text class="nodeText" x="110" y="24">用户</text>
+        <text class="nodeSub"  x="110" y="40">学习与互动主体</text>
+        <title>用户：浏览课程、观看视频、评论互动、收藏与学习进度</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(510,118)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('移动端：Flutter 跨平台客户端\\n\\n核心：课程浏览 / 播放器与进度上报 / 评论互动 / 收藏 / 离线缓存与弱网重试 / 骨架屏与空态');"></rect>
+        <text class="nodeText" x="110" y="24">移动端（Flutter）</text>
+        <text class="nodeSub"  x="110" y="40">App 为主入口</text>
+        <title>移动端：面向“中国大学 MOOC”风格，支持课程/视频/评论/收藏/进度与离线体验</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(790,118)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('第三方应用：OAuth 登录等\\n\\n示例：QQ 登录、回调与错误处理、绑定/解绑');"></rect>
+        <text class="nodeText" x="110" y="24">第三方应用</text>
+        <text class="nodeSub"  x="110" y="40">OAuth / 外部能力</text>
+        <title>第三方应用：提供 OAuth 登录等外部能力（如 QQ 登录）</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(1070,118)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('管理端：内容与运营后台\\n\\n能力：课程/视频/评论管理，运营与数据看板');"></rect>
+        <text class="nodeText" x="110" y="24">管理端</text>
+        <text class="nodeSub"  x="110" y="40">内容/运营后台</text>
+        <title>管理端：课程、视频、评论管理；运营配置；数据看板查看</title>
+      </g>
+    </g>
+
+    <!-- API Gateway Layer -->
+    <g id="layer-gateway">
+      <rect x="40" y="210" width="1440" height="122" class="layerBox" fill="var(--gw-bg)"></rect>
+      <text x="70" y="236" class="layerLabel">API 网关层</text>
+
+      <g class="nodeGroup" transform="translate(110,252)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('API 网关：统一入口\\n\\n功能：鉴权、限流、路由、灰度、统一错误码、聚合接口');"></rect>
+        <text class="nodeText" x="110" y="24">API 网关</text>
+        <text class="nodeSub"  x="110" y="40">统一入口</text>
+        <title>API 网关：鉴权/限流/路由/错误码统一；承载热点保护与缓存策略入口</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(380,252)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('用户服务：账户与关系\\n\\n包括：注册登录、第三方登录、资料、积分余额、权限');"></rect>
+        <text class="nodeText" x="110" y="24">用户服务</text>
+        <text class="nodeSub"  x="110" y="40">认证与画像</text>
+        <title>用户服务：注册登录、OAuth 绑定/解绑、用户资料、积分与权限管理</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(650,252)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('视频服务：内容与播放\\n\\n包括：课程/视频列表、播放地址、进度上报、继续观看、热点保护');"></rect>
+        <text class="nodeText" x="110" y="24">视频服务</text>
+        <text class="nodeSub"  x="110" y="40">播放与进度</text>
+        <title>视频服务：课程/视频信息、播放器进度上报、继续观看、预热与热点保护</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(920,252)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('搜索服务：检索与联想\\n\\n包括：联想、过滤、排序、高亮、空结果策略');"></rect>
+        <text class="nodeText" x="110" y="24">搜索服务</text>
+        <text class="nodeSub"  x="110" y="40">联想与高亮</text>
+        <title>搜索服务：联想/过滤/排序/高亮；支持空结果兜底与弱网策略</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(1190,252)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('通知服务：消息与触达\\n\\n包括：站内通知、推送、系统消息、告警联动（可选）');"></rect>
+        <text class="nodeText" x="110" y="24">通知服务</text>
+        <text class="nodeSub"  x="110" y="40">推送与站内信</text>
+        <title>通知服务：站内通知/推送；可通过消息队列解耦与削峰</title>
+      </g>
+    </g>
+
+    <!-- Data Layer -->
+    <g id="layer-data">
+      <rect x="40" y="348" width="1440" height="168" class="layerBox" fill="var(--data-bg)"></rect>
+      <text x="70" y="374" class="layerLabel">数据层</text>
+
+      <!-- nodes w=200 h=64; more nodes -> wrap visually by spacing, still single row via smaller width? keep equal size -->
+      <!-- We'll use 5 nodes, same size; last row is still ok -->
+      <g class="nodeGroup" transform="translate(110,390)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('MySQL：结构化业务数据\\n\\n用户、课程、视频、收藏、学习进度、积分流水等');"></rect>
+        <text class="nodeText" x="110" y="24">MySQL（主库）</text>
+        <text class="nodeSub"  x="110" y="40">结构化数据</text>
+        <title>MySQL：用户/课程/视频/收藏/进度/积分等结构化数据；配合索引优化与分页策略</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(380,390)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('MongoDB：高频文档数据\\n\\n评论列表、回复、举报预留、弹幕/互动内容可扩展');"></rect>
+        <text class="nodeText" x="110" y="24">MongoDB</text>
+        <text class="nodeSub"  x="110" y="40">评论与互动</text>
+        <title>MongoDB：评论等高频交互数据；适合文档结构与扩展字段</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(650,390)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('缓存：Redis\\n\\n用途：首页/分类预热、热点 key 锁、会话与限流计数、弱网兜底');"></rect>
+        <text class="nodeText" x="110" y="24">缓存（Redis）</text>
+        <text class="nodeSub"  x="110" y="40">预热与保护</text>
+        <title>Redis：缓存预热、热点保护、限流计数、会话/验证码等；提升响应与稳定性</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(920,390)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('对象存储：视频与图片资源\\n\\n用途：视频上传/访问控制，封面图、附件等');"></rect>
+        <text class="nodeText" x="110" y="24">对象存储</text>
+        <text class="nodeSub"  x="110" y="40">视频与资源</text>
+        <title>对象存储：视频/图片等大文件；支持上传流程与访问控制</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(110,456)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('分析数据：埋点与看板\\n\\n用途：曝光/点击/完播等事件沉淀与可视化');"></rect>
+        <text class="nodeText" x="110" y="24">埋点数据</text>
+        <text class="nodeSub"  x="110" y="40">看板指标</text>
+        <title>埋点数据：曝光/点击/完播等事件；用于看板与推荐训练样本</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(380,456)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('搜索索引：可选\\n\\n用途：全文检索与高亮；可接入 ES/Meilisearch 等');"></rect>
+        <text class="nodeText" x="110" y="24">搜索索引</text>
+        <text class="nodeSub"  x="110" y="40">全文检索</text>
+        <title>搜索索引：支撑联想/高亮/排序；可选接入 ES/Meilisearch 等</title>
+      </g>
+    </g>
+
+    <!-- Infrastructure Layer -->
+    <g id="layer-infra">
+      <rect x="40" y="532" width="1440" height="150" class="layerBox" fill="var(--infra-bg)"></rect>
+      <text x="70" y="558" class="layerLabel">基础设施层</text>
+
+      <!-- use 6 nodes, equal size -->
+      <g class="nodeGroup" transform="translate(110,582)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('服务注册与发现\\n\\n用途：服务地址管理、健康检查、动态路由（可选）');"></rect>
+        <text class="nodeText" x="110" y="24">服务注册与发现</text>
+        <text class="nodeSub"  x="110" y="40">可选能力</text>
+        <title>服务注册与发现：管理服务实例、健康检查与动态路由（微服务场景）</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(380,582)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('消息队列：RabbitMQ\\n\\n用途：通知、埋点异步写入、削峰填谷、解耦');"></rect>
+        <text class="nodeText" x="110" y="24">消息队列</text>
+        <text class="nodeSub"  x="110" y="40">异步解耦</text>
+        <title>消息队列：用于通知/埋点/异步任务；削峰填谷并降低耦合</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(650,582)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('日志系统\\n\\n结构化日志、trace_id、采样、落盘与集中检索');"></rect>
+        <text class="nodeText" x="110" y="24">日志系统</text>
+        <text class="nodeSub"  x="110" y="40">结构化日志</text>
+        <title>日志系统：结构化字段、trace_id、采样与落盘策略；便于检索与排障</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(920,582)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('监控告警\\n\\nPrometheus/Grafana：指标采集、看板、告警规则');"></rect>
+        <text class="nodeText" x="110" y="24">监控告警</text>
+        <text class="nodeSub"  x="110" y="40">指标与告警</text>
+        <title>监控告警：Prometheus/Grafana；指标采集、可视化看板与告警规则</title>
+      </g>
+
+      <g class="nodeGroup" transform="translate(1190,582)">
+        <rect class="node" width="220" height="56"
+              onclick="alert('链路追踪\\n\\nTrace/Span：定位慢请求、失败链路、调用拓扑');"></rect>
+        <text class="nodeText" x="110" y="24">链路追踪</text>
+        <text class="nodeSub"  x="110" y="40">Tracing</text>
+        <title>链路追踪：Trace/Span，定位慢请求与失败链路，辅助容量与性能分析</title>
+      </g>
+    </g>
+
+  </svg>
+
+  <div class="hint">
+    悬停可查看说明；点击节点可弹出详情。你可以把标题文字改成“xxx架构图”，也可以把服务名替换为你的实际模块名。
+  </div>
+</div>
+
+<script>
+  // 可扩展：根据 id 做更复杂的弹窗/侧边栏详情展示
+  // 这里保留最小可运行示例
+</script>
+</body>
+</html>
