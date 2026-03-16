@@ -25,3 +25,5 @@ server/secrets/
 server/secrets/*
 .gocache/*
 .vscode/*
+.claude/*
+.github/*

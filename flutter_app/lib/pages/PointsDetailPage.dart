@@ -16,6 +16,8 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
   bool _loading = true;
   bool _loggedIn = false;
   int _balance = 0;
+  int? _rank;
+  int? _totalUsers;
   List<Map<String, dynamic>> _transactions = [];
 
   @override
@@ -41,28 +43,38 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
     }
 
     try {
-      final balanceResp = await _api.get<Map<String, dynamic>>(
-        '/points/balance',
-        fromJson: (data) => Map<String, dynamic>.from(data as Map),
-      );
-      final txResp = await _api.get<Map<String, dynamic>>(
-        '/points/transactions',
-        queryParameters: const {'page': 1, 'page_size': 50},
-        fromJson: (data) => Map<String, dynamic>.from(data as Map),
-      );
+      final results = await Future.wait([
+        _api.get<Map<String, dynamic>>(
+          '/points/balance',
+          fromJson: (data) => Map<String, dynamic>.from(data as Map),
+        ),
+        _api.get<Map<String, dynamic>>(
+          '/points/transactions',
+          queryParameters: const {'page': 1, 'page_size': 50},
+          fromJson: (data) => Map<String, dynamic>.from(data as Map),
+        ),
+        _api.get<Map<String, dynamic>>(
+          '/points/rank',
+          fromJson: (data) => Map<String, dynamic>.from(data as Map),
+        ),
+      ]);
 
       final balance =
-          (balanceResp.data['points_balance'] as num?)?.toInt() ?? 0;
-      final rawItems = txResp.data['items'] as List<dynamic>? ?? [];
+          (results[0].data['points_balance'] as num?)?.toInt() ?? 0;
+      final rawItems = results[1].data['items'] as List<dynamic>? ?? [];
       final items = rawItems
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
+      final rank = (results[2].data['rank'] as num?)?.toInt();
+      final total = (results[2].data['total_users'] as num?)?.toInt();
 
       if (mounted) {
         setState(() {
           _loggedIn = true;
           _balance = balance;
+          _rank = rank;
+          _totalUsers = total;
           _transactions = items;
           _loading = false;
         });
@@ -102,38 +114,81 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.amber.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.stars, color: Colors.orange),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '当前积分',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '$_balance',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                  child: const Icon(Icons.stars, color: Colors.orange),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '当前积分',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$_balance',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(onPressed: _loadData, child: const Text('刷新')),
+              ],
+            ),
+            if (_rank != null) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.emoji_events_rounded,
+                      color: Colors.amber, size: 18),
+                  const SizedBox(width: 6),
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: [
+                        const TextSpan(
+                          text: '排名第 ',
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.grey),
+                        ),
+                        TextSpan(
+                          text: '$_rank',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        if (_totalUsers != null)
+                          TextSpan(
+                            text: ' / $_totalUsers 名用户',
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.grey),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-            TextButton(onPressed: _loadData, child: const Text('刷新')),
+            ],
           ],
         ),
       ),

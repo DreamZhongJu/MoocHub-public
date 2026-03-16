@@ -1,6 +1,6 @@
-﻿import 'package:MoocHub/services/StorageService.dart';
+﻿import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
-import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -10,24 +10,33 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage>
-    with AutomaticKeepAliveClientMixin<UserPage> {
+    with AutomaticKeepAliveClientMixin<UserPage>, WidgetsBindingObserver {
   final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiService();
   final PageController _featureController = PageController();
   int _featurePage = 0;
   Map<String, dynamic> _userData = {};
   String _userRole = '';
   bool _loading = true;
+  int _balance = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUser();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _featureController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadUser();
   }
 
   Future<void> _loadUser() async {
@@ -39,6 +48,24 @@ class _UserPageState extends State<UserPage>
         _userRole = role ?? '';
         _loading = false;
       });
+    }
+    // Load points if logged in
+    final token = _userData['token'] ?? _userData['Token'];
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
+    if (loggedIn) {
+      try {
+        final resp = await _apiService.getWithRetry<Map<String, dynamic>>(
+          '/points/balance',
+          fromJson: (data) => Map<String, dynamic>.from(data as Map),
+          retries: 2,
+          baseDelay: const Duration(milliseconds: 300),
+        );
+        final balance = (resp.data['points_balance'] as num?)?.toInt() ?? 0;
+        if (mounted) setState(() => _balance = balance);
+      } catch (_) {}
+    } else {
+      if (mounted) setState(() => _balance = 0);
     }
   }
 
@@ -70,104 +97,204 @@ class _UserPageState extends State<UserPage>
   }
 
   Widget _userCard() {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     if (_loading) {
-      return const SizedBox(
-        height: 120,
-        child: Center(child: CircularProgressIndicator()),
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+        height: 100,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF171A21) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: primary,
+          ),
+        ),
       );
     }
 
     final dynamic rawUser = _userData['user'] ?? _userData['User'] ?? _userData;
-    final user = rawUser is Map<String, dynamic>
-        ? rawUser
-        : <String, dynamic>{};
+    final user = rawUser is Map<String, dynamic> ? rawUser : <String, dynamic>{};
 
     final nickname = _pickString(user, [
-      'nickname',
-      'Nickname',
-      'nickName',
-      'NickName',
+      'nickname', 'Nickname', 'nickName', 'NickName',
     ], _isLoggedIn ? '未命名用户' : '未登录');
     final username = _pickString(user, [
-      'username',
-      'Username',
-      'user_name',
-      'UserName',
-    ], _isLoggedIn ? '无用户名' : '点击下方登录');
+      'username', 'Username', 'user_name', 'UserName',
+    ], _isLoggedIn ? '无用户名' : '点击登录以探索更多');
     final role = _pickString(user, ['role', 'Role'], 'student');
     final avatarUrl = _pickString(user, [
-      'avatar_url',
-      'AvatarURL',
-      'avatar',
+      'avatar_url', 'AvatarURL', 'avatar',
     ], '');
 
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final isDark = theme.brightness == Brightness.dark;
-    final surface = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: primary.withOpacity(0.12),
-            ),
-            child: CircleAvatar(
-              radius: 28,
-              backgroundColor: surface,
-              backgroundImage: avatarUrl.isEmpty
-                  ? null
-                  : NetworkImage(avatarUrl),
-              child: avatarUrl.isEmpty
-                  ? Icon(Icons.person, color: primary)
-                  : null,
-            ),
+    String roleLabel(String r) {
+      switch (r.toLowerCase()) {
+        case 'admin':   return '管理员';
+        case 'teacher': return '讲师';
+        default:        return '学员';
+      }
+    }
+
+    return GestureDetector(
+      onTap: _isLoggedIn ? null : () => Navigator.pushNamed(context, '/login'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF1A2535), const Color(0xFF171A21)]
+                : [primary.withValues(alpha: 0.08), Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: primary.withValues(alpha: isDark ? 0.18 : 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            // 头像
+            Stack(
               children: [
-                Text(
-                  nickname,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [primary, primary.withValues(alpha: 0.4)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor:
+                        isDark ? const Color(0xFF0F1115) : Colors.white,
+                    backgroundImage:
+                        avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl.isEmpty
+                        ? Icon(Icons.person_rounded, color: primary, size: 32)
+                        : null,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (_isLoggedIn)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primary.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          role,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                if (_isLoggedIn)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.shade400,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
-          ),
-        ],
+            const SizedBox(width: 14),
+            // 昵称 + 用户名 + 角色徽章
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nickname,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    username,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_isLoggedIn)
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            roleLabel(role),
+                            style: TextStyle(
+                              color: primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.stars_rounded,
+                                size: 11,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '$_balance',
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      '登录后查看完整功能 →',
+                      style: TextStyle(
+                        color: primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -198,7 +325,7 @@ class _UserPageState extends State<UserPage>
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
       ),
       onTap: onTap,
     );
@@ -233,27 +360,13 @@ class _UserPageState extends State<UserPage>
   }
 
   Widget _buildLinksFooter(BuildContext context) {
-    return TDFooter(
-      TDFooterType.link,
-      links: [
-        TDLink(
-          label: '底部链接1',
-          style: TDLinkStyle.primary,
-          uri: Uri.parse('https://example.com'),
-          linkClick: (link) {
-            print('点击了链接1 $link');
-          },
-        ),
-        TDLink(
-          label: '底部链接2',
-          style: TDLinkStyle.primary,
-          uri: Uri.parse('https://example.com'),
-          linkClick: (link) {
-            print('点击了链接2 $link');
-          },
-        ),
-      ],
-      text: 'Copyright © 2019-2023 TDesign.All Rights Reserved.',
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        'MoocHub © 2025  ·  版权所有',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+      ),
     );
   }
 
@@ -279,30 +392,33 @@ class _UserPageState extends State<UserPage>
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required Color color,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final iconBg = isDark ? const Color(0xFF1F2430) : const Color(0xFFF1F4F9);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 45,
-            height: 45,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
+              color: isDark
+                  ? color.withValues(alpha: 0.18)
+                  : color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: theme.colorScheme.primary, size: 32),
+            child: Icon(icon, color: color, size: 26),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w600,
+              fontSize: 12,
             ),
           ),
         ],
@@ -315,16 +431,35 @@ class _UserPageState extends State<UserPage>
     final isDark = theme.brightness == Brightness.dark;
     final items = [
       _FeatureItem(
-        icon: Icons.favorite_border,
-        label: '收藏',
+        icon: Icons.favorite_rounded,
+        label: '我的收藏',
+        color: const Color(0xFFFF6B6B),
         onTap: _openFavorites,
       ),
       _FeatureItem(
-        icon: Icons.history,
+        icon: Icons.history_rounded,
         label: '学习记录',
+        color: const Color(0xFF4ECDC4),
         onTap: () => _openPlaceholder('学习记录'),
       ),
-      _FeatureItem(icon: Icons.settings, label: '设置', onTap: _openSettings),
+      _FeatureItem(
+        icon: Icons.stars_rounded,
+        label: '我的积分',
+        color: const Color(0xFFFFB347),
+        onTap: () => Navigator.pushNamed(context, '/pointsDetail'),
+      ),
+      _FeatureItem(
+        icon: Icons.notifications_outlined,
+        label: '通知设置',
+        color: const Color(0xFF7C4DFF),
+        onTap: () => Navigator.pushNamed(context, '/notificationSettings'),
+      ),
+      _FeatureItem(
+        icon: Icons.settings_rounded,
+        label: '设置',
+        color: const Color(0xFF95A5A6),
+        onTap: _openSettings,
+      ),
     ];
     const int perPage = 8;
     final pages = <List<_FeatureItem>>[];
@@ -369,6 +504,7 @@ class _UserPageState extends State<UserPage>
                             icon: item.icon,
                             label: item.label,
                             onTap: item.onTap,
+                            color: item.color,
                           ),
                         )
                         .toList(),
@@ -419,36 +555,40 @@ class _UserPageState extends State<UserPage>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: primary.withOpacity(isDark ? 0.12 : 0.08),
+                color: primary.withValues(alpha: isDark ? 0.12 : 0.08),
                 shape: BoxShape.circle,
               ),
             ),
           ),
-          CustomScrollView(
-            slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _userCard(),
+          RefreshIndicator(
+            onRefresh: _loadUser,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: _userCard(),
+                  ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text(
-                    '常用功能',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: theme.textTheme.titleSmall?.color,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Text(
+                      '常用功能',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.titleSmall?.color,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(child: _buildFeaturePager()),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
+                SliverToBoxAdapter(child: _buildFeaturePager()),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
+            ),
           ),
         ],
       ),
@@ -546,9 +686,11 @@ class _FeatureItem {
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.color,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color color;
 }

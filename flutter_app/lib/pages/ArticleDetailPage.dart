@@ -1,6 +1,7 @@
 import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/ArticleModel.dart';
 import 'package:MoocHub/pages/CourseDetailPage.dart';
+import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class ArticleDetailPage extends StatefulWidget {
 class _ArticleDetailPageState extends State<ArticleDetailPage> {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+  final AnalyticsService _analyticsService = AnalyticsService();
   final TextEditingController _aiQuestionController = TextEditingController();
   bool _loading = true;
   ArticleModel? _article;
@@ -45,6 +47,11 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     super.initState();
     _bootstrap();
     _loadDetail();
+    _analyticsService.trackPageView(
+      contentType: 'article',
+      contentId: widget.articleId,
+      scene: 'article_detail',
+    );
   }
 
   Future<void> _bootstrap() async {
@@ -177,6 +184,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
             _favorite = true;
           });
         }
+        _analyticsService.trackFavorite(
+          contentType: 'article',
+          contentId: widget.articleId,
+        );
       }
     } catch (_) {
     } finally {
@@ -212,6 +223,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           _likeCount = likeCount is num ? likeCount.toInt() : _likeCount + 1;
         });
       }
+      _analyticsService.trackComment(
+        contentType: 'article',
+        contentId: widget.articleId,
+      );
     } catch (_) {
       if (mounted && _article != null) {
         setState(() {

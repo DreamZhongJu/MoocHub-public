@@ -1,9 +1,8 @@
-import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/CategoriesModel.dart';
+import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/services/ScreenAdaper.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
@@ -19,6 +18,7 @@ class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+  final AnalyticsService _analyticsService = AnalyticsService();
   final Map<int, List<CategoryModel>> _rightCache = {};
   final TDSideBarController _sideBarController = TDSideBarController();
 
@@ -221,6 +221,26 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
+  // 根据 index 循环取预设颜色/图标，让每个分类有独立的色彩
+  static const List<Color> _cateColors = [
+    Color(0xFF4ECDC4), Color(0xFFFF6B6B), Color(0xFF7C4DFF),
+    Color(0xFFFFB347), Color(0xFF45B7D1), Color(0xFF96CEB4),
+    Color(0xFFFF8B94), Color(0xFF6C5CE7), Color(0xFFFDCB6E),
+    Color(0xFF00B894),
+  ];
+  static const List<IconData> _cateIcons = [
+    Icons.computer_rounded,       // 编程
+    Icons.design_services_rounded,// 设计
+    Icons.science_rounded,        // 理科
+    Icons.business_center_rounded,// 商业
+    Icons.language_rounded,       // 语言
+    Icons.music_note_rounded,     // 音乐
+    Icons.fitness_center_rounded, // 健身
+    Icons.camera_alt_rounded,     // 摄影
+    Icons.psychology_rounded,     // 心理
+    Icons.auto_stories_rounded,   // 阅读
+  ];
+
   Widget _rightCateWidget(double rightItemWidth, double rightItemHeight) {
     if (_loadingRight) {
       return Expanded(
@@ -239,15 +259,27 @@ class _CategoryPageState extends State<CategoryPage>
     }
 
     if (_rightCateList.isEmpty) {
-      return const Expanded(child: Center(child: Text('暂无分类')));
+      return Expanded(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.inbox_rounded, size: 40, color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+              Text('暂无子分类', style: TextStyle(color: Colors.grey.shade400)),
+            ],
+          ),
+        ),
+      );
     }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
       child: Container(
-        padding: EdgeInsets.only(top: 2.h),
-        decoration: const BoxDecoration(color: Color(0xFFF7F9F8)),
+        color: isDark ? const Color(0xFF0F1115) : const Color(0xFFF7F9F8),
         child: GridView.builder(
-          padding: EdgeInsets.all(8.w),
+          padding: const EdgeInsets.all(10),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             childAspectRatio: rightItemWidth / rightItemHeight,
@@ -257,8 +289,11 @@ class _CategoryPageState extends State<CategoryPage>
           itemCount: _rightCateList.length,
           itemBuilder: (context, index) {
             final item = _rightCateList[index];
-            return InkWell(
+            final color = _cateColors[index % _cateColors.length];
+            final icon = _cateIcons[index % _cateIcons.length];
+            return GestureDetector(
               onTap: () {
+                _analyticsService.trackCategoryClick(categoryId: item.id);
                 Navigator.pushNamed(
                   context,
                   '/courseList',
@@ -266,50 +301,44 @@ class _CategoryPageState extends State<CategoryPage>
                 );
               },
               child: Container(
-                padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
+                  color: isDark ? const Color(0xFF171A21) : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.25 : 0.05,
+                      ),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    AspectRatio(
-                      aspectRatio: 1.15,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: CachedNetworkImage(
-                          imageUrl:
-                              'https://picsum.photos/seed/cate${item.id}/200/200',
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Image.asset(
-                            Config.defaultProductAsset,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 6.h),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
-                        color: Colors.blueGrey.shade50,
-                        borderRadius: BorderRadius.circular(10),
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
+                      child: Icon(icon, color: color, size: 26),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
                         item.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                        ),
                       ),
                     ),
                   ],
@@ -323,30 +352,35 @@ class _CategoryPageState extends State<CategoryPage>
   }
 
   Widget _searchHeader() {
-    return Container(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.035),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search, color: Colors.grey.shade500, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              '搜索分类',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-            ),
-          ],
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, '/search'),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1F2430) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 12),
+              Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '搜索课程、讲师…',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              ),
+            ],
+          ),
         ),
       ),
     );

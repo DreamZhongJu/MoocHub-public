@@ -89,6 +89,63 @@ class AnalyticsService {
     });
   }
 
+  /// 页面浏览 — 用于课程/文章详情页打开时上报
+  Future<bool> trackPageView({
+    required String contentType,
+    required int contentId,
+    String scene = 'detail',
+  }) async {
+    final key = 'pv|$scene|$contentType|$contentId';
+    if (_exposureKeys.contains(key)) return true;
+    _exposureKeys.add(key);
+    final ok = await _postTrack('/events/page_view', {
+      'content_type': contentType,
+      'content_id': contentId.toString(),
+      'scene': scene,
+      'session_id': _sessionId,
+    });
+    if (!ok) _exposureKeys.remove(key);
+    return ok;
+  }
+
+  /// 收藏行为上报
+  Future<bool> trackFavorite({
+    required String contentType,
+    required int contentId,
+  }) async {
+    return _postTrack('/events/favorite', {
+      'content_type': contentType,
+      'content_id': contentId.toString(),
+      'session_id': _sessionId,
+    });
+  }
+
+  /// 发表评论行为上报
+  Future<bool> trackComment({
+    required String contentType,
+    required int contentId,
+  }) async {
+    return _postTrack('/events/comment', {
+      'content_type': contentType,
+      'content_id': contentId.toString(),
+      'session_id': _sessionId,
+    });
+  }
+
+  /// 分类点击上报
+  Future<bool> trackCategoryClick({
+    required int categoryId,
+    String scene = 'category',
+  }) async {
+    return _postTrack('/events/click', {
+      'content_type': 'category',
+      'content_id': categoryId.toString(),
+      'scene': scene,
+      'session_id': _sessionId,
+      'position': '0',
+    });
+  }
+
   Future<bool> _postTrack(String path, Map<String, String> payload) async {
     try {
       await _apiService.postForm<Map<String, dynamic>>(

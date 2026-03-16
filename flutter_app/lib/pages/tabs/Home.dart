@@ -8,8 +8,8 @@ import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/ArticleCard.dart';
 import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin, RouteAware {
   final ScrollController controller = ScrollController();
-  bool showBackTop = false;
+  final ValueNotifier<bool> _showBackTop = ValueNotifier(false);
   List<CoursesModel> _recommendedProducts = [];
   List<ArticleModel> _articleItems = [];
   List<_HomeFeedItem> _feedItems = [];
@@ -31,7 +31,6 @@ class HomePageState extends State<HomePage>
   int _page = 1;
   final int _pageSize = 10;
   bool _pendingScrollUpdate = false;
-  bool _showNotice = true;
   bool _continueLoading = false;
   bool _showContinue = true;
   VideoModel? _continueVideo;
@@ -70,6 +69,7 @@ class HomePageState extends State<HomePage>
     routeObserver.unsubscribe(this);
     controller.removeListener(_handleScroll);
     controller.dispose();
+    _showBackTop.dispose();
     super.dispose();
   }
 
@@ -313,81 +313,163 @@ class HomePageState extends State<HomePage>
         ? '未开始'
         : '${_continuePercent.toStringAsFixed(1)}%';
 
-    final maxWidth = MediaQuery.of(context).size.width - 32;
-    final cardWidth = maxWidth.clamp(220.0, 360.0);
+    final primary = Theme.of(context).colorScheme.primary;
+    final maxWidth = MediaQuery.sizeOf(context).width - 32;
+    final cardWidth = maxWidth.clamp(240.0, 340.0);
 
     return Container(
       width: cardWidth,
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F7F6),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: video.thumbUrl.isNotEmpty
-                ? TDImage(
-                    imgUrl: video.thumbUrl,
-                    width: 88,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 88,
-                    height: 50,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.play_arrow),
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '继续观看',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  video.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${_formatDuration(_continuePositionSec)} · $percentText',
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () {
-                  setState(() {
-                    _showContinue = false;
-                  });
-                },
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final id = int.tryParse(video.id);
-                  if (id == null) return;
-                  Navigator.pushNamed(context, '/videoDetail', arguments: id);
-                },
-                child: const Text('继续'),
-              ),
-            ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 进度条顶部装饰
+            LinearProgressIndicator(
+              value: (_continuePercent / 100).clamp(0.0, 1.0),
+              minHeight: 3,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(primary),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              child: Row(
+                children: [
+                  // 缩略图
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: video.thumbUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: video.thumbUrl,
+                            width: 80,
+                            height: 46,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => Container(
+                              width: 80,
+                              height: 46,
+                              color: Colors.grey.shade200,
+                              child: Icon(
+                                Icons.play_circle_outline,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 80,
+                            height: 46,
+                            color: Colors.grey.shade200,
+                            child: Icon(
+                              Icons.play_circle_outline,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 10),
+                  // 标题和进度
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.play_circle_filled,
+                              size: 12,
+                              color: primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '继续观看',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          video.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '已看 $percentText · ${_formatDuration(_continuePositionSec)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 操作区
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _showContinue = false),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: () {
+                          final id = int.tryParse(video.id);
+                          if (id == null) return;
+                          Navigator.pushNamed(
+                            context,
+                            '/videoDetail',
+                            arguments: id,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            '继续',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -557,11 +639,7 @@ class HomePageState extends State<HomePage>
       _pendingScrollUpdate = false;
       if (!mounted || !controller.hasClients) return;
       final shouldShow = controller.offset > 120;
-      if (shouldShow != showBackTop) {
-        setState(() {
-          showBackTop = shouldShow;
-        });
-      }
+      _showBackTop.value = shouldShow;
       if (_isLoading || _isLoadingMore || !_hasMore) return;
       if (controller.position.maxScrollExtent <= 0 ||
           controller.position.pixels <= 0) {
@@ -606,71 +684,72 @@ class HomePageState extends State<HomePage>
     if (_homeExposedKeys.contains(key)) return;
     _homeExposedKeys.add(key);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _analyticsService.trackExposure(
-        contentType: contentType,
-        contentId: contentId,
-        scene: _homeScene,
-        position: position,
-      );
-    });
+    // 直接上报，由调用方（_ExposureWrapper.initState）保证在帧结束后执行
+    _analyticsService.trackExposure(
+      contentType: contentType,
+      contentId: contentId,
+      scene: _homeScene,
+      position: position,
+    );
   }
 
   Widget _buildRecommendedItem(CoursesModel product, int position) {
-    _reportHomeExposure(
-      contentType: 'course',
-      contentIdText: product.id,
-      position: position,
-    );
-    return CoursesCard(
-      key: ValueKey(product.id),
-      title: product.title,
-      summary: product.summary,
-      coverUrl: product.coverUrl,
-      viewCount: product.viewCount,
-      favoriteCount: product.favoriteCount,
-      onTap: () {
-        final id = int.tryParse(product.id);
-        if (id == null) {
-          return;
-        }
-        _analyticsService.trackClick(
-          contentType: 'course',
-          contentId: id,
-          scene: _homeScene,
-          position: position,
-        );
-        Navigator.pushNamed(context, '/courseDetail', arguments: id);
-      },
+    return _ExposureWrapper(
+      key: ValueKey('exp-course-${product.id}'),
+      onExposed: () => _reportHomeExposure(
+        contentType: 'course',
+        contentIdText: product.id,
+        position: position,
+      ),
+      child: CoursesCard(
+        key: ValueKey(product.id),
+        title: product.title,
+        summary: product.summary,
+        coverUrl: product.coverUrl,
+        viewCount: product.viewCount,
+        favoriteCount: product.favoriteCount,
+        onTap: () {
+          final id = int.tryParse(product.id);
+          if (id == null) return;
+          _analyticsService.trackClick(
+            contentType: 'course',
+            contentId: id,
+            scene: _homeScene,
+            position: position,
+          );
+          Navigator.pushNamed(context, '/courseDetail', arguments: id);
+        },
+      ),
     );
   }
 
   Widget _buildArticleItem(ArticleModel article, int position) {
-    _reportHomeExposure(
-      contentType: 'article',
-      contentIdText: article.id,
-      position: position,
-    );
-    return ArticleCard(
-      key: ValueKey('article-${article.id}'),
-      title: article.title,
-      summary: article.summary,
-      coverUrl: article.coverUrl,
-      viewCount: article.viewCount,
-      likeCount: article.likeCount,
-      onTap: () {
-        final id = int.tryParse(article.id);
-        if (id == null) {
-          return;
-        }
-        _analyticsService.trackClick(
-          contentType: 'article',
-          contentId: id,
-          scene: _homeScene,
-          position: position,
-        );
-        Navigator.pushNamed(context, '/articleDetail', arguments: id);
-      },
+    return _ExposureWrapper(
+      key: ValueKey('exp-article-${article.id}'),
+      onExposed: () => _reportHomeExposure(
+        contentType: 'article',
+        contentIdText: article.id,
+        position: position,
+      ),
+      child: ArticleCard(
+        key: ValueKey('article-${article.id}'),
+        title: article.title,
+        summary: article.summary,
+        coverUrl: article.coverUrl,
+        viewCount: article.viewCount,
+        likeCount: article.likeCount,
+        onTap: () {
+          final id = int.tryParse(article.id);
+          if (id == null) return;
+          _analyticsService.trackClick(
+            contentType: 'article',
+            contentId: id,
+            scene: _homeScene,
+            position: position,
+          );
+          Navigator.pushNamed(context, '/articleDetail', arguments: id);
+        },
+      ),
     );
   }
 
@@ -710,6 +789,7 @@ class HomePageState extends State<HomePage>
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildFeedItem(_feedItems[index], index),
           childCount: _feedItems.length,
+          addRepaintBoundaries: false, // 卡片内已有 RepaintBoundary，避免双层包裹
         ),
       ),
     );
@@ -717,34 +797,69 @@ class HomePageState extends State<HomePage>
 
   Widget _buildTDesignHeader() {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final primary = colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── 顶部标题栏 ──────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
+          child: Row(
             children: [
-              const Expanded(
-                child: Text(
-                  '首页',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '发现好课程',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '每天进步一点点',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               IconButton(
                 onPressed: () => Navigator.pushNamed(context, '/articles'),
-                icon: const Icon(Icons.article_outlined),
+                icon: Icon(
+                  Icons.article_outlined,
+                  color: isDark ? Colors.white70 : Colors.grey.shade700,
+                ),
+                tooltip: '文章',
               ),
               IconButton(
                 onPressed: () => Navigator.pushNamed(context, '/messages'),
+                tooltip: '消息',
                 icon: Stack(
-                  children: const [
-                    Icon(TDIcons.notification),
+                  children: [
+                    Icon(
+                      Icons.notifications_outlined,
+                      color: isDark ? Colors.white70 : Colors.grey.shade700,
+                    ),
                     Positioned(
                       right: 0,
                       top: 0,
-                      child: CircleAvatar(
-                        radius: 4,
-                        backgroundColor: Colors.red,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.2),
+                        ),
                       ),
                     ),
                   ],
@@ -752,96 +867,238 @@ class HomePageState extends State<HomePage>
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary.withValues(alpha: 0.12),
-                  colorScheme.primary.withValues(alpha: 0.04),
+        ),
+        const SizedBox(height: 14),
+
+        // ── 搜索框 ────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/search'),
+            child: Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1F2430) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.2),
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    '搜索课程、讲师、关键词…',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      '搜索',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // ── 快捷入口标签 ────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
-                const Text(
-                  'MoocHub 学习推荐',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                _buildQuickTag(
+                  label: '🔥 热门课程',
+                  color: const Color(0xFFFF6B6B),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/search',
+                    arguments: const {
+                      'keyword': '课程',
+                      'scope': 'course',
+                      'sort': 'view_count',
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildQuickTag(
+                  label: '✨ 最新上线',
+                  color: const Color(0xFF4ECDC4),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/search',
+                    arguments: const {
+                      'keyword': '最新',
+                      'scope': 'all',
+                      'sort': 'created_at',
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildQuickTag(
+                  label: '📖 精选文章',
+                  color: const Color(0xFF7C4DFF),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/search',
+                    arguments: const {
+                      'keyword': '文章',
+                      'scope': 'article',
+                      'sort': 'view_count',
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAccess() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final items = [
+      (Icons.grid_view_rounded, '全部课程', const Color(0xFF4ECDC4),
+          () => Navigator.pushNamed(context, '/search',
+              arguments: const {'scope': 'course', 'sort': 'view_count'})),
+      (Icons.article_outlined, '精选文章', const Color(0xFF7C4DFF),
+          () => Navigator.pushNamed(context, '/articles')),
+      (Icons.favorite_border_rounded, '我的收藏', const Color(0xFFFF6B6B),
+          () => Navigator.pushNamed(context, '/favorites')),
+      (Icons.chat_bubble_outline_rounded, '消息', const Color(0xFFFFB347),
+          () => Navigator.pushNamed(context, '/chat')),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: items.map((item) {
+          final (icon, label, color, onTap) = item;
+          return GestureDetector(
+            onTap: onTap,
+            child: Column(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? color.withValues(alpha: 0.18)
+                        : color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: color, size: 26),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '今天想学点什么？试试搜索或看热门课程',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                TDSearchBar(
-                  placeHolder: '搜索课程/讲师/关键词',
-                  readOnly: true,
-                  action: '前往搜索',
-                  onInputClick: () => Navigator.pushNamed(context, '/search'),
-                  onActionClick: (_) => Navigator.pushNamed(context, '/search'),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    TDButton(
-                      text: '热门课程',
-                      size: TDButtonSize.small,
-                      type: TDButtonType.fill,
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        '/search',
-                        arguments: const {
-                          'keyword': '课程',
-                          'scope': 'course',
-                          'sort': 'view_count',
-                        },
-                      ),
-                    ),
-                    TDButton(
-                      text: '最新更新',
-                      size: TDButtonSize.small,
-                      type: TDButtonType.fill,
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        '/search',
-                        arguments: const {
-                          'keyword': '最新',
-                          'scope': 'all',
-                          'sort': 'created_at',
-                        },
-                      ),
-                    ),
-                    TDButton(
-                      text: '推荐文章',
-                      size: TDButtonSize.small,
-                      type: TDButtonType.fill,
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        '/search',
-                        arguments: const {
-                          'keyword': '文章',
-                          'scope': 'article',
-                          'sort': 'view_count',
-                        },
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildFeedSectionHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            '为你推荐',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => _loadRecommendedProducts(
+                reset: true, useOfflineCache: false),
+            child: Row(
+              children: [
+                Icon(Icons.refresh_rounded,
+                    size: 14,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500),
+                const SizedBox(width: 3),
+                Text(
+                  '换一批',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                  ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickTag({
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -892,11 +1149,7 @@ class HomePageState extends State<HomePage>
             curve: Curves.easeOut,
           );
         }
-        if (mounted) {
-          setState(() {
-            showBackTop = false;
-          });
-        }
+        _showBackTop.value = false;
       },
       child: Container(
         height: 40,
@@ -934,25 +1187,15 @@ class HomePageState extends State<HomePage>
   }
 
   Widget _buildBackTopButton() {
-    if (!showBackTop) return const SizedBox.shrink();
-    return Positioned(
-      right: 0,
-      bottom: _backTopBottomOffset(),
-      child: _buildHalfCircleBackTop(context),
-    );
-  }
-
-  Widget _closeNoticeBar(BuildContext context) {
-    return TDNoticeBar(
-      content: '这是一条普通的通知信息',
-      prefixIcon: TDIcons.error_circle_filled,
-      suffixIcon: TDIcons.close,
-      onTap: (trigger) {
-        if (trigger == 'suffix-icon') {
-          setState(() {
-            _showNotice = false;
-          });
-        }
+    return ValueListenableBuilder<bool>(
+      valueListenable: _showBackTop,
+      builder: (context, show, _) {
+        if (!show) return const SizedBox.shrink();
+        return Positioned(
+          right: 0,
+          bottom: _backTopBottomOffset(),
+          child: _buildHalfCircleBackTop(context),
+        );
       },
     );
   }
@@ -976,17 +1219,11 @@ class HomePageState extends State<HomePage>
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 SliverToBoxAdapter(child: _buildTDesignHeader()),
-                const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                if (_showNotice)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _closeNoticeBar(context),
-                    ),
-                  ),
-                if (_showNotice)
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                SliverToBoxAdapter(child: _buildQuickAccess()),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
                 _buildNetworkStateSliver(),
+                SliverToBoxAdapter(child: _buildFeedSectionHeader()),
                 _buildRecommendedSliver(),
                 _buildLoadingMoreSliver(),
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
@@ -1030,4 +1267,34 @@ class _NoScrollbarBehavior extends MaterialScrollBehavior {
   ) {
     return child;
   }
+}
+
+/// 曝光追踪包装器：在 initState（首次进入视口）时触发一次 onExposed，
+/// 后续 rebuild 不会重复上报，避免在 build 方法里调用带副作用的函数。
+class _ExposureWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onExposed;
+
+  const _ExposureWrapper({
+    super.key,
+    required this.child,
+    required this.onExposed,
+  });
+
+  @override
+  State<_ExposureWrapper> createState() => _ExposureWrapperState();
+}
+
+class _ExposureWrapperState extends State<_ExposureWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // addPostFrameCallback 确保在 layout 完成后上报，不阻塞当前帧
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onExposed();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

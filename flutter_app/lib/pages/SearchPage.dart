@@ -8,7 +8,6 @@ import 'package:MoocHub/widget/ArticleCard.dart';
 import 'package:MoocHub/widget/AppStateWidgets.dart';
 import 'package:MoocHub/widget/CoursesCard.dart';
 import 'package:flutter/material.dart';
-import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 class SearchPage extends StatefulWidget {
   final String initialKeyword;
@@ -454,6 +453,71 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  Widget _buildSearchBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1B1F28) : const Color(0xFFF3F5F9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchTextChanged,
+              onSubmitted: (v) => _search(keyword: v, submit: true),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: '搜索课程/文章/讲师',
+                hintStyle:
+                    TextStyle(fontSize: 14, color: Colors.grey.shade400),
+                prefixIcon:
+                    Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                suffixIcon: _keyword.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.close_rounded,
+                            color: Colors.grey.shade400, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchTextChanged('');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => _search(submit: true),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              '搜索',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSuggestions() {
     if (!_showSuggest || _suggestions.isEmpty) return const SizedBox.shrink();
     final items = _suggestions.take(8).toList();
@@ -573,15 +637,7 @@ class _SearchPageState extends State<SearchPage> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Column(
               children: [
-                TDSearchBar(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  placeHolder: '搜索课程/文章/讲师',
-                  action: '搜索',
-                  onTextChanged: _onSearchTextChanged,
-                  onSubmitted: (value) => _search(keyword: value, submit: true),
-                  onActionClick: (_) => _search(submit: true),
-                ),
+                _buildSearchBar(),
                 _buildSuggestions(),
                 const SizedBox(height: 8),
                 Wrap(
