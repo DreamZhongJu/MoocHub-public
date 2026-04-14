@@ -23,8 +23,10 @@ class Config {
 
   static String get domain => '${_backendHost()}/api/v1';
   static String get imageHost => _backendHost();
-  static String get qqAppId =>
-      _envOrDefault('QQ_APP_ID', _envOrDefault('TENCENT_APP_ID', defaultQqAppId));
+  static String get qqAppId => _envOrDefault(
+    'QQ_APP_ID',
+    _envOrDefault('TENCENT_APP_ID', defaultQqAppId),
+  );
   static const String defaultProductAsset = 'assets/images/default-product.png';
 
   static String resolveImage(String? url) {

@@ -891,19 +891,23 @@ class HomePageState extends State<HomePage>
               child: Row(
                 children: [
                   const SizedBox(width: 14),
-                  Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                  Icon(
+                    Icons.search_rounded,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     '搜索课程、讲师、关键词…',
-                    style: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                   ),
                   const Spacer(),
                   Container(
                     margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: primary,
                       borderRadius: BorderRadius.circular(10),
@@ -983,15 +987,34 @@ class HomePageState extends State<HomePage>
   Widget _buildQuickAccess() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = [
-      (Icons.grid_view_rounded, '全部课程', const Color(0xFF4ECDC4),
-          () => Navigator.pushNamed(context, '/search',
-              arguments: const {'scope': 'course', 'sort': 'view_count'})),
-      (Icons.article_outlined, '精选文章', const Color(0xFF7C4DFF),
-          () => Navigator.pushNamed(context, '/articles')),
-      (Icons.favorite_border_rounded, '我的收藏', const Color(0xFFFF6B6B),
-          () => Navigator.pushNamed(context, '/favorites')),
-      (Icons.chat_bubble_outline_rounded, '消息', const Color(0xFFFFB347),
-          () => Navigator.pushNamed(context, '/chat')),
+      (
+        Icons.grid_view_rounded,
+        '全部课程',
+        const Color(0xFF4ECDC4),
+        () => Navigator.pushNamed(
+          context,
+          '/search',
+          arguments: const {'scope': 'course', 'sort': 'view_count'},
+        ),
+      ),
+      (
+        Icons.article_outlined,
+        '精选文章',
+        const Color(0xFF7C4DFF),
+        () => Navigator.pushNamed(context, '/articles'),
+      ),
+      (
+        Icons.favorite_border_rounded,
+        '我的收藏',
+        const Color(0xFFFF6B6B),
+        () => Navigator.pushNamed(context, '/favorites'),
+      ),
+      (
+        Icons.chat_bubble_outline_rounded,
+        '消息',
+        const Color(0xFFFFB347),
+        () => Navigator.pushNamed(context, '/chat'),
+      ),
     ];
 
     return Padding(
@@ -1054,13 +1077,15 @@ class HomePageState extends State<HomePage>
           ),
           const Spacer(),
           GestureDetector(
-            onTap: () => _loadRecommendedProducts(
-                reset: true, useOfflineCache: false),
+            onTap: () =>
+                _loadRecommendedProducts(reset: true, useOfflineCache: false),
             child: Row(
               children: [
-                Icon(Icons.refresh_rounded,
-                    size: 14,
-                    color: isDark ? Colors.white54 : Colors.grey.shade500),
+                Icon(
+                  Icons.refresh_rounded,
+                  size: 14,
+                  color: isDark ? Colors.white54 : Colors.grey.shade500,
+                ),
                 const SizedBox(width: 3),
                 Text(
                   '换一批',

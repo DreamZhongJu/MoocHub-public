@@ -223,22 +223,28 @@ class _CategoryPageState extends State<CategoryPage>
 
   // 根据 index 循环取预设颜色/图标，让每个分类有独立的色彩
   static const List<Color> _cateColors = [
-    Color(0xFF4ECDC4), Color(0xFFFF6B6B), Color(0xFF7C4DFF),
-    Color(0xFFFFB347), Color(0xFF45B7D1), Color(0xFF96CEB4),
-    Color(0xFFFF8B94), Color(0xFF6C5CE7), Color(0xFFFDCB6E),
+    Color(0xFF4ECDC4),
+    Color(0xFFFF6B6B),
+    Color(0xFF7C4DFF),
+    Color(0xFFFFB347),
+    Color(0xFF45B7D1),
+    Color(0xFF96CEB4),
+    Color(0xFFFF8B94),
+    Color(0xFF6C5CE7),
+    Color(0xFFFDCB6E),
     Color(0xFF00B894),
   ];
   static const List<IconData> _cateIcons = [
-    Icons.computer_rounded,       // 编程
-    Icons.design_services_rounded,// 设计
-    Icons.science_rounded,        // 理科
-    Icons.business_center_rounded,// 商业
-    Icons.language_rounded,       // 语言
-    Icons.music_note_rounded,     // 音乐
+    Icons.computer_rounded, // 编程
+    Icons.design_services_rounded, // 设计
+    Icons.science_rounded, // 理科
+    Icons.business_center_rounded, // 商业
+    Icons.language_rounded, // 语言
+    Icons.music_note_rounded, // 音乐
     Icons.fitness_center_rounded, // 健身
-    Icons.camera_alt_rounded,     // 摄影
-    Icons.psychology_rounded,     // 心理
-    Icons.auto_stories_rounded,   // 阅读
+    Icons.camera_alt_rounded, // 摄影
+    Icons.psychology_rounded, // 心理
+    Icons.auto_stories_rounded, // 阅读
   ];
 
   Widget _rightCateWidget(double rightItemWidth, double rightItemHeight) {

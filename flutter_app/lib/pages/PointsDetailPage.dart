@@ -59,8 +59,7 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
         ),
       ]);
 
-      final balance =
-          (results[0].data['points_balance'] as num?)?.toInt() ?? 0;
+      final balance = (results[0].data['points_balance'] as num?)?.toInt() ?? 0;
       final rawItems = results[1].data['items'] as List<dynamic>? ?? [];
       final items = rawItems
           .whereType<Map>()
@@ -157,8 +156,11 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.emoji_events_rounded,
-                      color: Colors.amber, size: 18),
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Colors.amber,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   RichText(
                     text: TextSpan(
@@ -166,8 +168,7 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
                       children: [
                         const TextSpan(
                           text: '排名第 ',
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey),
+                          style: TextStyle(fontSize: 13, color: Colors.grey),
                         ),
                         TextSpan(
                           text: '$_rank',
@@ -181,7 +182,9 @@ class _PointsDetailPageState extends State<PointsDetailPage> {
                           TextSpan(
                             text: ' / $_totalUsers 名用户',
                             style: const TextStyle(
-                                fontSize: 13, color: Colors.grey),
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
                           ),
                       ],
                     ),

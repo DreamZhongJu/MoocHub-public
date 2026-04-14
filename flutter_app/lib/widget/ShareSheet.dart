@@ -40,8 +40,9 @@ class _ShareSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1E2230) : Colors.white;
-    final cardColor =
-        isDark ? const Color(0xFF252A38) : const Color(0xFFF5F7FA);
+    final cardColor = isDark
+        ? const Color(0xFF252A38)
+        : const Color(0xFFF5F7FA);
 
     final options = [
       _ShareOption(
@@ -162,8 +163,9 @@ class _ShareSheetContent extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children:
-                    options.map((opt) => _buildOption(context, opt)).toList(),
+                children: options
+                    .map((opt) => _buildOption(context, opt))
+                    .toList(),
               ),
             ),
             const SizedBox(height: 12),
@@ -264,16 +266,20 @@ class _ShareSheetContent extends StatelessWidget {
         SnackBar(
           content: const Row(
             children: [
-              Icon(Icons.check_circle_outline_rounded,
-                  color: Colors.white, size: 16),
+              Icon(
+                Icons.check_circle_outline_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
               SizedBox(width: 8),
               Text('链接已复制到剪贴板'),
             ],
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: const Color(0xFF2D2D3A),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -284,8 +290,7 @@ class _ShareSheetContent extends StatelessWidget {
       SnackBar(
         content: Text('${opt.label} 分享功能即将上线'),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
       ),
     );

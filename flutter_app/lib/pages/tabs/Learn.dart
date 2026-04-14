@@ -276,8 +276,7 @@ class LearnPageState extends State<LearnPage>
           _errorChats = !fallback;
           _weakNetwork = true;
           _usingOfflineCache = fallback;
-          _networkHint =
-              fallback ? '网络较弱，聊天列表来自离线缓存' : '聊天列表加载失败，请下拉重试';
+          _networkHint = fallback ? '网络较弱，聊天列表来自离线缓存' : '聊天列表加载失败，请下拉重试';
         });
       }
     }
@@ -417,9 +416,9 @@ class LearnPageState extends State<LearnPage>
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(
-                    alpha: 0.1,
-                  ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -518,8 +517,7 @@ class LearnPageState extends State<LearnPage>
                             width: 90,
                             height: 54,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) =>
-                                _thumbFallback(90, 54),
+                            errorWidget: (_, __, ___) => _thumbFallback(90, 54),
                           )
                         : _thumbFallback(90, 54),
                   ),
@@ -681,8 +679,7 @@ class LearnPageState extends State<LearnPage>
     setState(() {
       _hiddenConversationIds = {..._hiddenConversationIds, item.id};
       _chatItems = _chatItems.where((e) => e.id != item.id).toList();
-      _chatUnreadTotal =
-          _chatItems.fold<int>(0, (prev, e) => prev + e.unread);
+      _chatUnreadTotal = _chatItems.fold<int>(0, (prev, e) => prev + e.unread);
     });
     try {
       await _storage.saveHiddenConversationIds(_hiddenConversationIds);
@@ -759,8 +756,9 @@ class LearnPageState extends State<LearnPage>
                         color: primary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color:
-                              isDark ? const Color(0xFF171A21) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF171A21)
+                              : Colors.white,
                           width: 1.5,
                         ),
                       ),
@@ -858,10 +856,7 @@ class LearnPageState extends State<LearnPage>
             children: [
               Icon(Icons.hide_source_rounded, color: Colors.white, size: 20),
               SizedBox(height: 4),
-              Text(
-                '隐藏',
-                style: TextStyle(color: Colors.white, fontSize: 11),
-              ),
+              Text('隐藏', style: TextStyle(color: Colors.white, fontSize: 11)),
             ],
           ),
         ),
@@ -948,10 +943,7 @@ class LearnPageState extends State<LearnPage>
               children: [
                 const Text(
                   '消息',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 if (_chatUnreadTotal > 0) ...[
                   const SizedBox(width: 8),

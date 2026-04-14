@@ -473,14 +473,19 @@ class _SearchPageState extends State<SearchPage> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: '搜索课程/文章/讲师',
-                hintStyle:
-                    TextStyle(fontSize: 14, color: Colors.grey.shade400),
-                prefixIcon:
-                    Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: Colors.grey.shade400,
+                  size: 20,
+                ),
                 suffixIcon: _keyword.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.close_rounded,
-                            color: Colors.grey.shade400, size: 18),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: Colors.grey.shade400,
+                          size: 18,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchTextChanged('');
@@ -488,8 +493,7 @@ class _SearchPageState extends State<SearchPage> {
                       )
                     : null,
                 border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -508,9 +512,10 @@ class _SearchPageState extends State<SearchPage> {
             child: const Text(
               '搜索',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600),
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),

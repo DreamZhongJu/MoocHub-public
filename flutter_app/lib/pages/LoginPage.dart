@@ -124,11 +124,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
     if (_qqAppId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('QQ AppID 未配置'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: const Text('QQ AppID 未配置')));
       return;
     }
     if (_tencent == null) {

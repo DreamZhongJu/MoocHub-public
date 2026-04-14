@@ -52,7 +52,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Future<void> _init() async {
     if (_conversationId == null || _conversationId! <= 0) {
-      if (mounted) setState(() { _loading = false; _error = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
       return;
     }
     _myUserId = await _storage.getUserId() ?? 0;
@@ -63,7 +67,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final cid = _conversationId;
     if (cid == null) return;
     if (showLoading && mounted) {
-      setState(() { _loading = true; _error = false; });
+      setState(() {
+        _loading = true;
+        _error = false;
+      });
     }
     try {
       final response = await _api.get<Map<String, dynamic>>(
@@ -72,17 +79,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         fromJson: (raw) => Map<String, dynamic>.from(raw as Map),
       );
       final rawItems = response.data['items'] as List<dynamic>? ?? [];
-      final messages = rawItems
-          .whereType<Map>()
-          .map((e) => _ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-          .toList()
-        ..sort((a, b) => a.id.compareTo(b.id));
+      final messages =
+          rawItems
+              .whereType<Map>()
+              .map((e) => _ChatMessage.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+            ..sort((a, b) => a.id.compareTo(b.id));
 
-      if (mounted) setState(() { _messages = messages; _loading = false; _error = false; });
+      if (mounted)
+        setState(() {
+          _messages = messages;
+          _loading = false;
+          _error = false;
+        });
       if (messages.isNotEmpty) await _markRead(messages.last.id);
       _scrollToBottom();
     } catch (_) {
-      if (mounted) setState(() { _loading = false; _error = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
     }
   }
 
@@ -124,12 +141,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       );
       final map = response.data;
       final msg = _ChatMessage(
-        id: (map['id'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch,
+        id:
+            (map['id'] as num?)?.toInt() ??
+            DateTime.now().millisecondsSinceEpoch,
         senderId: (map['sender_id'] as num?)?.toInt() ?? _myUserId,
         senderName: '我',
         senderAvatar: '',
         content: map['content']?.toString() ?? text,
-        createdAt: map['created_at']?.toString() ?? DateTime.now().toIso8601String(),
+        createdAt:
+            map['created_at']?.toString() ?? DateTime.now().toIso8601String(),
       );
       if (mounted) {
         setState(() {
@@ -145,7 +165,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           SnackBar(
             content: Text('发送失败：$e'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -159,7 +181,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     if (msg.senderId <= 0) return;
 
     final token = await _storage.getUserToken();
-    final loggedIn = token != null && token.toString().isNotEmpty && token != 'null';
+    final loggedIn =
+        token != null && token.toString().isNotEmpty && token != 'null';
     if (!loggedIn) {
       if (!mounted) return;
       await Navigator.pushNamed(context, '/login');
@@ -173,13 +196,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       );
       final data = resp.data;
       final raw = data['id'] ?? data['ID'];
-      final cid = raw is num ? raw.toInt() : int.tryParse(raw?.toString() ?? '') ?? 0;
+      final cid = raw is num
+          ? raw.toInt()
+          : int.tryParse(raw?.toString() ?? '') ?? 0;
       if (cid <= 0) throw Exception('会话编号无效');
       if (!mounted) return;
       await Navigator.pushNamed(
         context,
         '/chatDetail',
-        arguments: {'conversationId': cid.toString(), 'title': msg.senderName, 'isGroup': false},
+        arguments: {
+          'conversationId': cid.toString(),
+          'title': msg.senderName,
+          'isGroup': false,
+        },
       );
     } catch (e) {
       if (!mounted) return;
@@ -187,7 +216,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         SnackBar(
           content: Text('发起私信失败：$e'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -220,7 +251,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final yesterday = now.subtract(const Duration(days: 1));
     if (dt.year == yesterday.year &&
         dt.month == yesterday.month &&
-        dt.day == yesterday.day) return '昨天';
+        dt.day == yesterday.day)
+      return '昨天';
     return '${dt.month}月${dt.day}日';
   }
 
@@ -316,8 +348,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: mine
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
@@ -336,18 +369,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
-        mainAxisAlignment:
-            mine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: mine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!mine) ...[
-            _buildAvatar(msg, false),
-            const SizedBox(width: 8),
-          ],
+          if (!mine) ...[_buildAvatar(msg, false), const SizedBox(width: 8)],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: mine
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!mine && widget.isGroup)
                   Padding(
@@ -365,10 +397,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ],
             ),
           ),
-          if (mine) ...[
-            const SizedBox(width: 8),
-            _buildAvatar(msg, true),
-          ],
+          if (mine) ...[const SizedBox(width: 8), _buildAvatar(msg, true)],
         ],
       ),
     );
@@ -395,7 +424,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0F1115) : const Color(0xFFF3F4F6),
+                  color: isDark
+                      ? const Color(0xFF0F1115)
+                      : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: TextField(
@@ -409,7 +440,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   ),
                   decoration: InputDecoration(
                     hintText: '输入消息…',
-                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
@@ -501,8 +535,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           final msg = _messages[index];
           return Column(
             children: [
-              if (_needDateSeparator(index))
-                _buildDateSeparator(msg.createdAt),
+              if (_needDateSeparator(index)) _buildDateSeparator(msg.createdAt),
               _buildBubble(msg),
             ],
           );
@@ -517,9 +550,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     if (_loading) {
       return Container(
         color: isDark ? const Color(0xFF0F1115) : const Color(0xFFF0F2F5),
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
 
@@ -563,8 +594,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1115) : const Color(0xFFF0F2F5),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1115)
+          : const Color(0xFFF0F2F5),
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF171A21) : Colors.white,
         elevation: 0,

@@ -280,8 +280,9 @@ class _ProductListPageState extends State<ProductListPage> {
                       style: TextStyle(
                         fontSize: 13,
                         color: active ? primary : Colors.grey.shade600,
-                        fontWeight:
-                            active ? FontWeight.w700 : FontWeight.normal,
+                        fontWeight: active
+                            ? FontWeight.w700
+                            : FontWeight.normal,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -308,8 +309,11 @@ class _ProductListPageState extends State<ProductListPage> {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(Icons.tune_rounded,
-                      size: 20, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 20,
+                    color: Colors.grey.shade600,
+                  ),
                   if (_level != 'all')
                     Positioned(
                       top: -3,
@@ -375,7 +379,11 @@ class _ProductListPageState extends State<ProductListPage> {
                       _filterChip(ctx, 'all', '全部难度', Colors.grey),
                       ..._levelLabels.entries.map(
                         (e) => _filterChip(
-                            ctx, e.key, e.value, _levelColor(e.key)),
+                          ctx,
+                          e.key,
+                          e.value,
+                          _levelColor(e.key),
+                        ),
                       ),
                     ],
                   ),
@@ -389,7 +397,11 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   Widget _filterChip(
-      BuildContext ctx, String value, String label, Color color) {
+    BuildContext ctx,
+    String value,
+    String label,
+    Color color,
+  ) {
     final active = _level == value;
     return GestureDetector(
       onTap: () {
@@ -518,8 +530,11 @@ class _ProductListPageState extends State<ProductListPage> {
                     // Instructor + level badge
                     Row(
                       children: [
-                        Icon(Icons.person_rounded,
-                            size: 13, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.person_rounded,
+                          size: 13,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
@@ -537,7 +552,9 @@ class _ProductListPageState extends State<ProductListPage> {
                         if (item.level.isNotEmpty && item.level != 'unknown')
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: levelColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
@@ -557,22 +574,32 @@ class _ProductListPageState extends State<ProductListPage> {
                     // Stats
                     Row(
                       children: [
-                        Icon(Icons.remove_red_eye_outlined,
-                            size: 12, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.remove_red_eye_outlined,
+                          size: 12,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           _formatCount(item.viewCount),
                           style: TextStyle(
-                              fontSize: 11, color: Colors.grey.shade400),
+                            fontSize: 11,
+                            color: Colors.grey.shade400,
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.bookmark_outline_rounded,
-                            size: 12, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.bookmark_outline_rounded,
+                          size: 12,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           _formatCount(item.favoriteCount),
                           style: TextStyle(
-                              fontSize: 11, color: Colors.grey.shade400),
+                            fontSize: 11,
+                            color: Colors.grey.shade400,
+                          ),
                         ),
                       ],
                     ),
@@ -639,8 +666,7 @@ class _ProductListPageState extends State<ProductListPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor =
-        isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F7FA);
+    final bgColor = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F7FA);
 
     return Scaffold(
       backgroundColor: bgColor,
