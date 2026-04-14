@@ -15,6 +15,20 @@ The format follows Keep a Changelog and semantic versioning tags (`vX.Y.Z`).
 ### Fixed
 - 待补充
 
+## [v1.0.1] - 2026-04-14
+
+### Added
+- `server/config`: 新增 `MinioDataDir()` 配置项，支持本地磁盘直接挂载回退。
+- `server/controllers/upload.go`: `ServeUpload` 新增 MinIO DataDir 磁盘回退路径，以及 presign 失败时的 WARN 日志，方便排查。
+- `server/router`: 补充缺失的事件路由 `POST /events/page_view`、`/events/favorite`、`/events/comment`。
+
+### Changed
+- `server/config`: MinIO 默认配置恢复为本地开发实际值（endpoint `192.168.10.2:9000`，用户 `appuser`）。
+- `server/main.go`: 移除 `godotenv` 依赖，回归无外部配置文件的简洁启动方式。
+
+### Fixed
+- 修复 MinIO presign 持续触发 circuit breaker 的问题：根因为 `godotenv.Load` 多路径陷阱导致 `.env` 未被加载，服务器使用了错误的默认凭证（`minioadmin`）而非实际凭证（`appuser`）。
+
 ## [v1.0.2] - 2026-02-28
 
 ### Added

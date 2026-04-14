@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"MOOCHUB-server/config"
+	"MOOCHUB-server/global"
 	"MOOCHUB-server/storage"
 	"crypto/rand"
 	"encoding/hex"
@@ -10,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type UploadController struct{}
@@ -87,8 +90,19 @@ func (uc UploadController) ServeUpload(c *gin.Context) {
 		return
 	}
 
+	if dataDir := strings.TrimSpace(config.MinioDataDir()); dataDir != "" {
+		minioDiskPath := filepath.Join(dataDir, config.MinioBucket(), filepath.FromSlash(objectPath))
+		if stat, err := os.Stat(minioDiskPath); err == nil && !stat.IsDir() {
+			c.File(minioDiskPath)
+			return
+		}
+	}
+
 	url, err := storage.ResolveObjectURL(objectPath)
 	if err != nil || strings.TrimSpace(url) == "" {
+		if err != nil {
+			global.Log.Warn("ServeUpload: resolve object URL failed", zap.String("path", objectPath), zap.Error(err))
+		}
 		c.Status(404)
 		return
 	}
