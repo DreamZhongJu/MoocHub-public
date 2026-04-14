@@ -15,6 +15,14 @@ The format follows Keep a Changelog and semantic versioning tags (`vX.Y.Z`).
 ### Fixed
 - 待补充
 
+## [v1.0.7] - 2026-04-14
+
+### Changed
+- `.gitignore` 移除 `.github/*` 排除规则，workflow 文件可直接 `git add` 无需 `-f`。
+
+### Fixed
+- CI artifact 存储配额耗尽：`build-android.yml` 的 debug APK artifact 保留期改为 1 天，自动清理历史堆积。
+
 ## [v1.0.1] - 2026-04-14
 
 ### Added
