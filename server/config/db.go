@@ -27,15 +27,15 @@ func MongoDBName() string {
 }
 
 func MinioEndpoint() string {
-	return envOrDefault("MINIO_ENDPOINT", "192.168.10.2:9000")
+	return envOrDefault("MINIO_ENDPOINT", "127.0.0.1:9000")
 }
 
 func MinioAccessKey() string {
-	return envOrDefault("MINIO_ACCESS_KEY", "appuser")
+	return envOrDefault("MINIO_ACCESS_KEY", "minioadmin")
 }
 
 func MinioSecretKey() string {
-	return envOrDefault("MINIO_SECRET_KEY", "<your_minio_secret_key>")
+	return envOrDefault("MINIO_SECRET_KEY", "minioadmin")
 }
 
 func MinioBucket() string {
@@ -95,6 +95,10 @@ func RabbitMQURL() string {
 
 func InternalToken() string {
 	return envOrDefault("INTERNAL_TOKEN", "moochub-internal")
+}
+
+func JWTSecret() string {
+	return envOrDefault("JWT_SECRET", "change-me-in-prod")
 }
 
 func QQAppID() string {
@@ -170,6 +174,16 @@ func RateLimitWritePerMinute() int {
 		return 120
 	}
 	return n
+}
+
+func DisableCourseListCache() bool {
+	v := strings.TrimSpace(envOrDefault("DISABLE_COURSE_LIST_CACHE", "false"))
+	switch strings.ToLower(v) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 func IdempotencyTTL() time.Duration {

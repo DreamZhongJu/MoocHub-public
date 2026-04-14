@@ -31,7 +31,7 @@
 - [文档导航](#文档导航)
 - [快速运行](#快速运行)
 - [API 文档](#api-文档)
-- [TODO List](#todo-list)
+- [项目状态](#项目状态)
 - [贡献与协作](#贡献与协作)
 
 ## 功能截图
@@ -65,11 +65,11 @@ flowchart LR
 ## 版本节奏
 | 轨道       | 说明                                      | 入口                                                                        |
 | ---------- | ----------------------------------------- | --------------------------------------------------------------------------- |
-| 需求规划   | TODO 拆分、Issue 管理、迭代范围冻结       | [Issues](https://github.com/DreamZhongJu/MoocHub/issues)                    |
+| 项目状态   | 迭代范围冻结、功能维护                   | 1.0 发布                                                                 |
 | 开发联调   | 功能分支开发 + PR 评审 + CI 门禁          | [Pull Requests](https://github.com/DreamZhongJu/MoocHub/pulls)              |
 | 持续集成   | Flutter/Go 检查、Android 构建、格式与测试 | [Actions](https://github.com/DreamZhongJu/MoocHub/actions)                  |
 | 版本发布   | Tag + Release + 变更说明 + APK 产物       | [Releases](https://github.com/DreamZhongJu/MoocHub/releases)                |
-| 里程碑追踪 | 版本目标、已完成事项、下一阶段计划        | [CHANGELOG.md](CHANGELOG.md) / [doc/CompletedTodo.md](doc/CompletedTodo.md) |
+| 里程碑追踪 | 版本目标、已完成事项        | [CHANGELOG.md](CHANGELOG.md) / [doc/CompletedTodo.md](doc/CompletedTodo.md) |
 
 ## 文档导航
 - 开发流程与 PR 规范：[`doc/DevWorkflow.md`](doc/DevWorkflow.md)
@@ -81,14 +81,13 @@ flowchart LR
 - 实时聊天方案：[`doc/ChatSystem.md`](doc/ChatSystem.md)
 - 埋点看板方案：[`doc/AnalyticsDashboard.md`](doc/AnalyticsDashboard.md)
 - LightRAG 接入路线：[`doc/LightRAGPlan.md`](doc/LightRAGPlan.md)
-- LightRAG 任务拆解：[`doc/LightRAGTaskBreakdown.md`](doc/LightRAGTaskBreakdown.md)
 - LightRAG 导出接口：[`doc/LightRAGKnowledgeExportAPI.md`](doc/LightRAGKnowledgeExportAPI.md)
 
 ## 项目定位
 - 产品形态：学习社区 + 课程平台
 - 首页风格：类 B 站推荐流（卡片瀑布流 + 热门/继续观看）
 - MVP 功能：课程/视频/评论/收藏/进度/用户中心
-- 当前深化方向：已完成功能稳定化 + LightRAG 路线接入 + 论文实验材料整理
+- 当前状态：1.0 版本功能冻结，进入维护阶段
 
 ## 技术栈
 - 客户端：Flutter
@@ -102,6 +101,7 @@ flowchart LR
 - `flutter_app/`：Flutter 客户端
 - `server/`：Go 服务端
 - `doc/`：技术文档
+- 根目录：数据库结构与数据转储文件（仅结构 / 结构+数据）
 
 ## 快速运行
 ### Server
@@ -112,23 +112,36 @@ cd server
  go run main.go
 ```
 
-如果当前要联调 LightRAG，可直接用启动脚本：
+启动脚本包含密钥与环境变量，已从仓库忽略。可在本地按下述模板创建：
 
+PowerShell 示例：
 ```powershell
-cd server
-./scripts/start_server_with_lightrag.ps1
+$env:LIGHTRAG_SYNC_URL = "http://127.0.0.1:9621/documents/text"
+$env:LIGHTRAG_QUERY_URL = "http://127.0.0.1:9621/query"
+$env:DEEPSEEK_API_BASE_URL = "https://api.deepseek.com/v1"
+$env:DEEPSEEK_API_KEY = "<your_api_key>"
+$env:DEEPSEEK_MODEL = "deepseek-chat"
+$env:DEEPSEEK_TIMEOUT_MS = "120000"
+
+go run main.go
 ```
 
-Linux/macOS:
-
+Bash 示例：
 ```bash
-cd server
-bash ./scripts/start_server_with_lightrag.sh
+export LIGHTRAG_SYNC_URL="http://127.0.0.1:9621/documents/text"
+export LIGHTRAG_QUERY_URL="http://127.0.0.1:9621/query"
+export DEEPSEEK_API_BASE_URL="https://api.deepseek.com/v1"
+export DEEPSEEK_API_KEY="<your_api_key>"
+export DEEPSEEK_MODEL="deepseek-chat"
+export DEEPSEEK_TIMEOUT_MS="120000"
+
+go run main.go
 ```
 
 ### Flutter
 ```bash
 cd flutter_app
+cp assets/.env.example assets/.env
 flutter pub get
 flutter run
 ```
@@ -264,14 +277,14 @@ docker run -d --name minio \
 ### 2) 创建 bucket 与账号
 - 控制台：`http://127.0.0.1:9001`
 - 创建 bucket：`moochub-video`
-- 创建用户：例如 `appuser / <your_minio_secret_key>`，赋予读写权限
+- 创建用户：例如 `minioadmin / <your_password>`，赋予读写权限
 
 ### 3) 服务端配置
 - 方案 B 使用 **签名 URL**：服务端返回 `video_url` / `thumb_url` 为临时可访问地址
 - 当前默认配置写在 `server/config/db.go`（或用环境变量覆盖）
 - 建议填入：
   - `MINIO_ENDPOINT=127.0.0.1:9000`
-  - `MINIO_ACCESS_KEY=appuser`
+  - `MINIO_ACCESS_KEY=minioadmin`
   - `MINIO_SECRET_KEY=<your_minio_secret_key>
   - `MINIO_BUCKET=moochub-video`
   - `MINIO_SECURE=false`
@@ -499,25 +512,9 @@ CREATE TABLE favorite_articles (
 
 ---
 
-## TODO List
-状态说明：✅ 已实现 / ⬜ 未实现 / 🟡 部分完成
-
-说明：
-- 当前阶段不再新增业务功能，重点是已完成功能深化 + LightRAG 论文亮点落地
-- 已完成事项已单独整理到：[`doc/CompletedTodo.md`](doc/CompletedTodo.md)
-- 当前开发排期与迭代追踪以 GitHub `Issues + Projects` 为准
-
-| 阶段 | 事项                                 | 细节 TODO                                                           | 状态 |
-| ---- | ------------------------------------ | ------------------------------------------------------------------- | ---- |
-| 12   | LightRAG 知识库接入                  | 课程/文章标准导出、图索引构建、增量更新（[#29](https://github.com/DreamZhongJu/MoocHub/issues/29) / [#30](https://github.com/DreamZhongJu/MoocHub/issues/30)） | ⬜    |
-| 12   | LightRAG 智能问答                    | 多模式检索、课程/文章问答、引用来源展示（[#31](https://github.com/DreamZhongJu/MoocHub/issues/31) / [#32](https://github.com/DreamZhongJu/MoocHub/issues/32)） | ⬜    |
-| 12   | LightRAG 内容总结                    | 课程要点提炼、章节摘要、学习卡片生成（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
-| 12   | LightRAG 自动出题                    | 按章节生成题目、答案与解析、错题讲解（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
-| 12   | LightRAG 语义搜索增强                | 语义召回 + 关键词混排 + 结果重排（[#33](https://github.com/DreamZhongJu/MoocHub/issues/33)） | ⬜    |
-| 12   | LightRAG 评估与成本看板              | 命中率/延迟/成本统计、论文实验材料整理（[#34](https://github.com/DreamZhongJu/MoocHub/issues/34)） | ⬜    |
-| 13   | 论文与答辩材料                       | 论文初稿/修订；PPT；演示脚本                                        | ⬜    |
-
----
+## 项目状态
+- 当前版本：1.0（功能冻结）
+- 后续仅进行稳定性与文档维护，不再新增功能
 
 ## DIN 落地实施路线（已完成基础版，保留过程记录）
 
@@ -755,6 +752,6 @@ CREATE TABLE favorite_articles (
 
 ## 协作看板
 - 项目规划：[`README.md`](README.md) / [`doc/CompletedTodo.md`](doc/CompletedTodo.md)
-- 任务协同：GitHub Issues + Projects（Sprint 迭代）
+- 任务协同：维护模式（不再启用 Sprint 迭代）
 - 代码协同：功能分支 -> PR -> CI 通过 -> 合并主干
 - 版本协同：`CHANGELOG.md` 维护发布说明，`release.yml` 负责发布流程

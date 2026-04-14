@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="5.3.3 限流机制验证" enabled="true">
+      <stringProp name="TestPlan.comments">验证全局限流（300次/分钟/IP）
+测试方案：在1秒内向同一IP发送500次请求
+预期：前300次（≈前36秒等比，但在1秒内则约前300次）返回200，超出后返回429
+实际限流算法：Redis INCR 滑动窗口（1分钟时间槽）
+500线程 × 1次循环，ramp-up=1秒，模拟瞬时高并发冲击</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="HOST" elementType="Argument">
+            <stringProp name="Argument.name">HOST</stringProp>
+            <stringProp name="Argument.value">127.0.0.1</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="PORT" elementType="Argument">
+            <stringProp name="Argument.name">PORT</stringProp>
+            <stringProp name="Argument.value">3000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+
+      <!-- ===== 全局 HTTP 默认配置 ===== -->
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP请求默认值" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments"/>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+        <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+        <stringProp name="HTTPSampler.protocol">http</stringProp>
+        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
+        <stringProp name="HTTPSampler.response_timeout">10000</stringProp>
+      </ConfigTestElement>
+      <hashTree/>
+
+      <!-- ===== SetUp：重置限流计数（等待当前分钟时间槽过期）===== -->
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp - 清空限流计数" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="清空 ratelimit:* 计数键" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">
+// 清空所有限流计数键，确保每次测试从零开始
+def cmd = ["bash", "-c",
+  "redis-cli -p 16379 --scan --pattern 'ratelimit:*' | xargs -r redis-cli -p 16379 del"]
+def proc = cmd.execute()
+proc.waitFor()
+def output = proc.text
+log.info("Rate limit keys cleared: " + output)
+SampleResult.setResponseData("Cleared ratelimit keys: " + output, "UTF-8")
+SampleResult.setSuccessful(true)
+          </stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ===== 主测试线程组：500线程，1秒ramp-up，每线程执行1次 ===== -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="限流验证 - 500并发请求" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <!-- 每线程只执行1次，总共500次请求 -->
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">500</stringProp>
+        <!-- ramp-up=1秒：模拟500个请求在约1秒内全部发出 -->
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </ThreadGroup>
+      <hashTree>
+
+        <!-- 发送 GET /api/v1/courses 请求（使用同一IP，触发全局限流） -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/courses（限流测试）" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.name">page</stringProp>
+                <stringProp name="Argument.value">1</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              </elementProp>
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.name">size</stringProp>
+                <stringProp name="Argument.value">20</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/v1/courses</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <!-- 断言：允许 200（正常）和 429（限流）均视为预期，不允许其他5xx错误 -->
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="断言-200或429均为预期响应" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">^(200|429)$</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">非预期响应码（非200/429），服务可能崩溃</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- 写入原始结果 CSV（用于统计200/429分布）-->
+        <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="写入原始结果" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time><latency>true</latency><timestamp>true</timestamp>
+              <success>true</success><label>true</label><code>true</code>
+              <message>true</message><threadName>true</threadName>
+              <dataType>false</dataType><encoding>false</encoding>
+              <assertions>true</assertions><subresults>false</subresults>
+              <responseData>false</responseData><samplerData>false</samplerData>
+              <xml>false</xml><fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <bytes>true</bytes><sentBytes>true</sentBytes>
+              <url>true</url><threadCounts>true</threadCounts>
+              <idleTime>true</idleTime><connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename">results/s5_ratelimit_raw.csv</stringProp>
+        </ResultCollector>
+        <hashTree/>
+
+      </hashTree>
+
+      <!-- ===== TearDown：统计200/429分布，确定限流触发时刻 ===== -->
+      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown - 统计限流结果" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </PostThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="分析结果：统计200/429数量与触发时刻" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">
+import java.io.File
+
+def csvFile = new File("results/s5_ratelimit_raw.csv")
+if (!csvFile.exists()) {
+    log.warn("Result file not found: results/s5_ratelimit_raw.csv")
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseData("Result file not found", "UTF-8")
+    return
+}
+
+def lines = csvFile.readLines()
+if (lines.size() &lt;= 1) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseData("No data in result file", "UTF-8")
+    return
+}
+
+// 解析CSV头，找到 responseCode 和 timeStamp 列索引
+def header = lines[0].split(",")
+def codeIdx = header.findIndexOf { it.trim() == "responseCode" }
+def tsIdx   = header.findIndexOf { it.trim() == "timeStamp" }
+
+if (codeIdx &lt; 0 || tsIdx &lt; 0) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseData("Cannot find responseCode or timeStamp column", "UTF-8")
+    return
+}
+
+int count200 = 0
+int count429 = 0
+int firstRatelimitIndex = -1
+long firstTs = -1
+long firstRatelimitTs = -1
+
+def dataLines = lines.drop(1)
+dataLines.eachWithIndex { line, idx ->
+    def cols = line.split(",")
+    if (cols.size() &lt;= [codeIdx, tsIdx].max()) return
+    def code = cols[codeIdx].trim()
+    def ts   = cols[tsIdx].trim().toLong()
+
+    if (firstTs &lt; 0) firstTs = ts
+
+    if (code == "200") {
+        count200++
+    } else if (code == "429") {
+        count429++
+        if (firstRatelimitIndex &lt; 0) {
+            firstRatelimitIndex = idx + 1  // 1-based
+            firstRatelimitTs = ts
+        }
+    }
+}
+
+def elapsed = firstRatelimitTs >= 0 ? (firstRatelimitTs - firstTs) : -1
+def report = """
+=== 限流机制验证结果 ===
+发送总请求数  : ${dataLines.size()}
+正常响应(200) : ${count200}
+限流拦截(429) : ${count429}
+限流触发时刻  : 第 ${firstRatelimitIndex} 个请求（距测试开始 ${elapsed} ms）
+======================
+"""
+
+log.info(report)
+// 同时写入汇总文件
+new File("results/s5_ratelimit_summary.txt").text = report
+SampleResult.setSuccessful(true)
+SampleResult.setResponseData(report, "UTF-8")
+          </stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ===== 全局聚合报告 ===== -->
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="聚合报告（全局）" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time><latency>true</latency><timestamp>true</timestamp>
+            <success>true</success><label>true</label><code>true</code>
+            <message>true</message><threadName>true</threadName>
+            <dataType>false</dataType><encoding>false</encoding>
+            <assertions>true</assertions><subresults>false</subresults>
+            <responseData>false</responseData><samplerData>false</samplerData>
+            <xml>false</xml><fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <bytes>true</bytes><sentBytes>true</sentBytes>
+            <url>true</url><threadCounts>true</threadCounts>
+            <idleTime>true</idleTime><connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">results/s5_all.csv</stringProp>
+      </ResultCollector>
+      <hashTree/>
+
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

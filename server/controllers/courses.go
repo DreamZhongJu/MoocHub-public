@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"MOOCHUB-server/cache"
+	"MOOCHUB-server/config"
 	"MOOCHUB-server/model"
 	"MOOCHUB-server/storage"
 	"context"
@@ -144,6 +145,15 @@ func parsePageAndSize(pageRaw string, sizeRaw string, maxSize int) (int, int, er
 }
 
 func loadCourseListWithCache(ctx context.Context, categoryID int64, sort string, page int, pageSize int) ([]model.Courses, error) {
+	if config.DisableCourseListCache() {
+		return model.GetCoursesByCategory(
+			categoryID,
+			sort,
+			strconv.Itoa(page),
+			strconv.Itoa(pageSize),
+		)
+	}
+
 	cacheKey := buildCourseListCacheKey(categoryID, sort, page, pageSize)
 	courses := make([]model.Courses, 0)
 	_, _, err := cache.FillJSONWithHotKey(

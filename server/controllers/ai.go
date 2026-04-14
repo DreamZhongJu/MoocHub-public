@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"MOOCHUB-server/config"
+	"MOOCHUB-server/model"
 	"MOOCHUB-server/notify"
 	"MOOCHUB-server/utils"
 	"context"
@@ -77,42 +78,105 @@ func (AIController) Query(c *gin.Context) {
 		return
 	}
 
-	client := notify.NewLightRAGQueryClient(
-		config.LightRAGQueryURL(),
-		config.LightRAGQueryToken(),
-		config.LightRAGQueryTimeout(),
-		config.BreakerFailureThreshold(),
-		config.BreakerOpenTimeout(),
+	var sourceCtx *model.KnowledgeSource
+	switch req.Scope {
+	case "article":
+		item, err := model.GetKnowledgeSourceByID(model.KnowledgeSourceTypeArticle, req.ArticleID, "")
+		if err != nil {
+			if model.IsKnowledgeSourceNotFound(err) {
+				ReturnError(c, 404, "article not found")
+				return
+			}
+			ReturnError(c, 500, "load article context failed")
+			return
+		}
+		sourceCtx = item
+	case "course":
+		item, err := model.GetKnowledgeSourceByID(model.KnowledgeSourceTypeCourse, req.CourseID, "")
+		if err != nil {
+			if model.IsKnowledgeSourceNotFound(err) {
+				ReturnError(c, 404, "course not found")
+				return
+			}
+			ReturnError(c, 500, "load course context failed")
+			return
+		}
+		sourceCtx = item
+	}
+
+	client := notify.NewDeepSeekClient(
+		config.DeepSeekAPIBaseURL(),
+		config.DeepSeekAPIKey(),
+		config.DeepSeekModel(),
+		config.DeepSeekTimeout(),
 	)
 	if !client.Enabled() {
-		ReturnError(c, 503, "LightRAG query service is not configured")
+		ReturnError(c, 503, "DeepSeek API is not configured")
 		return
 	}
 
-	out, err := client.Query(context.Background(), notify.LightRAGQueryRequest{
+	out, err := client.Query(context.Background(), notify.DeepSeekQueryRequest{
 		Query:     req.Query,
 		Mode:      req.Mode,
 		Scope:     req.Scope,
 		CourseID:  req.CourseID,
 		ArticleID: req.ArticleID,
-		TopK:      req.TopK,
 		TraceID:   utils.GetTraceID(c),
+		Context:   toDeepSeekContext(sourceCtx),
 	})
 	if err != nil {
-		ReturnError(c, 502, "LightRAG query failed: "+err.Error())
+		ReturnError(c, 502, "DeepSeek query failed: "+err.Error())
 		return
+	}
+
+	sources := []gin.H{}
+	if sourceCtx != nil {
+		sources = append(sources, gin.H{
+			"source_id":   sourceCtx.SourceID,
+			"source_type": sourceCtx.SourceType,
+			"biz_id":      sourceCtx.BizID,
+			"title":       sourceCtx.Title,
+			"source_url":  sourceCtx.SourceURL,
+			"snippet":     sourceCtx.Summary,
+		})
 	}
 
 	ReturnSuccess(c, 200, "ok", gin.H{
 		"answer":     out.Answer,
-		"sources":    out.Sources,
-		"entities":   out.Entities,
-		"mode_used":  out.ModeUsed,
-		"confidence": out.Confidence,
-		"raw":        out.Raw,
-	}, int64(len(out.Sources)))
+		"sources":    sources,
+		"entities":   []any{},
+		"mode_used":  "deepseek",
+		"confidence": nil,
+		"raw": gin.H{
+			"provider":          "deepseek",
+			"model":             out.Model,
+			"context_source_id": pickSourceID(sourceCtx),
+		},
+	}, 0)
 }
 
 func normalizeLightRAGValue(v string) string {
 	return strings.ToLower(strings.TrimSpace(v))
+}
+
+func toDeepSeekContext(src *model.KnowledgeSource) *notify.DeepSeekContext {
+	if src == nil {
+		return nil
+	}
+	return &notify.DeepSeekContext{
+		SourceID:   src.SourceID,
+		SourceType: src.SourceType,
+		BizID:      src.BizID,
+		Title:      src.Title,
+		Summary:    src.Summary,
+		Content:    src.Content,
+		SourceURL:  src.SourceURL,
+	}
+}
+
+func pickSourceID(src *model.KnowledgeSource) string {
+	if src == nil {
+		return ""
+	}
+	return src.SourceID
 }

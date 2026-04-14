@@ -13,7 +13,11 @@ import 'package:tdesign_flutter/tdesign_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: "assets/.env");
+  try {
+    await dotenv.load(fileName: "assets/.env");
+  } catch (_) {
+    await dotenv.load(fileName: "assets/.env.example");
+  }
   debugPrint('[dotenv] QQ_APP_ID=${dotenv.env['QQ_APP_ID']}');
   debugPrint('[dotenv] TENCENT_APP_ID=${dotenv.env['TENCENT_APP_ID']}');
   debugPrint('[dotenv] BACKEND_IP=${dotenv.env['BACKEND_IP']}');

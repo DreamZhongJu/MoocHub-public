@@ -5,10 +5,6 @@ import 'package:MoocHub/pages/tabs/User.dart';
 import 'package:flutter/material.dart';
 import 'package:tdesign_flutter/tdesign_flutter.dart';
 
-Widget? _selectedIcon;
-
-Widget? _unSelectedIcon;
-
 class Tabs extends StatefulWidget {
   const Tabs({super.key});
 

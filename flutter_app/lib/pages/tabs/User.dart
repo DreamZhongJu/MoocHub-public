@@ -1,4 +1,4 @@
-﻿import 'package:MoocHub/services/ApiService.dart';
+import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:flutter/material.dart';
 
@@ -110,33 +110,43 @@ class _UserPageState extends State<UserPage>
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: primary,
-          ),
+          child: CircularProgressIndicator(strokeWidth: 2, color: primary),
         ),
       );
     }
 
     final dynamic rawUser = _userData['user'] ?? _userData['User'] ?? _userData;
-    final user = rawUser is Map<String, dynamic> ? rawUser : <String, dynamic>{};
+    final user = rawUser is Map<String, dynamic>
+        ? rawUser
+        : <String, dynamic>{};
 
     final nickname = _pickString(user, [
-      'nickname', 'Nickname', 'nickName', 'NickName',
+      'nickname',
+      'Nickname',
+      'nickName',
+      'NickName',
     ], _isLoggedIn ? '未命名用户' : '未登录');
     final username = _pickString(user, [
-      'username', 'Username', 'user_name', 'UserName',
+      'username',
+      'Username',
+      'user_name',
+      'UserName',
     ], _isLoggedIn ? '无用户名' : '点击登录以探索更多');
     final role = _pickString(user, ['role', 'Role'], 'student');
     final avatarUrl = _pickString(user, [
-      'avatar_url', 'AvatarURL', 'avatar',
+      'avatar_url',
+      'AvatarURL',
+      'avatar',
     ], '');
 
     String roleLabel(String r) {
       switch (r.toLowerCase()) {
-        case 'admin':   return '管理员';
-        case 'teacher': return '讲师';
-        default:        return '学员';
+        case 'admin':
+          return '管理员';
+        case 'teacher':
+          return '讲师';
+        default:
+          return '学员';
       }
     }
 
@@ -175,10 +185,12 @@ class _UserPageState extends State<UserPage>
                   ),
                   child: CircleAvatar(
                     radius: 30,
-                    backgroundColor:
-                        isDark ? const Color(0xFF0F1115) : Colors.white,
-                    backgroundImage:
-                        avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                    backgroundColor: isDark
+                        ? const Color(0xFF0F1115)
+                        : Colors.white,
+                    backgroundImage: avatarUrl.isNotEmpty
+                        ? NetworkImage(avatarUrl)
+                        : null,
                     child: avatarUrl.isEmpty
                         ? Icon(Icons.person_rounded, color: primary, size: 32)
                         : null,
@@ -216,10 +228,7 @@ class _UserPageState extends State<UserPage>
                   const SizedBox(height: 4),
                   Text(
                     username,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -296,38 +305,6 @@ class _UserPageState extends State<UserPage>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _entryItem({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final iconBg = isDark ? const Color(0xFF1F2430) : const Color(0xFFF3F6FB);
-    return ListTile(
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: iconBg,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: theme.colorScheme.primary, size: 20),
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-      ),
-      onTap: onTap,
     );
   }
 
@@ -472,6 +449,11 @@ class _UserPageState extends State<UserPage>
       );
     }
 
+    double _pageHeightForCount(int count) {
+      final rows = (count / 4).ceil().clamp(1, 2);
+      return rows * 78.0;
+    }
+
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -480,38 +462,58 @@ class _UserPageState extends State<UserPage>
         padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
         child: Column(
           children: [
-            SizedBox(
-              height: 120,
-              child: PageView.builder(
-                controller: _featureController,
-                itemCount: pages.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _featurePage = index;
-                  });
-                },
-                itemBuilder: (context, pageIndex) {
-                  final pageItems = pages[pageIndex];
-                  return GridView.count(
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 4,
-                    crossAxisSpacing: 2,
-                    childAspectRatio: 1,
-                    children: pageItems
-                        .map(
-                          (item) => _buildFeatureItem(
-                            icon: item.icon,
-                            label: item.label,
-                            onTap: item.onTap,
-                            color: item.color,
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
+            if (pages.length == 1)
+              GridView.count(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                crossAxisCount: 4,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 2,
+                childAspectRatio: 1,
+                children: pages.first
+                    .map(
+                      (item) => _buildFeatureItem(
+                        icon: item.icon,
+                        label: item.label,
+                        onTap: item.onTap,
+                        color: item.color,
+                      ),
+                    )
+                    .toList(),
+              )
+            else
+              SizedBox(
+                height: _pageHeightForCount(perPage),
+                child: PageView.builder(
+                  controller: _featureController,
+                  itemCount: pages.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _featurePage = index;
+                    });
+                  },
+                  itemBuilder: (context, pageIndex) {
+                    final pageItems = pages[pageIndex];
+                    return GridView.count(
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 2,
+                      childAspectRatio: 1,
+                      children: pageItems
+                          .map(
+                            (item) => _buildFeatureItem(
+                              icon: item.icon,
+                              label: item.label,
+                              onTap: item.onTap,
+                              color: item.color,
+                            ),
+                          )
+                          .toList(),
+                    );
+                  },
+                ),
               ),
-            ),
             if (pages.length > 1)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

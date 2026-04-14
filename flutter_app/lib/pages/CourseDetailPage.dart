@@ -403,6 +403,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           'course_id': widget.courseId,
           'top_k': 5,
         },
+        receiveTimeout: const Duration(seconds: 130),
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
       final data = resp.data;
@@ -784,11 +785,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                       children: [
                         Row(
                           children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              size: 14,
-                              color: primary,
-                            ),
+                            Icon(Icons.auto_awesome, size: 14, color: primary),
                             const SizedBox(width: 6),
                             Text(
                               'AI 回答',
@@ -825,9 +822,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                         _buildMarkdownBlock(
                           content: _aiAnswer,
                           expanded: _aiExpanded,
-                          onToggle: () => _safeSetState(
-                            () => _aiExpanded = !_aiExpanded,
-                          ),
+                          onToggle: () =>
+                              _safeSetState(() => _aiExpanded = !_aiExpanded),
                           previewChars: _aiPreviewChars,
                         ),
                       ],
@@ -998,8 +994,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   // ── 封面 SliverAppBar ─────────────────────────────────────────────────────
   Widget _buildSliverCover(BuildContext context, bool innerBoxIsScrolled) {
     final primary = Theme.of(context).colorScheme.primary;
-    final resolvedCover =
-        _product != null ? Config.resolveImage(_product!.coverUrl) : '';
+    final resolvedCover = _product != null
+        ? Config.resolveImage(_product!.coverUrl)
+        : '';
 
     return SliverAppBar(
       expandedHeight: 248,
@@ -1024,8 +1021,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             key: ValueKey(_isFavorite),
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color:
-                  _isFavorite ? Colors.redAccent.shade100 : Colors.white,
+              color: _isFavorite ? Colors.redAccent.shade100 : Colors.white,
             ),
             onPressed: _favoriteLoading ? null : _toggleFavorite,
           ),
@@ -1154,10 +1150,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               const Spacer(),
               // 难度徽章
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
@@ -1232,10 +1225,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           children: [
             Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 8),
-            Text(
-              '加载失败',
-              style: TextStyle(color: Colors.grey.shade500),
-            ),
+            Text('加载失败', style: TextStyle(color: Colors.grey.shade500)),
             TextButton(
               onPressed: _loadProductDetail,
               child: const Text('点击重试'),
@@ -1258,9 +1248,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF1F2430)
-                  : const Color(0xFFF8FAFB),
+              color: isDark ? const Color(0xFF1F2430) : const Color(0xFFF8FAFB),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -1279,9 +1267,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             _buildInfoRow(
               Icons.person_outlined,
               '讲师',
-              product.instructorName.isNotEmpty
-                  ? product.instructorName
-                  : '未知',
+              product.instructorName.isNotEmpty ? product.instructorName : '未知',
             ),
             _buildInfoRow(
               Icons.signal_cellular_alt_rounded,
@@ -1493,9 +1479,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       child: Row(
         children: [
           _buildBarIconButton(
-            icon: _isFavorite
-                ? Icons.favorite_rounded
-                : Icons.favorite_border,
+            icon: _isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
             label: _formatCount(_favoriteCount),
             color: _isFavorite ? Colors.redAccent : Colors.grey.shade600,
             onTap: _favoriteLoading ? null : _toggleFavorite,
@@ -1526,10 +1510,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 icon: const Icon(Icons.play_arrow_rounded, size: 22),
                 label: const Text(
                   '开始学习',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
@@ -1644,8 +1625,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1115)
+          : const Color(0xFFF5F6F8),
       bottomNavigationBar: _buildBottomBar(),
       body: DefaultTabController(
         length: 3,
@@ -1670,8 +1652,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   indicatorWeight: 3,
                   dividerColor: Colors.transparent,
                 ),
-                backgroundColor:
-                    isDark ? const Color(0xFF171A21) : Colors.white,
+                backgroundColor: isDark
+                    ? const Color(0xFF171A21)
+                    : Colors.white,
               ),
             ),
           ],

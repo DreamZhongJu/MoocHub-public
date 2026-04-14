@@ -27,3 +27,6 @@ server/secrets/*
 .vscode/*
 .claude/*
 .github/*
+server/scripts/start_server_with_lightrag.ps1
+server/scripts/start_server_with_lightrag.sh
+flutter_app/assets/.env

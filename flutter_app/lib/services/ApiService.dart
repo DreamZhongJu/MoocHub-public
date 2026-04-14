@@ -109,9 +109,25 @@ class ApiService {
     String path, {
     dynamic data,
     T Function(dynamic)? fromJson,
+    Duration? connectTimeout,
+    Duration? sendTimeout,
+    Duration? receiveTimeout,
   }) async {
     try {
-      final response = await _dio.post(path, data: data);
+      final response = await _dio.post(
+        path,
+        data: data,
+        options:
+            (connectTimeout != null ||
+                sendTimeout != null ||
+                receiveTimeout != null)
+            ? Options(
+                connectTimeout: connectTimeout,
+                sendTimeout: sendTimeout,
+                receiveTimeout: receiveTimeout,
+              )
+            : null,
+      );
 
       if (fromJson != null) {
         return ApiResponse<T>.fromJson(

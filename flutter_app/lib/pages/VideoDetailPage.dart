@@ -4,9 +4,11 @@ import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/widget/CommentsPanel.dart';
-import 'package:MoocHub/widget/ShareSheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tencent_kit/tencent_kit.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoDetailPage extends StatefulWidget {
@@ -37,11 +39,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   VideoPlayerController? _videoController;
   bool _playEventSent = false;
   bool _completeEventSent = false;
+  late final String _qqAppId;
+  TencentKitPlatform? _tencent;
+  StreamSubscription<TencentResp>? _qqShareSub;
 
   @override
   void initState() {
     super.initState();
     _bootstrap();
+    _initTencent();
   }
 
   @override
@@ -49,8 +55,109 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     _progressTimer?.cancel();
     _hideTimer?.cancel();
     _saveProgress(force: true);
+    _qqShareSub?.cancel();
     _videoController?.dispose();
     super.dispose();
+  }
+
+  void _initTencent() {
+    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
+        .trim();
+    if (_qqAppId.isNotEmpty && !kIsWeb) {
+      _tencent = TencentKitPlatform.instance;
+      _tencent!.registerApp(appId: _qqAppId);
+      _qqShareSub = _tencent!.respStream().listen(_handleTencentResp);
+    }
+  }
+
+  void _handleTencentResp(TencentResp resp) {
+    if (resp is TencentShareMsgResp && mounted) {
+      if (resp.isSuccessful) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('分享成功')));
+      } else if (resp.isCancelled) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已取消分享')));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(resp.msg ?? '分享失败')));
+      }
+    }
+  }
+
+  void _showShareSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.chat_bubble_outline),
+                title: const Text('分享给 QQ 好友'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareToQQ(TencentScene.kScene_QQ);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.group_outlined),
+                title: const Text('分享到 QQ 空间'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareToQQ(TencentScene.kScene_QZone);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _shareToQQ(int scene) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Web 不支持 QQ 分享')));
+      return;
+    }
+    if (_qqAppId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('QQ AppID 未配置')));
+      return;
+    }
+    if (_tencent == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('QQ SDK 未初始化')));
+      return;
+    }
+    final installed = await _tencent!.isQQInstalled();
+    if (!installed) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('未检测到 QQ 客户端')));
+      }
+      return;
+    }
+    final video = _video;
+    if (video == null) return;
+
+    await _tencent!.shareWebpage(
+      scene: scene,
+      title: video.title,
+      summary: video.description.isNotEmpty ? video.description : null,
+      imageUri: video.thumbUrl.isNotEmpty ? Uri.parse(video.thumbUrl) : null,
+      targetUrl: video.videoUrl,
+      appName: 'MoocHub',
+    );
   }
 
   Future<void> _bootstrap() async {
@@ -181,8 +288,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (controller == null || !controller.value.isInitialized) return;
     final duration = controller.value.duration.inSeconds;
     if (duration <= 0) return;
-    final position =
-        controller.value.position.inSeconds.clamp(0, duration).toInt();
+    final position = controller.value.position.inSeconds
+        .clamp(0, duration)
+        .toInt();
     final percent = position / duration * 100;
     if (percent < 90) return;
     final ok = await _analyticsService.trackPlayComplete(
@@ -206,8 +314,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       );
       final balance = (resp.data['points_balance'] as num?)?.toInt();
       if (!mounted) return;
-      final msg =
-          balance != null ? '🎉 学习完成！当前积分：$balance' : '🎉 恭喜完成本节学习，积分已到账';
+      final msg = balance != null
+          ? '🎉 学习完成！当前积分：$balance'
+          : '🎉 恭喜完成本节学习，积分已到账';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -345,8 +454,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
                   child: Text(
                     '播放速度',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 // Chip grid: 3 per row
@@ -362,16 +470,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
                           width:
-                              (MediaQuery.of(ctx).size.width - 40 - 10 * 2) /
-                                  3,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                              (MediaQuery.of(ctx).size.width - 40 - 10 * 2) / 3,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: active
                                 ? primary.withValues(alpha: 0.12)
                                 : (isDark
-                                    ? const Color(0xFF252A38)
-                                    : const Color(0xFFF3F5F9)),
+                                      ? const Color(0xFF252A38)
+                                      : const Color(0xFFF3F5F9)),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: active ? primary : Colors.transparent,
@@ -388,9 +494,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                                   : FontWeight.normal,
                               color: active
                                   ? primary
-                                  : (isDark
-                                      ? Colors.white70
-                                      : Colors.black87),
+                                  : (isDark ? Colors.white70 : Colors.black87),
                             ),
                           ),
                         ),
@@ -435,8 +539,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               children: [
                 Center(
                   child: AspectRatio(
-                    aspectRatio:
-                        _videoController?.value.aspectRatio ?? 16 / 9,
+                    aspectRatio: _videoController?.value.aspectRatio ?? 16 / 9,
                     child: VideoPlayer(_videoController!),
                   ),
                 ),
@@ -486,8 +589,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Colors.white54, size: 48),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white54,
+              size: 48,
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loadVideo,
@@ -560,7 +666,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                       onTap: _showSpeedPicker,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black38,
                           borderRadius: BorderRadius.circular(12),
@@ -577,17 +685,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () {
-                        final video = _video;
-                        if (video == null) return;
-                        ShareSheet.show(
-                          context,
-                          title: video.title,
-                          subtitle: video.description.isNotEmpty
-                              ? video.description
-                              : null,
-                        );
-                      },
+                      onTap: _showShareSheet,
                       child: Container(
                         width: 32,
                         height: 32,
@@ -659,9 +757,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 2,
                         thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 6),
+                          enabledThumbRadius: 6,
+                        ),
                         overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 12),
+                          overlayRadius: 12,
+                        ),
                         activeTrackColor: Colors.white,
                         inactiveTrackColor: Colors.white30,
                         thumbColor: Colors.white,
@@ -671,13 +771,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                         value: currentValue,
                         min: 0,
                         max: duration.toDouble().clamp(1, double.infinity),
-                        onChangeStart: (_) => setState(
-                          () => _dragValue = currentValue,
-                        ),
+                        onChangeStart: (_) =>
+                            setState(() => _dragValue = currentValue),
                         onChanged: (v) => setState(() => _dragValue = v),
                         onChangeEnd: (v) async {
-                          await controller.seekTo(
-                              Duration(seconds: v.toInt()));
+                          await controller.seekTo(Duration(seconds: v.toInt()));
                           setState(() => _dragValue = null);
                           _saveProgress(force: true);
                           _maybeReportPlayEvent();
@@ -736,18 +834,22 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         Text(
           video.title,
           style: const TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w700, height: 1.4),
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 10),
 
         // Meta badges
         Row(
           children: [
-            _metaBadge(Icons.access_time_rounded,
-                _formatDuration(video.durationSec)),
-            const SizedBox(width: 12),
             _metaBadge(
-                Icons.play_lesson_rounded, '第 ${video.sortOrder} 节'),
+              Icons.access_time_rounded,
+              _formatDuration(video.durationSec),
+            ),
+            const SizedBox(width: 12),
+            _metaBadge(Icons.play_lesson_rounded, '第 ${video.sortOrder} 节'),
           ],
         ),
 
@@ -760,8 +862,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(
-                      alpha: isDark ? 0.25 : 0.05),
+                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -784,7 +885,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                     const Text(
                       '视频简介',
                       style: TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -794,9 +897,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   style: TextStyle(
                     fontSize: 14,
                     height: 1.7,
-                    color: isDark
-                        ? Colors.white70
-                        : Colors.grey.shade700,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
                   ),
                 ),
               ],
@@ -812,9 +913,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon,
-            size: 14,
-            color: isDark ? Colors.white54 : Colors.grey.shade500),
+        Icon(
+          icon,
+          size: 14,
+          color: isDark ? Colors.white54 : Colors.grey.shade500,
+        ),
         const SizedBox(width: 4),
         Text(
           label,
@@ -842,8 +945,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6F8),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1115)
+          : const Color(0xFFF5F6F8),
       body: Column(
         children: [
           _buildPlayerArea(),
@@ -875,8 +979,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                             ? const Center(child: Text('暂无评论'))
                             : CommentsPanel(
                                 targetType: 'video',
-                                targetId:
-                                    int.tryParse(_video!.id) ?? 0,
+                                targetId: int.tryParse(_video!.id) ?? 0,
                                 embedded: true,
                                 showHeader: false,
                               ),

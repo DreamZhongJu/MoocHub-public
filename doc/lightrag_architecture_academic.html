@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LightRAG 集成架构图（论文版）</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #ffffff;
+      color: #111827;
+      font-family: "SimSun", "Songti SC", "Times New Roman", serif;
+    }
+
+    .page {
+      width: 1280px;
+      margin: 0 auto;
+      padding: 28px 36px 40px;
+      background: #ffffff;
+    }
+
+    .title {
+      margin: 0 0 28px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .section {
+      border: 1.5px solid #444444;
+      padding: 18px 20px 20px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .actors {
+      display: flex;
+      justify-content: center;
+      gap: 160px;
+      margin-bottom: 18px;
+    }
+
+    .actor {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .actor-circle {
+      width: 54px;
+      height: 54px;
+      border: 1.5px solid #444444;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: #ffffff;
+    }
+
+    .actor-label {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .card {
+      min-height: 82px;
+      border: 1.5px solid #444444;
+      padding: 12px 14px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      text-align: center;
+      font-size: 19px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .card p {
+      margin: 0;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #374151;
+    }
+
+    .arrow {
+      width: 58px;
+      height: 2px;
+      background: #444444;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -4px;
+      border-left: 8px solid #444444;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    .triple {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .note {
+      margin-top: 18px;
+      border: 1px solid #666666;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #374151;
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1 class="title">图 3-X  LightRAG 集成架构图</h1>
+
+    <div class="actors">
+      <div class="actor">
+        <div class="actor-circle">学</div>
+        <div class="actor-label">学生用户</div>
+      </div>
+      <div class="actor">
+        <div class="actor-circle">师</div>
+        <div class="actor-label">教师 / 管理员</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <h2 class="section-title">（1）实时问答链路</h2>
+      <div class="flow">
+        <div class="card">
+          <h3>前端页面</h3>
+          <p>课程详情页、文章详情页发起问答、总结与练习题请求</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>Go 业务服务</h3>
+          <p>完成权限校验、参数解析与课程 / 文章范围约束</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>Python 微服务</h3>
+          <p>封装 LightRAG Query 能力并执行检索增强生成</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>结果返回</h3>
+          <p>返回回答内容、相关实体及引用来源</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">（2）知识同步链路</h2>
+      <div class="flow">
+        <div class="card">
+          <h3>知识源</h3>
+          <p>课程文本、视频转录文本、文章正文内容</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>Go 业务服务</h3>
+          <p>在视频上传、文章发布等场景下触发知识同步事件</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>RabbitMQ</h3>
+          <p>承担异步消息投递，实现知识同步与主业务链路解耦</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="card">
+          <h3>Python 微服务</h3>
+          <p>消费同步事件，执行 Ingest 任务并调用 LightRAG 入库</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">（3）LightRAG 核心处理</h2>
+      <div class="triple">
+        <div class="card">
+          <h3>文档入库</h3>
+          <p>对课程与文章文本进行统一组织与知识源抽取</p>
+        </div>
+        <div class="card">
+          <h3>索引构建</h3>
+          <p>完成实体关系抽取与图检索索引构建</p>
+        </div>
+        <div class="card">
+          <h3>检索增强生成</h3>
+          <p>支持问答、课程总结、要点提炼与练习题生成</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="note">
+      该架构采用 Go 业务服务与 Python 智能微服务解耦的集成方式，通过 RabbitMQ 实现知识同步异步化，
+      通过 HTTP 实现实时查询调用，并结合课程或文章的业务范围约束，使 LightRAG 智能辅助能力能够围绕当前学习内容开展定向知识服务。
+    </div>
+  </div>
+</body>
+</html>

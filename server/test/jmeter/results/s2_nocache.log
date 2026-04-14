@@ -1,0 +1,894 @@
+2026-04-08 22:00:52,862 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2026-04-08 22:00:52,875 INFO o.a.j.JMeter: Loading user properties from: D:\Document\apache-jmeter-5.6.3\apache-jmeter-5.6.3\bin\user.properties
+2026-04-08 22:00:52,875 INFO o.a.j.JMeter: Loading system properties from: D:\Document\apache-jmeter-5.6.3\apache-jmeter-5.6.3\bin\system.properties
+2026-04-08 22:00:52,881 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2026-04-08 22:00:52,882 INFO o.a.j.JMeter: Version 5.6.3
+2026-04-08 22:00:52,882 INFO o.a.j.JMeter: java.version=1.8.0_202
+2026-04-08 22:00:52,882 INFO o.a.j.JMeter: java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+2026-04-08 22:00:52,882 INFO o.a.j.JMeter: os.name=Windows 10
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: os.arch=amd64
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: os.version=10.0
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: file.encoding=GBK
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: java.awt.headless=true
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: Max memory     =1073741824
+2026-04-08 22:00:52,883 INFO o.a.j.JMeter: Available Processors =16
+2026-04-08 22:00:52,887 INFO o.a.j.JMeter: Default Locale=English (EN)
+2026-04-08 22:00:52,887 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2026-04-08 22:00:52,887 INFO o.a.j.JMeter: JMeterHome=D:\Document\apache-jmeter-5.6.3\apache-jmeter-5.6.3
+2026-04-08 22:00:52,887 INFO o.a.j.JMeter: user.dir  =D:\Document\MyCodeProject\MoocHub
+2026-04-08 22:00:52,888 INFO o.a.j.JMeter: PWD       =D:\Document\MyCodeProject\MoocHub
+2026-04-08 22:00:52,889 INFO o.a.j.JMeter: IP: 192.168.10.2 Name: DESKTOP-RTLSVD5 FullName: DESKTOP-RTLSVD5
+2026-04-08 22:00:52,906 INFO o.a.j.s.FileServer: Default base='D:\Document\MyCodeProject\MoocHub'
+2026-04-08 22:00:52,908 INFO o.a.j.s.FileServer: Set new base='D:\Document\MyCodeProject\MoocHub\server\test\jmeter'
+2026-04-08 22:00:53,043 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2026-04-08 22:00:53,060 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2026-04-08 22:00:53,065 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2026-04-08 22:00:53,073 INFO o.a.j.s.SaveService: Loading file: server\test\jmeter\scenario2_cache_miss.jmx
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2026-04-08 22:00:53,180 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2026-04-08 22:00:53,536 INFO o.a.j.JMeter: Creating summariser <summary>
+2026-04-08 22:00:53,545 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2026-04-08 22:00:53,545 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-04-08 22:00:53,546 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-04-08 22:00:53,550 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2026-04-08 22:00:53,550 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2026-04-08 22:00:54,066 INFO o.a.j.JMeter: Running test (1775656854066)
+2026-04-08 22:00:54,142 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : 清空缓存 - 阶梯1前
+2026-04-08 22:00:54,142 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group 清空缓存 - 阶梯1前.
+2026-04-08 22:00:54,142 INFO o.a.j.e.StandardJMeterEngine: Test will stop on error
+2026-04-08 22:00:54,143 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=1 ramp-up=1 delayedStart=false
+2026-04-08 22:00:54,150 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2026-04-08 22:00:54,150 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 清空缓存 - 阶梯1前 to finish before starting next group
+2026-04-08 22:00:54,153 INFO o.a.j.t.JMeterThread: Thread started: 清空缓存 - 阶梯1前 1-1
+2026-04-08 22:00:54,157 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
+2026-04-08 22:00:54,158 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
+2026-04-08 22:00:54,158 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
+2026-04-08 22:00:54,158 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
+2026-04-08 22:00:55,543 INFO o.a.j.p.j.s.J.清空 courses:list:* 缓存键: Redis cache cleared: 
+2026-04-08 22:00:55,566 INFO o.a.j.t.JMeterThread: Thread is done: 清空缓存 - 阶梯1前 1-1
+2026-04-08 22:00:55,566 INFO o.a.j.t.JMeterThread: Thread finished: 清空缓存 - 阶梯1前 1-1
+2026-04-08 22:00:55,566 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 2 : 阶梯1 - 10并发用户（冷缓存）
+2026-04-08 22:00:55,566 INFO o.a.j.e.StandardJMeterEngine: Starting 10 threads for group 阶梯1 - 10并发用户（冷缓存）.
+2026-04-08 22:00:55,566 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:00:55,567 INFO o.a.j.t.ThreadGroup: Starting thread group... number=2 threads=10 ramp-up=3 delayedStart=false
+2026-04-08 22:00:55,568 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-1
+2026-04-08 22:00:55,576 INFO o.a.j.t.ThreadGroup: Started thread group number 2
+2026-04-08 22:00:55,577 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 阶梯1 - 10并发用户（冷缓存） to finish before starting next group
+2026-04-08 22:00:55,692 INFO o.a.j.p.h.s.HTTPHCAbstractImpl: Local host = DESKTOP-RTLSVD5
+2026-04-08 22:00:55,700 INFO o.a.j.p.h.s.HTTPHC4Impl: HTTP request retry count = 0
+2026-04-08 22:00:55,873 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-2
+2026-04-08 22:00:56,171 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-3
+2026-04-08 22:00:56,472 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-4
+2026-04-08 22:00:56,772 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-5
+2026-04-08 22:00:57,072 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-6
+2026-04-08 22:00:57,370 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-7
+2026-04-08 22:00:57,674 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-8
+2026-04-08 22:00:57,974 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-9
+2026-04-08 22:00:58,275 INFO o.a.j.t.JMeterThread: Thread started: 阶梯1 - 10并发用户（冷缓存） 2-10
+2026-04-08 22:01:00,029 INFO o.a.j.r.Summariser: summary +    281 in 00:00:06 =   47.1/s Avg:    10 Min:     3 Max:  1402 Err:     0 (0.00%) Active: 10 Started: 11 Finished: 1
+2026-04-08 22:01:30,044 INFO o.a.j.r.Summariser: summary +   2753 in 00:00:30 =   91.7/s Avg:     2 Min:     1 Max:    11 Err:  2454 (89.14%) Active: 10 Started: 11 Finished: 1
+2026-04-08 22:01:30,045 INFO o.a.j.r.Summariser: summary =   3034 in 00:00:36 =   84.3/s Avg:     2 Min:     1 Max:  1402 Err:  2454 (80.88%)
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-4
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-3
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-2
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-6
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-8
+2026-04-08 22:01:55,489 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-5
+2026-04-08 22:01:55,505 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-7
+2026-04-08 22:01:55,520 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-9
+2026-04-08 22:01:55,535 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-10
+2026-04-08 22:01:55,535 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯1 - 10并发用户（冷缓存） 2-1
+2026-04-08 22:01:55,536 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 3 : 清空缓存 - 阶梯2前
+2026-04-08 22:01:55,536 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group 清空缓存 - 阶梯2前.
+2026-04-08 22:01:55,536 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:01:55,537 INFO o.a.j.t.ThreadGroup: Starting thread group... number=3 threads=1 ramp-up=1 delayedStart=false
+2026-04-08 22:01:55,537 INFO o.a.j.t.ThreadGroup: Started thread group number 3
+2026-04-08 22:01:55,537 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 清空缓存 - 阶梯2前 to finish before starting next group
+2026-04-08 22:01:55,538 INFO o.a.j.t.JMeterThread: Thread started: 清空缓存 - 阶梯2前 3-1
+2026-04-08 22:01:55,902 INFO o.a.j.p.j.s.J.清空 courses:list:* 缓存键: Cache cleared for stage 2: 
+2026-04-08 22:01:55,903 INFO o.a.j.t.JMeterThread: Thread is done: 清空缓存 - 阶梯2前 3-1
+2026-04-08 22:01:55,903 INFO o.a.j.t.JMeterThread: Thread finished: 清空缓存 - 阶梯2前 3-1
+2026-04-08 22:01:55,903 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 4 : 阶梯2 - 50并发用户（冷缓存）
+2026-04-08 22:01:55,903 INFO o.a.j.e.StandardJMeterEngine: Starting 50 threads for group 阶梯2 - 50并发用户（冷缓存）.
+2026-04-08 22:01:55,904 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:01:55,904 INFO o.a.j.t.ThreadGroup: Starting thread group... number=4 threads=50 ramp-up=10 delayedStart=false
+2026-04-08 22:01:55,907 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-1
+2026-04-08 22:01:55,929 INFO o.a.j.t.ThreadGroup: Started thread group number 4
+2026-04-08 22:01:55,929 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 阶梯2 - 50并发用户（冷缓存） to finish before starting next group
+2026-04-08 22:01:56,111 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-2
+2026-04-08 22:01:56,309 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-3
+2026-04-08 22:01:56,509 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-4
+2026-04-08 22:01:56,707 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-5
+2026-04-08 22:01:56,910 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-6
+2026-04-08 22:01:57,106 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-7
+2026-04-08 22:01:57,306 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-8
+2026-04-08 22:01:57,504 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-9
+2026-04-08 22:01:57,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-10
+2026-04-08 22:01:57,905 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-11
+2026-04-08 22:01:58,104 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-12
+2026-04-08 22:01:58,305 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-13
+2026-04-08 22:01:58,505 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-14
+2026-04-08 22:01:58,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-15
+2026-04-08 22:01:58,905 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-16
+2026-04-08 22:01:59,105 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-17
+2026-04-08 22:01:59,306 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-18
+2026-04-08 22:01:59,506 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-19
+2026-04-08 22:01:59,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-20
+2026-04-08 22:01:59,905 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-21
+2026-04-08 22:02:00,025 INFO o.a.j.r.Summariser: summary +   2770 in 00:00:30 =   92.4/s Avg:     1 Min:     0 Max:   365 Err:  2768 (99.93%) Active: 21 Started: 33 Finished: 12
+2026-04-08 22:02:00,025 INFO o.a.j.r.Summariser: summary =   5804 in 00:01:06 =   88.0/s Avg:     2 Min:     0 Max:  1402 Err:  5222 (89.97%)
+2026-04-08 22:02:00,105 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-22
+2026-04-08 22:02:00,305 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-23
+2026-04-08 22:02:00,504 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-24
+2026-04-08 22:02:00,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-25
+2026-04-08 22:02:00,904 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-26
+2026-04-08 22:02:01,104 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-27
+2026-04-08 22:02:01,305 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-28
+2026-04-08 22:02:01,505 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-29
+2026-04-08 22:02:01,704 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-30
+2026-04-08 22:02:01,905 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-31
+2026-04-08 22:02:02,109 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-32
+2026-04-08 22:02:02,305 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-33
+2026-04-08 22:02:02,505 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-34
+2026-04-08 22:02:02,707 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-35
+2026-04-08 22:02:02,906 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-36
+2026-04-08 22:02:03,105 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-37
+2026-04-08 22:02:03,305 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-38
+2026-04-08 22:02:03,506 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-39
+2026-04-08 22:02:03,706 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-40
+2026-04-08 22:02:03,906 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-41
+2026-04-08 22:02:04,106 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-42
+2026-04-08 22:02:04,306 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-43
+2026-04-08 22:02:04,506 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-44
+2026-04-08 22:02:04,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-45
+2026-04-08 22:02:04,906 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-46
+2026-04-08 22:02:05,107 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-47
+2026-04-08 22:02:05,306 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-48
+2026-04-08 22:02:05,506 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-49
+2026-04-08 22:02:05,705 INFO o.a.j.t.JMeterThread: Thread started: 阶梯2 - 50并发用户（冷缓存） 4-50
+2026-04-08 22:02:30,009 INFO o.a.j.r.Summariser: summary +  13103 in 00:00:30 =  437.0/s Avg:     2 Min:     0 Max:    25 Err: 12804 (97.72%) Active: 50 Started: 62 Finished: 12
+2026-04-08 22:02:30,009 INFO o.a.j.r.Summariser: summary =  18907 in 00:01:36 =  197.1/s Avg:     2 Min:     0 Max:  1402 Err: 18026 (95.34%)
+2026-04-08 22:02:55,814 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-1
+2026-04-08 22:02:55,828 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-47
+2026-04-08 22:02:55,828 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-9
+2026-04-08 22:02:55,844 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-45
+2026-04-08 22:02:55,844 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-46
+2026-04-08 22:02:55,860 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-24
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-4
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-23
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-39
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-3
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-25
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-6
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-44
+2026-04-08 22:02:55,862 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-43
+2026-04-08 22:02:55,862 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-22
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-26
+2026-04-08 22:02:55,862 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-2
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-41
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-42
+2026-04-08 22:02:55,861 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-40
+2026-04-08 22:02:55,862 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-5
+2026-04-08 22:02:55,874 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-38
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-21
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-37
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-18
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-34
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-17
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-35
+2026-04-08 22:02:55,890 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-19
+2026-04-08 22:02:55,905 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-32
+2026-04-08 22:02:55,905 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-36
+2026-04-08 22:02:55,905 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-33
+2026-04-08 22:02:55,905 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-20
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-50
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-31
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-27
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-11
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-29
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-8
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-13
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-30
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-12
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-13
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-28
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-16
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-14
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-30
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-28
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-16
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-14
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-10
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-12
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-10
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-8
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-29
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-15
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-11
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-27
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-7
+2026-04-08 22:02:55,922 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-15
+2026-04-08 22:02:55,923 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-7
+2026-04-08 22:02:55,937 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-49
+2026-04-08 22:02:55,937 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯2 - 50并发用户（冷缓存） 4-48
+2026-04-08 22:02:55,937 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-48
+2026-04-08 22:02:55,937 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯2 - 50并发用户（冷缓存） 4-49
+2026-04-08 22:02:55,937 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 5 : 清空缓存 - 阶梯3前
+2026-04-08 22:02:55,937 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group 清空缓存 - 阶梯3前.
+2026-04-08 22:02:55,937 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:02:55,938 INFO o.a.j.t.ThreadGroup: Starting thread group... number=5 threads=1 ramp-up=1 delayedStart=false
+2026-04-08 22:02:55,938 INFO o.a.j.t.ThreadGroup: Started thread group number 5
+2026-04-08 22:02:55,938 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 清空缓存 - 阶梯3前 to finish before starting next group
+2026-04-08 22:02:55,938 INFO o.a.j.t.JMeterThread: Thread started: 清空缓存 - 阶梯3前 5-1
+2026-04-08 22:02:56,287 INFO o.a.j.p.j.s.J.清空 courses:list:* 缓存键: Cache cleared for stage 3: 
+2026-04-08 22:02:56,287 INFO o.a.j.t.JMeterThread: Thread is done: 清空缓存 - 阶梯3前 5-1
+2026-04-08 22:02:56,288 INFO o.a.j.t.JMeterThread: Thread finished: 清空缓存 - 阶梯3前 5-1
+2026-04-08 22:02:56,288 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 6 : 阶梯3 - 100并发用户（冷缓存）
+2026-04-08 22:02:56,288 INFO o.a.j.e.StandardJMeterEngine: Starting 100 threads for group 阶梯3 - 100并发用户（冷缓存）.
+2026-04-08 22:02:56,288 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:02:56,288 INFO o.a.j.t.ThreadGroup: Starting thread group... number=6 threads=100 ramp-up=15 delayedStart=false
+2026-04-08 22:02:56,289 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-1
+2026-04-08 22:02:56,308 INFO o.a.j.t.ThreadGroup: Started thread group number 6
+2026-04-08 22:02:56,308 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 阶梯3 - 100并发用户（冷缓存） to finish before starting next group
+2026-04-08 22:02:56,446 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-2
+2026-04-08 22:02:56,600 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-3
+2026-04-08 22:02:56,739 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-4
+2026-04-08 22:02:56,888 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-5
+2026-04-08 22:02:57,039 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-6
+2026-04-08 22:02:57,190 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-7
+2026-04-08 22:02:57,340 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-8
+2026-04-08 22:02:57,489 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-9
+2026-04-08 22:02:57,639 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-10
+2026-04-08 22:02:57,789 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-11
+2026-04-08 22:02:57,938 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-12
+2026-04-08 22:02:58,089 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-13
+2026-04-08 22:02:58,239 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-14
+2026-04-08 22:02:58,389 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-15
+2026-04-08 22:02:58,538 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-16
+2026-04-08 22:02:58,688 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-17
+2026-04-08 22:02:58,839 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-18
+2026-04-08 22:02:58,990 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-19
+2026-04-08 22:02:59,140 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-20
+2026-04-08 22:02:59,290 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-21
+2026-04-08 22:02:59,439 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-22
+2026-04-08 22:02:59,588 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-23
+2026-04-08 22:02:59,739 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-24
+2026-04-08 22:02:59,888 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-25
+2026-04-08 22:03:00,016 INFO o.a.j.r.Summariser: summary +  12402 in 00:00:30 =  413.3/s Avg:     2 Min:     0 Max:   349 Err: 12400 (99.98%) Active: 25 Started: 88 Finished: 63
+2026-04-08 22:03:00,016 INFO o.a.j.r.Summariser: summary =  31309 in 00:02:06 =  248.6/s Avg:     2 Min:     0 Max:  1402 Err: 30426 (97.18%)
+2026-04-08 22:03:00,038 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-26
+2026-04-08 22:03:00,189 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-27
+2026-04-08 22:03:00,340 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-28
+2026-04-08 22:03:00,489 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-29
+2026-04-08 22:03:00,638 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-30
+2026-04-08 22:03:00,816 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-31
+2026-04-08 22:03:00,939 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-32
+2026-04-08 22:03:01,089 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-33
+2026-04-08 22:03:01,240 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-34
+2026-04-08 22:03:01,389 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-35
+2026-04-08 22:03:01,538 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-36
+2026-04-08 22:03:01,688 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-37
+2026-04-08 22:03:01,838 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-38
+2026-04-08 22:03:01,989 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-39
+2026-04-08 22:03:02,139 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-40
+2026-04-08 22:03:02,288 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-41
+2026-04-08 22:03:02,444 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-42
+2026-04-08 22:03:02,597 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-43
+2026-04-08 22:03:02,738 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-44
+2026-04-08 22:03:02,893 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-45
+2026-04-08 22:03:03,046 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-46
+2026-04-08 22:03:03,203 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-47
+2026-04-08 22:03:03,339 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-48
+2026-04-08 22:03:03,489 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-49
+2026-04-08 22:03:03,638 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-50
+2026-04-08 22:03:03,789 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-51
+2026-04-08 22:03:03,940 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-52
+2026-04-08 22:03:04,090 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-53
+2026-04-08 22:03:04,238 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-54
+2026-04-08 22:03:04,389 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-55
+2026-04-08 22:03:04,538 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-56
+2026-04-08 22:03:04,690 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-57
+2026-04-08 22:03:04,839 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-58
+2026-04-08 22:03:04,989 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-59
+2026-04-08 22:03:05,138 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-60
+2026-04-08 22:03:05,291 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-61
+2026-04-08 22:03:05,440 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-62
+2026-04-08 22:03:05,589 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-63
+2026-04-08 22:03:05,739 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-64
+2026-04-08 22:03:05,888 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-65
+2026-04-08 22:03:06,039 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-66
+2026-04-08 22:03:06,189 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-67
+2026-04-08 22:03:06,338 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-68
+2026-04-08 22:03:06,489 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-69
+2026-04-08 22:03:06,639 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-70
+2026-04-08 22:03:06,800 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-71
+2026-04-08 22:03:06,938 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-72
+2026-04-08 22:03:07,088 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-73
+2026-04-08 22:03:07,238 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-74
+2026-04-08 22:03:07,389 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-75
+2026-04-08 22:03:07,540 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-76
+2026-04-08 22:03:07,689 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-77
+2026-04-08 22:03:07,838 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-78
+2026-04-08 22:03:07,989 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-79
+2026-04-08 22:03:08,139 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-80
+2026-04-08 22:03:08,289 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-81
+2026-04-08 22:03:08,438 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-82
+2026-04-08 22:03:08,588 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-83
+2026-04-08 22:03:08,738 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-84
+2026-04-08 22:03:08,888 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-85
+2026-04-08 22:03:09,038 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-86
+2026-04-08 22:03:09,190 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-87
+2026-04-08 22:03:09,339 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-88
+2026-04-08 22:03:09,488 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-89
+2026-04-08 22:03:09,638 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-90
+2026-04-08 22:03:09,788 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-91
+2026-04-08 22:03:09,940 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-92
+2026-04-08 22:03:10,089 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-93
+2026-04-08 22:03:10,238 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-94
+2026-04-08 22:03:10,389 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-95
+2026-04-08 22:03:10,540 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-96
+2026-04-08 22:03:10,689 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-97
+2026-04-08 22:03:10,839 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-98
+2026-04-08 22:03:10,989 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-99
+2026-04-08 22:03:11,140 INFO o.a.j.t.JMeterThread: Thread started: 阶梯3 - 100并发用户（冷缓存） 6-100
+2026-04-08 22:03:30,023 INFO o.a.j.r.Summariser: summary +  23995 in 00:00:30 =  799.7/s Avg:     2 Min:     0 Max:    66 Err: 23696 (98.75%) Active: 100 Started: 163 Finished: 63
+2026-04-08 22:03:30,023 INFO o.a.j.r.Summariser: summary =  55304 in 00:02:36 =  354.6/s Avg:     2 Min:     0 Max:  1402 Err: 54122 (97.86%)
+2026-04-08 22:03:56,195 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-26
+2026-04-08 22:03:56,195 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-20
+2026-04-08 22:03:56,195 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-6
+2026-04-08 22:03:56,196 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-33
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-24
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-56
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-81
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-100
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-40
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-83
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-74
+2026-04-08 22:03:56,212 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-36
+2026-04-08 22:03:56,212 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-23
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-51
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-4
+2026-04-08 22:03:56,212 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-69
+2026-04-08 22:03:56,212 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-91
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-1
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-28
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-35
+2026-04-08 22:03:56,211 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-60
+2026-04-08 22:03:56,241 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-70
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-12
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-2
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-17
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-84
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-11
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-94
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-31
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-52
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-21
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-39
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-85
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-27
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-16
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-14
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-71
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-86
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-22
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-50
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-44
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-42
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-92
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-25
+2026-04-08 22:03:56,243 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-47
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-98
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-54
+2026-04-08 22:03:56,243 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-5
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-10
+2026-04-08 22:03:56,243 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-68
+2026-04-08 22:03:56,242 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-8
+2026-04-08 22:03:56,243 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-48
+2026-04-08 22:03:56,243 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-32
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-58
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-77
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-43
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-13
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-9
+2026-04-08 22:03:56,244 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-3
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-38
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-99
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-62
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-45
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-18
+2026-04-08 22:03:56,256 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-96
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-55
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-78
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-29
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-75
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-15
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-57
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-95
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-46
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-88
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-53
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-59
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-97
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-30
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-41
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-19
+2026-04-08 22:03:56,257 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-61
+2026-04-08 22:03:56,258 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-7
+2026-04-08 22:03:56,258 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-73
+2026-04-08 22:03:56,258 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-82
+2026-04-08 22:03:56,258 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-37
+2026-04-08 22:03:56,258 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-65
+2026-04-08 22:03:56,259 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-79
+2026-04-08 22:03:56,259 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-34
+2026-04-08 22:03:56,259 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-80
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-87
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-72
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-93
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-89
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯3 - 100并发用户（冷缓存） 6-66
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯3 - 100并发用户（冷缓存） 6-64
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯3 - 100并发用户（冷缓存） 6-49
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯3 - 100并发用户（冷缓存） 6-67
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-90
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-76
+2026-04-08 22:03:56,302 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-67
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-49
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-64
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-66
+2026-04-08 22:03:56,301 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯3 - 100并发用户（冷缓存） 6-63
+2026-04-08 22:03:56,302 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯3 - 100并发用户（冷缓存） 6-63
+2026-04-08 22:03:56,302 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 7 : 清空缓存 - 阶梯4前
+2026-04-08 22:03:56,302 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group 清空缓存 - 阶梯4前.
+2026-04-08 22:03:56,302 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:03:56,302 INFO o.a.j.t.ThreadGroup: Starting thread group... number=7 threads=1 ramp-up=1 delayedStart=false
+2026-04-08 22:03:56,303 INFO o.a.j.t.ThreadGroup: Started thread group number 7
+2026-04-08 22:03:56,303 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: 清空缓存 - 阶梯4前 to finish before starting next group
+2026-04-08 22:03:56,303 INFO o.a.j.t.JMeterThread: Thread started: 清空缓存 - 阶梯4前 7-1
+2026-04-08 22:03:56,629 INFO o.a.j.p.j.s.J.清空 courses:list:* 缓存键: Cache cleared for stage 4: 
+2026-04-08 22:03:56,629 INFO o.a.j.t.JMeterThread: Thread is done: 清空缓存 - 阶梯4前 7-1
+2026-04-08 22:03:56,629 INFO o.a.j.t.JMeterThread: Thread finished: 清空缓存 - 阶梯4前 7-1
+2026-04-08 22:03:56,630 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 8 : 阶梯4 - 200并发用户（冷缓存）
+2026-04-08 22:03:56,630 INFO o.a.j.e.StandardJMeterEngine: Starting 200 threads for group 阶梯4 - 200并发用户（冷缓存）.
+2026-04-08 22:03:56,630 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-04-08 22:03:56,630 INFO o.a.j.t.ThreadGroup: Starting thread group... number=8 threads=200 ramp-up=20 delayedStart=false
+2026-04-08 22:03:56,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-1
+2026-04-08 22:03:56,667 INFO o.a.j.t.ThreadGroup: Started thread group number 8
+2026-04-08 22:03:56,667 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2026-04-08 22:03:56,744 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-2
+2026-04-08 22:03:56,836 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-3
+2026-04-08 22:03:56,944 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-4
+2026-04-08 22:03:57,030 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-5
+2026-04-08 22:03:57,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-6
+2026-04-08 22:03:57,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-7
+2026-04-08 22:03:57,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-8
+2026-04-08 22:03:57,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-9
+2026-04-08 22:03:57,530 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-10
+2026-04-08 22:03:57,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-11
+2026-04-08 22:03:57,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-12
+2026-04-08 22:03:57,830 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-13
+2026-04-08 22:03:57,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-14
+2026-04-08 22:03:58,032 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-15
+2026-04-08 22:03:58,132 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-16
+2026-04-08 22:03:58,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-17
+2026-04-08 22:03:58,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-18
+2026-04-08 22:03:58,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-19
+2026-04-08 22:03:58,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-20
+2026-04-08 22:03:58,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-21
+2026-04-08 22:03:58,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-22
+2026-04-08 22:03:58,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-23
+2026-04-08 22:03:58,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-24
+2026-04-08 22:03:59,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-25
+2026-04-08 22:03:59,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-26
+2026-04-08 22:03:59,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-27
+2026-04-08 22:03:59,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-28
+2026-04-08 22:03:59,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-29
+2026-04-08 22:03:59,532 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-30
+2026-04-08 22:03:59,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-31
+2026-04-08 22:03:59,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-32
+2026-04-08 22:03:59,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-33
+2026-04-08 22:03:59,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-34
+2026-04-08 22:04:00,030 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-35
+2026-04-08 22:04:00,039 INFO o.a.j.r.Summariser: summary +  24693 in 00:00:30 =  822.6/s Avg:     2 Min:     0 Max:   326 Err: 24691 (99.99%) Active: 35 Started: 199 Finished: 164
+2026-04-08 22:04:00,039 INFO o.a.j.r.Summariser: summary =  79997 in 00:03:06 =  430.2/s Avg:     2 Min:     0 Max:  1402 Err: 78813 (98.52%)
+2026-04-08 22:04:00,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-36
+2026-04-08 22:04:00,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-37
+2026-04-08 22:04:00,332 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-38
+2026-04-08 22:04:00,432 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-39
+2026-04-08 22:04:00,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-40
+2026-04-08 22:04:00,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-41
+2026-04-08 22:04:00,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-42
+2026-04-08 22:04:00,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-43
+2026-04-08 22:04:00,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-44
+2026-04-08 22:04:01,030 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-45
+2026-04-08 22:04:01,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-46
+2026-04-08 22:04:01,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-47
+2026-04-08 22:04:01,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-48
+2026-04-08 22:04:01,432 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-49
+2026-04-08 22:04:01,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-50
+2026-04-08 22:04:01,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-51
+2026-04-08 22:04:01,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-52
+2026-04-08 22:04:01,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-53
+2026-04-08 22:04:01,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-54
+2026-04-08 22:04:02,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-55
+2026-04-08 22:04:02,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-56
+2026-04-08 22:04:02,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-57
+2026-04-08 22:04:02,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-58
+2026-04-08 22:04:02,432 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-59
+2026-04-08 22:04:02,532 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-60
+2026-04-08 22:04:02,632 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-61
+2026-04-08 22:04:02,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-62
+2026-04-08 22:04:02,830 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-63
+2026-04-08 22:04:02,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-64
+2026-04-08 22:04:03,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-65
+2026-04-08 22:04:03,132 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-66
+2026-04-08 22:04:03,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-67
+2026-04-08 22:04:03,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-68
+2026-04-08 22:04:03,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-69
+2026-04-08 22:04:03,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-70
+2026-04-08 22:04:03,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-71
+2026-04-08 22:04:03,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-72
+2026-04-08 22:04:03,830 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-73
+2026-04-08 22:04:03,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-74
+2026-04-08 22:04:04,030 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-75
+2026-04-08 22:04:04,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-76
+2026-04-08 22:04:04,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-77
+2026-04-08 22:04:04,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-78
+2026-04-08 22:04:04,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-79
+2026-04-08 22:04:04,530 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-80
+2026-04-08 22:04:04,632 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-81
+2026-04-08 22:04:04,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-82
+2026-04-08 22:04:04,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-83
+2026-04-08 22:04:04,932 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-84
+2026-04-08 22:04:05,032 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-85
+2026-04-08 22:04:05,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-86
+2026-04-08 22:04:05,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-87
+2026-04-08 22:04:05,333 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-88
+2026-04-08 22:04:05,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-89
+2026-04-08 22:04:05,532 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-90
+2026-04-08 22:04:05,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-91
+2026-04-08 22:04:05,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-92
+2026-04-08 22:04:05,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-93
+2026-04-08 22:04:05,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-94
+2026-04-08 22:04:06,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-95
+2026-04-08 22:04:06,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-96
+2026-04-08 22:04:06,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-97
+2026-04-08 22:04:06,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-98
+2026-04-08 22:04:06,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-99
+2026-04-08 22:04:06,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-100
+2026-04-08 22:04:06,632 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-101
+2026-04-08 22:04:06,733 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-102
+2026-04-08 22:04:06,832 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-103
+2026-04-08 22:04:06,933 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-104
+2026-04-08 22:04:07,034 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-105
+2026-04-08 22:04:07,133 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-106
+2026-04-08 22:04:07,237 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-107
+2026-04-08 22:04:07,334 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-108
+2026-04-08 22:04:07,435 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-109
+2026-04-08 22:04:07,534 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-110
+2026-04-08 22:04:07,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-111
+2026-04-08 22:04:07,733 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-112
+2026-04-08 22:04:07,834 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-113
+2026-04-08 22:04:07,932 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-114
+2026-04-08 22:04:08,034 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-115
+2026-04-08 22:04:08,134 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-116
+2026-04-08 22:04:08,233 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-117
+2026-04-08 22:04:08,332 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-118
+2026-04-08 22:04:08,433 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-119
+2026-04-08 22:04:08,533 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-120
+2026-04-08 22:04:08,633 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-121
+2026-04-08 22:04:08,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-122
+2026-04-08 22:04:08,835 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-123
+2026-04-08 22:04:08,933 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-124
+2026-04-08 22:04:09,034 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-125
+2026-04-08 22:04:09,133 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-126
+2026-04-08 22:04:09,233 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-127
+2026-04-08 22:04:09,333 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-128
+2026-04-08 22:04:09,433 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-129
+2026-04-08 22:04:09,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-130
+2026-04-08 22:04:09,633 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-131
+2026-04-08 22:04:09,733 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-132
+2026-04-08 22:04:09,832 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-133
+2026-04-08 22:04:09,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-134
+2026-04-08 22:04:10,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-135
+2026-04-08 22:04:10,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-136
+2026-04-08 22:04:10,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-137
+2026-04-08 22:04:10,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-138
+2026-04-08 22:04:10,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-139
+2026-04-08 22:04:10,530 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-140
+2026-04-08 22:04:10,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-141
+2026-04-08 22:04:10,732 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-142
+2026-04-08 22:04:10,845 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-143
+2026-04-08 22:04:10,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-144
+2026-04-08 22:04:11,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-145
+2026-04-08 22:04:11,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-146
+2026-04-08 22:04:11,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-147
+2026-04-08 22:04:11,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-148
+2026-04-08 22:04:11,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-149
+2026-04-08 22:04:11,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-150
+2026-04-08 22:04:11,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-151
+2026-04-08 22:04:11,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-152
+2026-04-08 22:04:11,830 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-153
+2026-04-08 22:04:11,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-154
+2026-04-08 22:04:12,030 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-155
+2026-04-08 22:04:12,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-156
+2026-04-08 22:04:12,232 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-157
+2026-04-08 22:04:12,331 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-158
+2026-04-08 22:04:12,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-159
+2026-04-08 22:04:12,530 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-160
+2026-04-08 22:04:12,632 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-161
+2026-04-08 22:04:12,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-162
+2026-04-08 22:04:12,830 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-163
+2026-04-08 22:04:12,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-164
+2026-04-08 22:04:13,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-165
+2026-04-08 22:04:13,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-166
+2026-04-08 22:04:13,230 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-167
+2026-04-08 22:04:13,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-168
+2026-04-08 22:04:13,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-169
+2026-04-08 22:04:13,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-170
+2026-04-08 22:04:13,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-171
+2026-04-08 22:04:13,730 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-172
+2026-04-08 22:04:13,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-173
+2026-04-08 22:04:13,930 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-174
+2026-04-08 22:04:14,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-175
+2026-04-08 22:04:14,131 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-176
+2026-04-08 22:04:14,231 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-177
+2026-04-08 22:04:14,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-178
+2026-04-08 22:04:14,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-179
+2026-04-08 22:04:14,532 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-180
+2026-04-08 22:04:14,631 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-181
+2026-04-08 22:04:14,741 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-182
+2026-04-08 22:04:14,833 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-183
+2026-04-08 22:04:14,932 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-184
+2026-04-08 22:04:15,046 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-185
+2026-04-08 22:04:15,138 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-186
+2026-04-08 22:04:15,232 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-187
+2026-04-08 22:04:15,330 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-188
+2026-04-08 22:04:15,431 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-189
+2026-04-08 22:04:15,531 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-190
+2026-04-08 22:04:15,630 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-191
+2026-04-08 22:04:15,731 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-192
+2026-04-08 22:04:15,831 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-193
+2026-04-08 22:04:15,931 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-194
+2026-04-08 22:04:16,031 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-195
+2026-04-08 22:04:16,130 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-196
+2026-04-08 22:04:16,232 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-197
+2026-04-08 22:04:16,333 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-198
+2026-04-08 22:04:16,430 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-199
+2026-04-08 22:04:16,530 INFO o.a.j.t.JMeterThread: Thread started: 阶梯4 - 200并发用户（冷缓存） 8-200
+2026-04-08 22:04:30,000 INFO o.a.j.r.Summariser: summary +  43370 in 00:00:30 = 1447.5/s Avg:     3 Min:     0 Max:    35 Err: 43071 (99.31%) Active: 200 Started: 364 Finished: 164
+2026-04-08 22:04:30,000 INFO o.a.j.r.Summariser: summary = 123367 in 00:03:36 =  571.3/s Avg:     2 Min:     0 Max:  1402 Err: 121884 (98.80%)
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-38
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-10
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-44
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-21
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-4
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-25
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-36
+2026-04-08 22:04:56,538 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-3
+2026-04-08 22:04:56,539 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-51
+2026-04-08 22:04:56,540 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-17
+2026-04-08 22:04:56,540 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-46
+2026-04-08 22:04:56,540 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-32
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-71
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-24
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-65
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-53
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-26
+2026-04-08 22:04:56,542 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-23
+2026-04-08 22:04:56,543 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-1
+2026-04-08 22:04:56,543 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-9
+2026-04-08 22:04:56,543 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-59
+2026-04-08 22:04:56,543 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-76
+2026-04-08 22:04:56,545 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-33
+2026-04-08 22:04:56,545 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-90
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-126
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-75
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-35
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-73
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-64
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-20
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-27
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-88
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-104
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-109
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-56
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-77
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-60
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-128
+2026-04-08 22:04:56,553 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-48
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-84
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-116
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-37
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-97
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-96
+2026-04-08 22:04:56,554 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-12
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-107
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-94
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-28
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-89
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-100
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-69
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-29
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-91
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-121
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-13
+2026-04-08 22:04:56,555 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-133
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-200
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-163
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-162
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-79
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-180
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-99
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-143
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-135
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-40
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-30
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-112
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-68
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-70
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-49
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-63
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-185
+2026-04-08 22:04:56,570 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-158
+2026-04-08 22:04:56,569 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-41
+2026-04-08 22:04:56,570 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-153
+2026-04-08 22:04:56,570 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-2
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-181
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-74
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-131
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-43
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-8
+2026-04-08 22:04:56,585 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-118
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-155
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-54
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-156
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-58
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-85
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-31
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-172
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-147
+2026-04-08 22:04:56,586 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-130
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-47
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-22
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-106
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-136
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-57
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-157
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-144
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-111
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-167
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-184
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-6
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-150
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-146
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-18
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-34
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-198
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-145
+2026-04-08 22:04:56,587 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-124
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-39
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-16
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-11
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-108
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-52
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-160
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-110
+2026-04-08 22:04:56,600 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-7
+2026-04-08 22:04:56,615 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-176
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-174
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-15
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-127
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-93
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-115
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-78
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-154
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-134
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-5
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-190
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-19
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-197
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-168
+2026-04-08 22:04:56,616 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-45
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-166
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-67
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-81
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-42
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-178
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-61
+2026-04-08 22:04:56,631 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-50
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-182
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-14
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-187
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-137
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-117
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-105
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-192
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-151
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-66
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-177
+2026-04-08 22:04:56,632 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-14
+2026-04-08 22:04:56,646 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-102
+2026-04-08 22:04:56,646 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-175
+2026-04-08 22:04:56,646 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-125
+2026-04-08 22:04:56,646 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-62
+2026-04-08 22:04:56,646 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-55
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-80
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-87
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-55
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-80
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-62
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-87
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-122
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-120
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-101
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-101
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-191
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-183
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-119
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-86
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-72
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-98
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-194
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-95
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-141
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-173
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-132
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-98
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-72
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-86
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-138
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-82
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-123
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-92
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-83
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-169
+2026-04-08 22:04:56,647 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-95
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-83
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-82
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-103
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-171
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-165
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-103
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-92
+2026-04-08 22:04:56,648 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-152
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-148
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-195
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-189
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-148
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-159
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-188
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-159
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-139
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-186
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-139
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-113
+2026-04-08 22:04:56,662 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-113
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-170
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-170
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-179
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-142
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-179
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-193
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-149
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-140
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-161
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-199
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-149
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-140
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-164
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-114
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-164
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-114
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: 阶梯4 - 200并发用户（冷缓存） 8-129
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-161
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-129
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-196
+2026-04-08 22:04:56,663 INFO o.a.j.t.JMeterThread: Thread finished: 阶梯4 - 200并发用户（冷缓存） 8-142
+2026-04-08 22:04:56,663 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2026-04-08 22:04:56,669 INFO o.a.j.r.Summariser: summary +  48895 in 00:00:27 = 1833.5/s Avg:     3 Min:     1 Max:    19 Err: 48895 (100.00%) Active: 0 Started: 364 Finished: 364
+2026-04-08 22:04:56,669 INFO o.a.j.r.Summariser: summary = 172262 in 00:04:03 =  710.1/s Avg:     2 Min:     0 Max:  1402 Err: 170779 (99.14%)

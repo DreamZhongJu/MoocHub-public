@@ -1,0 +1,1604 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+
+  <hashTree>
+
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="场景三：混合读写（70%进度上报 + 30%课程详情查询）" enabled="true">
+
+      <stringProp name="TestPlan.comments">阶梯并发：50→100→200→500，每阶梯持续60秒。
+70%线程执行POST /api/v1/progress，30%线程执行GET /api/v1/courses/:id。
+每线程循环读取data/users.csv与data/videos.csv，避免单用户限流干扰。</stringProp>
+
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
+
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+
+        <collectionProp name="Arguments.arguments">
+
+          <elementProp name="HOST" elementType="Argument">
+
+            <stringProp name="Argument.name">HOST</stringProp>
+
+            <stringProp name="Argument.value">127.0.0.1</stringProp>
+
+            <stringProp name="Argument.metadata">=</stringProp>
+
+          </elementProp>
+
+          <elementProp name="PORT" elementType="Argument">
+
+            <stringProp name="Argument.name">PORT</stringProp>
+
+            <stringProp name="Argument.value">3000</stringProp>
+
+            <stringProp name="Argument.metadata">=</stringProp>
+
+          </elementProp>
+
+        </collectionProp>
+
+      </elementProp>
+
+    </TestPlan>
+
+    <hashTree>
+
+
+
+      
+
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP璇锋眰榛樿鍊?" enabled="true">
+
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+          <collectionProp name="Arguments.arguments" />
+
+        </elementProp>
+
+        <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+
+        <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+
+        <stringProp name="HTTPSampler.protocol">http</stringProp>
+
+        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+
+        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
+
+        <stringProp name="HTTPSampler.response_timeout">30000</stringProp>
+
+      </ConfigTestElement>
+
+      <hashTree />
+
+
+
+      
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="闃舵1 - 50骞跺彂锛堟贩鍚堣鍐欙級" enabled="true">
+
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+
+          <intProp name="LoopController.loops">-1</intProp>
+
+        </elementProp>
+
+        <stringProp name="ThreadGroup.num_threads">50</stringProp>
+
+        <stringProp name="ThreadGroup.ramp_time">10</stringProp>
+
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+
+      </ThreadGroup>
+
+      <hashTree>
+
+        
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="鐢ㄦ埛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/users.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">username,password</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+
+
+        
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="瑙嗛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/videos.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">video_id,course_id</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+
+
+        
+
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="棣栨鐧诲綍锛堟瘡绾跨▼浠呬竴娆★級" enabled="true" />
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/auth/login" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments">
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">username</stringProp>
+
+                  <stringProp name="Argument.value">${username}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">password</stringProp>
+
+                  <stringProp name="Argument.value">${password}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+            <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="鎻愬彇JWT Token" enabled="true">
+              <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+              <stringProp name="RegexExtractor.refname">token</stringProp>
+              <stringProp name="RegexExtractor.regex">"token":"([^"]+)"</stringProp>
+              <stringProp name="RegexExtractor.template">$1$</stringProp>
+              <stringProp name="RegexExtractor.default">TOKEN_NOT_FOUND</stringProp>
+              <stringProp name="RegexExtractor.match_number">1</stringProp>
+            </RegexExtractor>
+
+            <hashTree />
+
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="鏂█-鐧诲綍鎴愬姛" enabled="true">
+
+              <collectionProp name="Asserion.test_strings">
+
+                <stringProp name="49586">200</stringProp>
+
+              </collectionProp>
+
+              <stringProp name="Assertion.custom_message">鐧诲綍澶辫触锛岃纭娴嬭瘯鐢ㄦ埛宸插垱寤猴紙杩愯 create_test_users.sh锛</stringProp>
+
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+
+              <boolProp name="Assertion.assume_success">false</boolProp>
+
+              <intProp name="Assertion.test_type">8</intProp>
+
+            </ResponseAssertion>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+
+
+        
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="70% - 杩涘害涓婃姤" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>70.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/progress锛堣繘搴︿笂鎶ワ級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">video_id</stringProp><stringProp name="Argument.value">${video_id}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">last_position_sec</stringProp><stringProp name="Argument.value">${__Random(10,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">progress_percent</stringProp><stringProp name="Argument.value">${__Random(10,95)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp></collectionProp></elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/progress</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON+JWT" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Authorization</stringProp>
+
+                  <stringProp name="Header.value">Bearer ${token}</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="鏂█-2xx鎴?29" enabled="true">
+
+              <collectionProp name="Asserion.test_strings">
+
+                <stringProp name="49586">^(2\d\d|429)$</stringProp>
+
+              </collectionProp>
+
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+
+              <boolProp name="Assertion.assume_success">false</boolProp>
+
+              <intProp name="Assertion.test_type">2</intProp>
+
+            </ResponseAssertion>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+
+
+        
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="30% - 璇剧▼璇︽儏鏌ヨ" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>30.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/courses/:id锛堣绋嬭鎯咃級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments" />
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/courses/${course_id}</stringProp>
+
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="鏂█-HTTP200" enabled="true">
+
+              <collectionProp name="Asserion.test_strings">
+
+                <stringProp name="49586">200</stringProp>
+
+              </collectionProp>
+
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+
+              <boolProp name="Assertion.assume_success">false</boolProp>
+
+              <intProp name="Assertion.test_type">8</intProp>
+
+            </ResponseAssertion>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+
+
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="鎬濊€冩椂闂?100ms" enabled="true">
+
+          <stringProp name="ConstantTimer.delay">100</stringProp>
+
+        </ConstantTimer>
+
+        <hashTree />
+
+        <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="鍐欏叆缁撴灉-50骞跺彂娣峰悎" enabled="true">
+
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+
+          <objProp>
+
+            <name>saveConfig</name>
+
+            <value class="SampleSaveConfiguration">
+
+              <time>true</time><latency>true</latency><timestamp>true</timestamp>
+
+              <success>true</success><label>true</label><code>true</code>
+
+              <message>false</message><threadName>false</threadName>
+
+              <dataType>false</dataType><encoding>false</encoding>
+
+              <assertions>true</assertions><subresults>false</subresults>
+
+              <responseData>false</responseData><samplerData>false</samplerData>
+
+              <xml>false</xml><fieldNames>true</fieldNames>
+
+              <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+
+              <responseDataOnError>false</responseDataOnError>
+
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+
+              <bytes>true</bytes><sentBytes>true</sentBytes>
+
+              <url>true</url><threadCounts>true</threadCounts>
+
+              <idleTime>true</idleTime><connectTime>true</connectTime>
+
+            </value>
+
+          </objProp>
+
+          <stringProp name="filename">results/s3_50users.csv</stringProp>
+
+        </ResultCollector>
+
+        <hashTree />
+
+      </hashTree>
+
+
+
+      
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="闃舵2 - 100骞跺彂锛堟贩鍚堣鍐欙級" enabled="true">
+
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+
+          <intProp name="LoopController.loops">-1</intProp>
+
+        </elementProp>
+
+        <stringProp name="ThreadGroup.num_threads">100</stringProp>
+
+        <stringProp name="ThreadGroup.ramp_time">15</stringProp>
+
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+
+      </ThreadGroup>
+
+      <hashTree>
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="鐢ㄦ埛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/users.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">username,password</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="瑙嗛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/videos.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">video_id,course_id</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="棣栨鐧诲綍锛堟瘡绾跨▼浠呬竴娆★級" enabled="true" />
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/auth/login" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments">
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">username</stringProp>
+
+                  <stringProp name="Argument.value">${username}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">password</stringProp>
+
+                  <stringProp name="Argument.value">${password}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+            <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="鎻愬彇JWT Token" enabled="true">
+              <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+              <stringProp name="RegexExtractor.refname">token</stringProp>
+              <stringProp name="RegexExtractor.regex">"token":"([^"]+)"</stringProp>
+              <stringProp name="RegexExtractor.template">$1$</stringProp>
+              <stringProp name="RegexExtractor.default">TOKEN_NOT_FOUND</stringProp>
+              <stringProp name="RegexExtractor.match_number">1</stringProp>
+            </RegexExtractor>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="70% - 杩涘害涓婃姤" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>70.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/progress锛堣繘搴︿笂鎶ワ級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">video_id</stringProp><stringProp name="Argument.value">${video_id}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">last_position_sec</stringProp><stringProp name="Argument.value">${__Random(10,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">progress_percent</stringProp><stringProp name="Argument.value">${__Random(10,95)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp></collectionProp></elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/progress</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON+JWT" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Authorization</stringProp>
+
+                  <stringProp name="Header.value">Bearer ${token}</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="30% - 璇剧▼璇︽儏鏌ヨ" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>30.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/courses/:id锛堣绋嬭鎯咃級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments" />
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/courses/${course_id}</stringProp>
+
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="鏂█-HTTP200" enabled="true">
+
+              <collectionProp name="Asserion.test_strings">
+
+                <stringProp name="49586">200</stringProp>
+
+              </collectionProp>
+
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+
+              <boolProp name="Assertion.assume_success">false</boolProp>
+
+              <intProp name="Assertion.test_type">8</intProp>
+
+            </ResponseAssertion>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="鎬濊€冩椂闂?100ms" enabled="true">
+
+          <stringProp name="ConstantTimer.delay">100</stringProp>
+
+        </ConstantTimer>
+
+        <hashTree />
+
+        <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="鍐欏叆缁撴灉-100骞跺彂娣峰悎" enabled="true">
+
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+
+          <objProp>
+
+            <name>saveConfig</name>
+
+            <value class="SampleSaveConfiguration">
+
+              <time>true</time><latency>true</latency><timestamp>true</timestamp>
+
+              <success>true</success><label>true</label><code>true</code>
+
+              <message>false</message><threadName>false</threadName>
+
+              <dataType>false</dataType><encoding>false</encoding>
+
+              <assertions>true</assertions><subresults>false</subresults>
+
+              <responseData>false</responseData><samplerData>false</samplerData>
+
+              <xml>false</xml><fieldNames>true</fieldNames>
+
+              <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+
+              <responseDataOnError>false</responseDataOnError>
+
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+
+              <bytes>true</bytes><sentBytes>true</sentBytes>
+
+              <url>true</url><threadCounts>true</threadCounts>
+
+              <idleTime>true</idleTime><connectTime>true</connectTime>
+
+            </value>
+
+          </objProp>
+
+          <stringProp name="filename">results/s3_100users.csv</stringProp>
+
+        </ResultCollector>
+
+        <hashTree />
+
+      </hashTree>
+
+
+
+      
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="闃舵3 - 200骞跺彂锛堟贩鍚堣鍐欙級" enabled="true">
+
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+
+          <intProp name="LoopController.loops">-1</intProp>
+
+        </elementProp>
+
+        <stringProp name="ThreadGroup.num_threads">200</stringProp>
+
+        <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+
+      </ThreadGroup>
+
+      <hashTree>
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="鐢ㄦ埛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/users.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">username,password</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="瑙嗛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/videos.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">video_id,course_id</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="棣栨鐧诲綍锛堟瘡绾跨▼浠呬竴娆★級" enabled="true" />
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/auth/login" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments">
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">username</stringProp>
+
+                  <stringProp name="Argument.value">${username}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">password</stringProp>
+
+                  <stringProp name="Argument.value">${password}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+            <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="鎻愬彇JWT Token" enabled="true">
+              <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+              <stringProp name="RegexExtractor.refname">token</stringProp>
+              <stringProp name="RegexExtractor.regex">"token":"([^"]+)"</stringProp>
+              <stringProp name="RegexExtractor.template">$1$</stringProp>
+              <stringProp name="RegexExtractor.default">TOKEN_NOT_FOUND</stringProp>
+              <stringProp name="RegexExtractor.match_number">1</stringProp>
+            </RegexExtractor>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="70% - 杩涘害涓婃姤" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>70.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/progress锛堣繘搴︿笂鎶ワ級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">video_id</stringProp><stringProp name="Argument.value">${video_id}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">last_position_sec</stringProp><stringProp name="Argument.value">${__Random(10,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">progress_percent</stringProp><stringProp name="Argument.value">${__Random(10,95)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp></collectionProp></elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/progress</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON+JWT" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Authorization</stringProp>
+
+                  <stringProp name="Header.value">Bearer ${token}</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="30% - 璇剧▼璇︽儏鏌ヨ" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>30.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/courses/:id锛堣绋嬭鎯咃級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments" />
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/courses/${course_id}</stringProp>
+
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree />
+
+        </hashTree>
+
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="鎬濊€冩椂闂?100ms" enabled="true">
+
+          <stringProp name="ConstantTimer.delay">100</stringProp>
+
+        </ConstantTimer>
+
+        <hashTree />
+
+        <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="鍐欏叆缁撴灉-200骞跺彂娣峰悎" enabled="true">
+
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+
+          <objProp>
+
+            <name>saveConfig</name>
+
+            <value class="SampleSaveConfiguration">
+
+              <time>true</time><latency>true</latency><timestamp>true</timestamp>
+
+              <success>true</success><label>true</label><code>true</code>
+
+              <message>false</message><threadName>false</threadName>
+
+              <dataType>false</dataType><encoding>false</encoding>
+
+              <assertions>true</assertions><subresults>false</subresults>
+
+              <responseData>false</responseData><samplerData>false</samplerData>
+
+              <xml>false</xml><fieldNames>true</fieldNames>
+
+              <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+
+              <responseDataOnError>false</responseDataOnError>
+
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+
+              <bytes>true</bytes><sentBytes>true</sentBytes>
+
+              <url>true</url><threadCounts>true</threadCounts>
+
+              <idleTime>true</idleTime><connectTime>true</connectTime>
+
+            </value>
+
+          </objProp>
+
+          <stringProp name="filename">results/s3_200users.csv</stringProp>
+
+        </ResultCollector>
+
+        <hashTree />
+
+      </hashTree>
+
+
+
+      
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="闃舵4 - 500骞跺彂锛堟贩鍚堣鍐欙級" enabled="true">
+
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+
+          <intProp name="LoopController.loops">-1</intProp>
+
+        </elementProp>
+
+        <stringProp name="ThreadGroup.num_threads">500</stringProp>
+
+        <stringProp name="ThreadGroup.ramp_time">30</stringProp>
+
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+
+      </ThreadGroup>
+
+      <hashTree>
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="鐢ㄦ埛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/users.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">username,password</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="瑙嗛鏁版嵁闆?" enabled="true">
+
+          <stringProp name="delimiter">,</stringProp>
+
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+
+          <stringProp name="filename">data/videos.csv</stringProp>
+
+          <boolProp name="ignoreFirstLine">true</boolProp>
+
+          <boolProp name="quotedData">false</boolProp>
+
+          <boolProp name="recycle">true</boolProp>
+
+          <boolProp name="shareMode.all">false</boolProp>
+
+          <boolProp name="stopThread">false</boolProp>
+
+          <stringProp name="variableNames">video_id,course_id</stringProp>
+
+        </CSVDataSet>
+
+        <hashTree />
+
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="棣栨鐧诲綍锛堟瘡绾跨▼浠呬竴娆★級" enabled="true" />
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/auth/login" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments">
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">username</stringProp>
+
+                  <stringProp name="Argument.value">${username}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="HTTPArgument">
+
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+
+                  <stringProp name="Argument.name">password</stringProp>
+
+                  <stringProp name="Argument.value">${password}</stringProp>
+
+                  <stringProp name="Argument.metadata">=</stringProp>
+
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+            <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="鎻愬彇JWT Token" enabled="true">
+              <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+              <stringProp name="RegexExtractor.refname">token</stringProp>
+              <stringProp name="RegexExtractor.regex">"token":"([^"]+)"</stringProp>
+              <stringProp name="RegexExtractor.template">$1$</stringProp>
+              <stringProp name="RegexExtractor.default">TOKEN_NOT_FOUND</stringProp>
+              <stringProp name="RegexExtractor.match_number">1</stringProp>
+            </RegexExtractor>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="70% - 杩涘害涓婃姤" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>70.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/v1/progress锛堣繘搴︿笂鎶ワ級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">video_id</stringProp><stringProp name="Argument.value">${video_id}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">last_position_sec</stringProp><stringProp name="Argument.value">${__Random(10,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">true</boolProp><stringProp name="Argument.name">progress_percent</stringProp><stringProp name="Argument.value">${__Random(10,95)}</stringProp><stringProp name="Argument.metadata">=</stringProp><boolProp name="HTTPArgument.use_equals">true</boolProp></elementProp></collectionProp></elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/progress</stringProp>
+
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree>
+
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="璇锋眰澶?JSON+JWT" enabled="true">
+
+              <collectionProp name="HeaderManager.headers">
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Content-Type</stringProp>
+
+                  <stringProp name="Header.value">application/x-www-form-urlencoded</stringProp>
+
+                </elementProp>
+
+                <elementProp name="" elementType="Header">
+
+                  <stringProp name="Header.name">Authorization</stringProp>
+
+                  <stringProp name="Header.value">Bearer ${token}</stringProp>
+
+                </elementProp>
+
+              </collectionProp>
+
+            </HeaderManager>
+
+            <hashTree />
+
+          </hashTree>
+
+        </hashTree>
+
+        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="30% - 璇剧▼璇︽儏鏌ヨ" enabled="true">
+
+          <intProp name="ThroughputController.style">1</intProp>
+
+          <boolProp name="ThroughputController.perThread">false</boolProp>
+
+          <intProp name="ThroughputController.maxThroughput">1</intProp>
+
+          <FloatProperty>
+
+            <name>ThroughputController.percentThroughput</name>
+
+            <value>30.0</value>
+
+          </FloatProperty>
+
+        </ThroughputController>
+
+        <hashTree>
+
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/courses/:id锛堣绋嬭鎯咃級" enabled="true">
+
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+
+              <collectionProp name="Arguments.arguments" />
+
+            </elementProp>
+
+            <stringProp name="HTTPSampler.path">/api/v1/courses/${course_id}</stringProp>
+
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+
+          </HTTPSamplerProxy>
+
+          <hashTree />
+
+        </hashTree>
+
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="鎬濊€冩椂闂?100ms" enabled="true">
+
+          <stringProp name="ConstantTimer.delay">100</stringProp>
+
+        </ConstantTimer>
+
+        <hashTree />
+
+        <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="鍐欏叆缁撴灉-500骞跺彂娣峰悎" enabled="true">
+
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+
+          <objProp>
+
+            <name>saveConfig</name>
+
+            <value class="SampleSaveConfiguration">
+
+              <time>true</time><latency>true</latency><timestamp>true</timestamp>
+
+              <success>true</success><label>true</label><code>true</code>
+
+              <message>false</message><threadName>false</threadName>
+
+              <dataType>false</dataType><encoding>false</encoding>
+
+              <assertions>true</assertions><subresults>false</subresults>
+
+              <responseData>false</responseData><samplerData>false</samplerData>
+
+              <xml>false</xml><fieldNames>true</fieldNames>
+
+              <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+
+              <responseDataOnError>false</responseDataOnError>
+
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+
+              <bytes>true</bytes><sentBytes>true</sentBytes>
+
+              <url>true</url><threadCounts>true</threadCounts>
+
+              <idleTime>true</idleTime><connectTime>true</connectTime>
+
+            </value>
+
+          </objProp>
+
+          <stringProp name="filename">results/s3_500users.csv</stringProp>
+
+        </ResultCollector>
+
+        <hashTree />
+
+      </hashTree>
+
+
+
+      
+
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="鑱氬悎鎶ュ憡锛堝叏灞€锛?" enabled="true">
+
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+
+        <objProp>
+
+          <name>saveConfig</name>
+
+          <value class="SampleSaveConfiguration">
+
+            <time>true</time><latency>true</latency><timestamp>true</timestamp>
+
+            <success>true</success><label>true</label><code>true</code>
+
+            <message>true</message><threadName>true</threadName>
+
+            <dataType>false</dataType><encoding>false</encoding>
+
+            <assertions>true</assertions><subresults>false</subresults>
+
+            <responseData>false</responseData><samplerData>false</samplerData>
+
+            <xml>false</xml><fieldNames>true</fieldNames>
+
+            <responseHeaders>false</responseHeaders><requestHeaders>false</requestHeaders>
+
+            <responseDataOnError>false</responseDataOnError>
+
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+
+            <bytes>true</bytes><sentBytes>true</sentBytes>
+
+            <url>true</url><threadCounts>true</threadCounts>
+
+            <idleTime>true</idleTime><connectTime>true</connectTime>
+
+          </value>
+
+        </objProp>
+
+        <stringProp name="filename">results/s3_all.csv</stringProp>
+
+      </ResultCollector>
+
+      <hashTree />
+
+
+
+    </hashTree>
+
+  </hashTree>
+
+</jmeterTestPlan>

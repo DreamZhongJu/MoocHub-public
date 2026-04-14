@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"MOOCHUB-server/config"
 	"errors"
 	"strings"
 	"time"
@@ -8,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("your_secret_key")
+var jwtSecret = []byte(config.JWTSecret())
 
 // 自定义声明
 type Claims struct {

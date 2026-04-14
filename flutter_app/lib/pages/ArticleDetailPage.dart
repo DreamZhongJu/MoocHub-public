@@ -291,6 +291,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           'article_id': widget.articleId,
           'top_k': 5,
         },
+        receiveTimeout: const Duration(seconds: 130),
         fromJson: (raw) => raw as Map<String, dynamic>,
       );
       final data = resp.data;
@@ -538,7 +539,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
             Row(
               children: [
                 const Text(
-                  '??',
+                  '回答',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 if (_aiTaskLabel.isNotEmpty) ...[

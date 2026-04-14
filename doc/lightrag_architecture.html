@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LightRAG 集成架构图</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #94a3b8;
+      --front: #dbeafe;
+      --go: #dcfce7;
+      --mq: #fef3c7;
+      --py: #fae8ff;
+      --rag: #fee2e2;
+      --data: #e0f2fe;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+
+    .page {
+      width: 1500px;
+      margin: 0 auto;
+      padding: 36px 32px 48px;
+      background: #fff;
+    }
+
+    .title {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      margin: 0 0 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .stage {
+      position: relative;
+      border: 2px solid #dbe3ee;
+      border-radius: 26px;
+      padding: 26px 24px 22px;
+      margin-bottom: 22px;
+      background: #fff;
+    }
+
+    .stage-title {
+      position: absolute;
+      top: -14px;
+      left: 22px;
+      padding: 0 12px;
+      background: #fff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .row {
+      display: grid;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .row-2 { grid-template-columns: repeat(2, 1fr); }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .row-4 { grid-template-columns: repeat(4, 1fr); }
+    .row-5 { grid-template-columns: repeat(5, 1fr); }
+
+    .card {
+      position: relative;
+      min-height: 104px;
+      border-radius: 20px;
+      border: 2px solid rgba(15, 23, 42, 0.08);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+      background: #fff;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .front { background: var(--front); }
+    .go { background: var(--go); }
+    .mq { background: var(--mq); }
+    .py { background: var(--py); }
+    .rag { background: var(--rag); }
+    .data { background: var(--data); }
+
+    .actors {
+      display: flex;
+      justify-content: center;
+      gap: 100px;
+      margin-bottom: 18px;
+    }
+
+    .actor {
+      width: 180px;
+      text-align: center;
+    }
+
+    .actor .avatar {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 10px;
+      border: 2px solid #cbd5e1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      background: #fff;
+    }
+
+    .actor .label {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .arrow-band {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 34px;
+      height: 2px;
+      background: var(--line);
+      position: relative;
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -4px;
+      border-left: 8px solid var(--line);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    .dual-flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 12px;
+    }
+
+    .flow-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 20px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .flow-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .flow-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .index {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 700;
+      background: #0f172a;
+      color: #fff;
+      flex: none;
+    }
+
+    .flow-step div:last-child {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-left: 4px solid #2563eb;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1 class="title">LightRAG 集成架构图</h1>
+    <p class="subtitle">在线学习社区中基于 Go 业务服务、RabbitMQ 与 Python 智能微服务的 LightRAG 集成方案</p>
+
+    <div class="legend">
+      <span><i class="dot" style="background:#dbeafe"></i>前端交互层</span>
+      <span><i class="dot" style="background:#dcfce7"></i>Go 业务服务层</span>
+      <span><i class="dot" style="background:#fef3c7"></i>消息中间件</span>
+      <span><i class="dot" style="background:#fae8ff"></i>Python 智能微服务层</span>
+      <span><i class="dot" style="background:#fee2e2"></i>LightRAG 引擎层</span>
+      <span><i class="dot" style="background:#e0f2fe"></i>知识源层</span>
+    </div>
+
+    <div class="actors">
+      <div class="actor">
+        <div class="avatar">学</div>
+        <div class="label">学生用户</div>
+      </div>
+      <div class="actor">
+        <div class="avatar">师</div>
+        <div class="label">教师 / 管理员</div>
+      </div>
+    </div>
+
+    <div class="arrow-band">
+      <span>用户请求</span><i class="arrow"></i><span>业务处理</span><i class="arrow"></i><span>智能服务</span><i class="arrow"></i><span>结果返回</span>
+    </div>
+
+    <section class="stage">
+      <div class="stage-title">一、交互入口与业务服务</div>
+      <div class="row row-4">
+        <div class="card front">
+          <h3>课程详情页</h3>
+          <p>AI 问答、课程总结、练习题生成</p>
+        </div>
+        <div class="card front">
+          <h3>文章详情页</h3>
+          <p>AI 问答、要点提炼、练习题生成</p>
+        </div>
+        <div class="card go">
+          <h3>Go 统一查询接口</h3>
+          <p>接收请求、权限校验、参数解析、响应组装</p>
+        </div>
+        <div class="card go">
+          <h3>范围约束构造</h3>
+          <p>携带 course_id / article_id，限定当前学习内容上下文</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="stage-title">二、知识同步链路</div>
+      <div class="row row-5">
+        <div class="card data">
+          <h3>课程文本</h3>
+          <p>课程标题、简介、章节说明、视频转录文本</p>
+        </div>
+        <div class="card data">
+          <h3>文章正文</h3>
+          <p>Markdown / 富文本正文、摘要、标签</p>
+        </div>
+        <div class="card go">
+          <h3>Go 同步事件发布</h3>
+          <p>在课程、视频、文章新增或发布后触发知识同步事件</p>
+        </div>
+        <div class="card mq">
+          <h3>RabbitMQ</h3>
+          <p>承担异步解耦，避免知识入库过程阻塞主业务链路</p>
+        </div>
+        <div class="card py">
+          <h3>Python Ingest 服务</h3>
+          <p>消费消息、整理知识源、调用 LightRAG 入库流程</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="stage-title">三、LightRAG 检索与生成</div>
+      <div class="row row-3">
+        <div class="card rag">
+          <h3>文档入库与索引构建</h3>
+          <p>统一知识文本、实体关系抽取、图检索索引构建</p>
+        </div>
+        <div class="card rag">
+          <h3>LightRAG Query 服务</h3>
+          <p>支持 local / global / hybrid 等模式的检索增强查询</p>
+        </div>
+        <div class="card rag">
+          <h3>增强生成结果</h3>
+          <p>输出回答正文、相关实体、引用来源与原始检索信息</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="stage-title">四、两条核心业务流程</div>
+      <div class="dual-flow">
+        <div class="flow-box">
+          <h3 class="flow-title">知识同步流程</h3>
+          <div class="flow-step">
+            <div class="index">1</div>
+            <div>教师上传视频或管理员发布文章后，Go 服务端生成知识同步事件。</div>
+          </div>
+          <div class="flow-step">
+            <div class="index">2</div>
+            <div>RabbitMQ 异步投递事件，Python 微服务消费后触发 Ingest 任务。</div>
+          </div>
+          <div class="flow-step">
+            <div class="index">3</div>
+            <div>LightRAG 对文本进行入库、实体关系抽取与图索引构建。</div>
+          </div>
+        </div>
+        <div class="flow-box">
+          <h3 class="flow-title">智能问答流程</h3>
+          <div class="flow-step">
+            <div class="index">1</div>
+            <div>用户在课程详情页或文章详情页发起 AI 问答、总结或练习题生成请求。</div>
+          </div>
+          <div class="flow-step">
+            <div class="index">2</div>
+            <div>Go 服务端根据 course_id 或 article_id 构造带业务范围约束的查询请求。</div>
+          </div>
+          <div class="flow-step">
+            <div class="index">3</div>
+            <div>Python 微服务调用 LightRAG 完成检索增强生成，并返回答案、实体及引用来源。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        设计要点：系统采用 Go 业务服务与 Python 智能微服务解耦架构，利用 RabbitMQ 完成知识同步异步化，
+        利用 HTTP 完成实时问答调用；通过业务范围约束机制，使智能辅助结果优先围绕当前课程或文章内容展开，
+        体现面向具体学习场景的 LightRAG 集成能力。
+      </div>
+    </section>
+  </div>
+</body>
+</html>
