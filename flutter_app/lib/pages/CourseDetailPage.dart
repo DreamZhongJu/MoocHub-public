@@ -13,7 +13,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tencent_kit/tencent_kit.dart';
 
 class CourseDetailPage extends StatefulWidget {
@@ -118,8 +117,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   }
 
   void _initTencent() {
-    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
-        .trim();
+    _qqAppId = Config.qqAppId.trim();
     if (_qqAppId.isNotEmpty && !kIsWeb) {
       _tencent = TencentKitPlatform.instance;
       _tencent!.registerApp(appId: _qqAppId);

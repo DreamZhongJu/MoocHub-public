@@ -1,6 +1,7 @@
 import 'package:MoocHub/routers/router.dart';
 import 'package:MoocHub/routers/route_observer.dart';
 import 'package:MoocHub/routers/navigator_key.dart';
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/services/ScreenAdaper.dart';
 import 'package:MoocHub/services/PushService.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,12 +17,12 @@ Future<void> main() async {
   try {
     await dotenv.load(fileName: "assets/.env");
   } catch (_) {
-    await dotenv.load(fileName: "assets/.env.example");
+    try {
+      await dotenv.load(fileName: "assets/.env.example");
+    } catch (_) {}
   }
-  debugPrint('[dotenv] QQ_APP_ID=${dotenv.env['QQ_APP_ID']}');
-  debugPrint('[dotenv] TENCENT_APP_ID=${dotenv.env['TENCENT_APP_ID']}');
-  debugPrint('[dotenv] BACKEND_IP=${dotenv.env['BACKEND_IP']}');
-  debugPrint('[dotenv] BACKEND_PORT=${dotenv.env['BACKEND_PORT']}');
+  debugPrint('[config] QQ_APP_ID=${Config.qqAppId}');
+  debugPrint('[config] API=${Config.domain}');
   if (!kIsWeb) {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

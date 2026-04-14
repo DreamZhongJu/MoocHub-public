@@ -1,15 +1,30 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Config {
+  static const String defaultBackendIp = '192.168.10.2';
+  static const String defaultBackendPort = '3000';
+  static const String defaultQqAppId = '102846875';
+
+  static String _envOrDefault(String key, String fallback) {
+    try {
+      final value = dotenv.env[key]?.trim() ?? '';
+      return value.isEmpty ? fallback : value;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
   static String _backendHost() {
-    final ip = dotenv.env['BACKEND_IP'] ?? '127.0.0.1';
-    final port = dotenv.env['BACKEND_PORT'] ?? '3000';
+    final ip = _envOrDefault('BACKEND_IP', defaultBackendIp);
+    final port = _envOrDefault('BACKEND_PORT', defaultBackendPort);
     final host = '$ip:$port';
     return 'http://$host';
   }
 
   static String get domain => '${_backendHost()}/api/v1';
   static String get imageHost => _backendHost();
+  static String get qqAppId =>
+      _envOrDefault('QQ_APP_ID', _envOrDefault('TENCENT_APP_ID', defaultQqAppId));
   static const String defaultProductAsset = 'assets/images/default-product.png';
 
   static String resolveImage(String? url) {
@@ -52,7 +67,7 @@ class Config {
           return raw;
         }
         if (uri.host == '127.0.0.1' || uri.host == 'localhost') {
-          final ip = dotenv.env['BACKEND_IP'] ?? '127.0.0.1';
+          final ip = _envOrDefault('BACKEND_IP', defaultBackendIp);
           return uri.replace(host: ip).toString();
         }
       } catch (_) {

@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/services/ApiService.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:MoocHub/services/PushService.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tencent_kit/tencent_kit.dart';
 
 class LoginPage extends StatefulWidget {
@@ -31,8 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
-        .trim();
+    _qqAppId = Config.qqAppId.trim();
     debugPrint('[login] QQ_APP_ID=$_qqAppId');
     if (_qqAppId.isNotEmpty && !kIsWeb) {
       _tencent = TencentKitPlatform.instance;
@@ -116,9 +115,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
     if (_qqAppId.isEmpty) {
-      final fromEnv =
-          (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
-              .trim();
+      final fromEnv = Config.qqAppId.trim();
       debugPrint('[login] reload QQ_APP_ID=$fromEnv');
       if (fromEnv.isNotEmpty) {
         _qqAppId = fromEnv;
@@ -127,13 +124,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
     if (_qqAppId.isEmpty) {
-      final envQq = (dotenv.env['QQ_APP_ID'] ?? '').trim();
-      final envTencent = (dotenv.env['TENCENT_APP_ID'] ?? '').trim();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'QQ AppID 未配置（QQ_APP_ID=$envQq, TENCENT_APP_ID=$envTencent）',
-          ),
+          content: const Text('QQ AppID 未配置'),
         ),
       );
       return;

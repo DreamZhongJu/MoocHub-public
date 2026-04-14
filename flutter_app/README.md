@@ -6,13 +6,18 @@
 ## 运行
 ```bash
 cd flutter_app
-cp assets/.env.example assets/.env
 flutter pub get
 flutter run
 ```
 
 ## 环境配置
-- `assets/.env`：配置后端地址（`BACKEND_HOST`）
+- 客户端默认直接连接 `192.168.10.2:3000`，代码位置：
+  - [Config.dart](/d:/Document/MyCodeProject/MoocHub/flutter_app/lib/config/Config.dart)
+- 如需改成你自己的后端地址，修改以下常量：
+  - `defaultBackendIp`
+  - `defaultBackendPort`
+  - `defaultQqAppId`
+- `assets/.env` 现在只作为可选覆盖项，不再是启动前置条件
 - Android 推送：需要将 Firebase 控制台下载的 `google-services.json` 放到 `android/app/`
 
 ## 目录结构（关键）

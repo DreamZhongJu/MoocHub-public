@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/VideoModel.dart';
 import 'package:MoocHub/services/AnalyticsService.dart';
 import 'package:MoocHub/services/ApiService.dart';
@@ -7,7 +8,6 @@ import 'package:MoocHub/widget/CommentsPanel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tencent_kit/tencent_kit.dart';
 import 'package:video_player/video_player.dart';
 
@@ -61,8 +61,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _initTencent() {
-    _qqAppId = (dotenv.env['QQ_APP_ID'] ?? dotenv.env['TENCENT_APP_ID'] ?? '')
-        .trim();
+    _qqAppId = Config.qqAppId.trim();
     if (_qqAppId.isNotEmpty && !kIsWeb) {
       _tencent = TencentKitPlatform.instance;
       _tencent!.registerApp(appId: _qqAppId);
