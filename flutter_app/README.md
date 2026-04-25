@@ -11,11 +11,19 @@ flutter run
 ```
 
 ## 环境配置
-- 客户端默认直接连接 `192.168.10.2:3000`，代码位置：
+- 客户端默认直接连接 `192.168.125.204:3000`，代码位置：
   - [Config.dart](/d:/Document/MyCodeProject/MoocHub/flutter_app/lib/config/Config.dart)
 - 如需改成你自己的后端地址，修改以下常量：
   - `defaultBackendIp`
   - `defaultBackendPort`
+
+- 若演示时切换到新的热点网段，只需要修改：
+  - `flutter_app/lib/config/Config.dart`
+  - 将 `defaultBackendIp` 改成当前电脑在热点下的 IPv4 地址（Windows 下用 `ipconfig` 查看 `WLAN`）
+
+- 若使用 Android 模拟器而不是实体机：
+  - 宿主机地址通常应改为 `10.0.2.2`
+  - 真机和同热点设备则使用电脑实际局域网 IP
   - `defaultQqAppId`
 - `assets/.env` 现在只作为可选覆盖项，不再是启动前置条件
 - Android 推送：需要将 Firebase 控制台下载的 `google-services.json` 放到 `android/app/`

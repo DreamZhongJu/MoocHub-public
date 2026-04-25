@@ -3,6 +3,7 @@ import 'package:MoocHub/config/Config.dart';
 import 'package:MoocHub/model/RequestModel.dart';
 import 'package:MoocHub/services/StorageService.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -19,6 +20,13 @@ class ApiService {
             }
           }
           handler.next(options);
+        },
+        onError: (error, handler) {
+          debugPrint(
+            '[api] ${error.requestOptions.method} ${error.requestOptions.uri} failed: '
+            '${error.type} ${error.message}',
+          );
+          handler.next(error);
         },
       ),
     );

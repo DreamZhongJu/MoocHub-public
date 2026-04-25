@@ -154,15 +154,15 @@ func (fc FavoriteController) GetFavorites(c *gin.Context) {
 		return
 	}
 	for i := range videos {
-		if url, err := storage.ResolveObjectURL(videos[i].VideoURL); err == nil && url != "" {
+		if url, err := storage.ResolveClientObjectURL(videos[i].VideoURL); err == nil && url != "" {
 			videos[i].VideoURL = url
 		}
-		if url, err := storage.ResolveObjectURL(videos[i].ThumbURL); err == nil && url != "" {
+		if url, err := storage.ResolveClientObjectURL(videos[i].ThumbURL); err == nil && url != "" {
 			videos[i].ThumbURL = url
 		}
 	}
 	for i := range articles {
-		if url, err := storage.ResolveObjectURL(articles[i].CoverURL); err == nil && url != "" {
+		if url, err := storage.ResolveClientObjectURL(articles[i].CoverURL); err == nil && url != "" {
 			articles[i].CoverURL = url
 		}
 	}

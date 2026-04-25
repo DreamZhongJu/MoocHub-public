@@ -6,6 +6,8 @@ import (
 	"MOOCHUB-server/storage"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -98,10 +100,28 @@ func (uc UploadController) ServeUpload(c *gin.Context) {
 		}
 	}
 
-	url, err := storage.ResolveObjectURL(objectPath)
-	if err != nil || strings.TrimSpace(url) == "" {
-		if err != nil {
-			global.Log.Warn("ServeUpload: resolve object URL failed", zap.String("path", objectPath), zap.Error(err))
+	obj, err := storage.OpenObjectForRead(objectPath, c.GetHeader("Range"))
+	if err == nil && obj != nil {
+		defer obj.Reader.Close()
+		headers := map[string]string{
+			"Accept-Ranges": "bytes",
+		}
+		status := http.StatusOK
+		if obj.Partial {
+			status = http.StatusPartialContent
+			headers["Content-Range"] = fmt.Sprintf("bytes %d-%d/%d", obj.Start, obj.End, obj.TotalSize)
+		}
+		c.DataFromReader(status, obj.Size, obj.ContentType, obj.Reader, headers)
+		return
+	}
+	if err != nil {
+		global.Log.Warn("ServeUpload: read MinIO object failed", zap.String("path", objectPath), zap.Error(err))
+	}
+
+	url, resolveErr := storage.ResolveObjectURL(objectPath)
+	if resolveErr != nil || strings.TrimSpace(url) == "" {
+		if resolveErr != nil {
+			global.Log.Warn("ServeUpload: resolve object URL failed", zap.String("path", objectPath), zap.Error(resolveErr))
 		}
 		c.Status(404)
 		return

@@ -44,7 +44,7 @@ func (ac ArticlesController) GetArticles(c *gin.Context) {
 	}
 
 	for i := range articles {
-		if url, resolveErr := storage.ResolveObjectURL(articles[i].CoverURL); resolveErr == nil && url != "" {
+		if url, resolveErr := storage.ResolveClientObjectURL(articles[i].CoverURL); resolveErr == nil && url != "" {
 			articles[i].CoverURL = url
 		}
 	}
@@ -81,7 +81,7 @@ func (ac ArticlesController) GetArticleDetail(c *gin.Context) {
 		return
 	}
 
-	if url, resolveErr := storage.ResolveObjectURL(article.CoverURL); resolveErr == nil && url != "" {
+	if url, resolveErr := storage.ResolveClientObjectURL(article.CoverURL); resolveErr == nil && url != "" {
 		article.CoverURL = url
 	}
 	ReturnSuccess(c, 200, "ok", gin.H{

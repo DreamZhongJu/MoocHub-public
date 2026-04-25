@@ -118,10 +118,10 @@ func (pc ProgressController) GetLatestProgress(c *gin.Context) {
 			if jsonErr := json.Unmarshal([]byte(cached), &payload); jsonErr == nil && payload.VideoID != 0 {
 				video, err := model.GetVideoDetails(payload.VideoID)
 				if err == nil {
-					if url, err := storage.ResolveObjectURL(video.VideoURL); err == nil && url != "" {
+					if url, err := storage.ResolveClientObjectURL(video.VideoURL); err == nil && url != "" {
 						video.VideoURL = url
 					}
-					if url, err := storage.ResolveObjectURL(video.ThumbURL); err == nil && url != "" {
+					if url, err := storage.ResolveClientObjectURL(video.ThumbURL); err == nil && url != "" {
 						video.ThumbURL = url
 					}
 					ReturnSuccess(c, 200, "获取成功", gin.H{
@@ -146,10 +146,10 @@ func (pc ProgressController) GetLatestProgress(c *gin.Context) {
 		ReturnSuccess(c, 200, "暂无进度", gin.H{}, 0)
 		return
 	}
-	if url, err := storage.ResolveObjectURL(video.VideoURL); err == nil && url != "" {
+	if url, err := storage.ResolveClientObjectURL(video.VideoURL); err == nil && url != "" {
 		video.VideoURL = url
 	}
-	if url, err := storage.ResolveObjectURL(video.ThumbURL); err == nil && url != "" {
+	if url, err := storage.ResolveClientObjectURL(video.ThumbURL); err == nil && url != "" {
 		video.ThumbURL = url
 	}
 

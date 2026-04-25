@@ -11,11 +11,14 @@ import (
 	"flag"
 	"os"
 
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 func main() {
+	_ = godotenv.Load(".env", "secrets/qq.env")
+
 	serviceAccount := flag.String("fcm-service-account", "", "path to FCM service account json")
 	projectID := flag.String("fcm-project-id", "", "FCM project ID")
 	flag.Parse()

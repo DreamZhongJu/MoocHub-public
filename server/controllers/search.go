@@ -69,7 +69,7 @@ func (sc SearchController) Search(c *gin.Context) {
 			return
 		}
 		for i := range nextCourses {
-			if url, err := storage.ResolveObjectURL(nextCourses[i].CoverURL); err == nil && url != "" {
+			if url, err := storage.ResolveClientObjectURL(nextCourses[i].CoverURL); err == nil && url != "" {
 				nextCourses[i].CoverURL = url
 			}
 		}
@@ -84,7 +84,7 @@ func (sc SearchController) Search(c *gin.Context) {
 			return
 		}
 		for i := range nextArticles {
-			if url, err := storage.ResolveObjectURL(nextArticles[i].CoverURL); err == nil && url != "" {
+			if url, err := storage.ResolveClientObjectURL(nextArticles[i].CoverURL); err == nil && url != "" {
 				nextArticles[i].CoverURL = url
 			}
 		}

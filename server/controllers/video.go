@@ -24,12 +24,12 @@ func (vc VideoController) GetVideoDetails(c *gin.Context) {
 		ReturnError(c, 500, "获取视频详情失败："+err.Error())
 		return
 	}
-	if url, err := storage.ResolveObjectURL(video.VideoURL); err == nil && url != "" {
+	if url, err := storage.ResolveClientObjectURL(video.VideoURL); err == nil && url != "" {
 		video.VideoURL = url
 	} else if err != nil {
 		global.Log.Error("minio presign video_url failed", zap.Error(err))
 	}
-	if url, err := storage.ResolveObjectURL(video.ThumbURL); err == nil && url != "" {
+	if url, err := storage.ResolveClientObjectURL(video.ThumbURL); err == nil && url != "" {
 		video.ThumbURL = url
 	} else if err != nil {
 		global.Log.Error("minio presign thumb_url failed", zap.Error(err))

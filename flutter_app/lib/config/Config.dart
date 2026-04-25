@@ -1,7 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Config {
-  static const String defaultBackendIp = '192.168.10.2';
+  // Current demo network: phone hotspot / WLAN
+  static const String defaultBackendIp = '192.168.125.204';
   static const String defaultBackendPort = '3000';
   static const String defaultQqAppId = '102846875';
 

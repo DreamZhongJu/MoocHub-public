@@ -33,7 +33,7 @@ func (rc RecommendController) GetCourseFeed(c *gin.Context) {
 		return
 	}
 	for i := range courses {
-		if url, resolveErr := storage.ResolveObjectURL(courses[i].CoverURL); resolveErr == nil && url != "" {
+		if url, resolveErr := storage.ResolveClientObjectURL(courses[i].CoverURL); resolveErr == nil && url != "" {
 			courses[i].CoverURL = url
 		}
 	}

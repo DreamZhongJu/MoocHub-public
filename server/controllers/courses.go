@@ -81,10 +81,10 @@ func (cc CoursesController) GetCourseDetails(c *gin.Context) {
 	videos := make([]model.Video, len(payload.Videos))
 	copy(videos, payload.Videos)
 	for i := range videos {
-		if url, resolveErr := storage.ResolveObjectURL(videos[i].VideoURL); resolveErr == nil && url != "" {
+		if url, resolveErr := storage.ResolveClientObjectURL(videos[i].VideoURL); resolveErr == nil && url != "" {
 			videos[i].VideoURL = url
 		}
-		if url, resolveErr := storage.ResolveObjectURL(videos[i].ThumbURL); resolveErr == nil && url != "" {
+		if url, resolveErr := storage.ResolveClientObjectURL(videos[i].ThumbURL); resolveErr == nil && url != "" {
 			videos[i].ThumbURL = url
 		}
 	}

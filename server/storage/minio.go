@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,16 @@ var (
 	minioErr     error
 	minioBreaker = resilience.NewCircuitBreaker(config.BreakerFailureThreshold(), config.BreakerOpenTimeout())
 )
+
+type ObjectReadResult struct {
+	Reader      io.ReadCloser
+	Size        int64
+	TotalSize   int64
+	ContentType string
+	Start       int64
+	End         int64
+	Partial     bool
+}
 
 func getMinioClient() (*minio.Client, error) {
 	minioOnce.Do(func() {
@@ -46,6 +57,42 @@ func parseObjectKey(raw string) (string, string) {
 		}
 	}
 	return config.MinioBucket(), raw
+}
+
+func ResolveClientObjectURL(raw string) (string, error) {
+	if raw == "" {
+		return "", nil
+	}
+	if strings.HasPrefix(raw, "minio://") {
+		_, key := parseObjectKey(raw)
+		if key == "" {
+			return "", nil
+		}
+		return "/uploads/" + strings.TrimLeft(key, "/"), nil
+	}
+	if strings.HasPrefix(raw, "/uploads/") {
+		return raw, nil
+	}
+	if strings.HasPrefix(raw, "uploads/") {
+		return "/" + raw, nil
+	}
+	if strings.HasPrefix(raw, "http://") || strings.HasPrefix(raw, "https://") {
+		u, err := url.Parse(raw)
+		if err != nil {
+			return raw, nil
+		}
+		path := strings.TrimPrefix(u.Path, "/")
+		bucket := config.MinioBucket()
+		if strings.HasPrefix(path, bucket+"/") {
+			key := strings.TrimPrefix(path, bucket+"/")
+			return "/uploads/" + strings.TrimLeft(key, "/"), nil
+		}
+		if strings.HasPrefix(u.Path, "/uploads/") {
+			return u.Path, nil
+		}
+		return raw, nil
+	}
+	return "/uploads/" + strings.TrimLeft(raw, "/"), nil
 }
 
 func ResolveObjectURL(raw string) (string, error) {
@@ -82,6 +129,122 @@ func ResolveObjectURL(raw string) (string, error) {
 		return "", err
 	}
 	return signed, nil
+}
+
+func OpenObjectForRead(raw string, rangeHeader string) (*ObjectReadResult, error) {
+	if raw == "" {
+		return nil, fmt.Errorf("empty object key")
+	}
+	bucket, key := parseObjectKey(raw)
+	client, err := getMinioClient()
+	if err != nil {
+		return nil, err
+	}
+
+	statCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	info, err := client.StatObject(statCtx, bucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	start, end, partial, err := parseHTTPRange(rangeHeader, info.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := minio.GetObjectOptions{}
+	if partial {
+		if err := opts.SetRange(start, end); err != nil {
+			return nil, err
+		}
+	}
+
+	obj, err := client.GetObject(context.Background(), bucket, key, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	readSize := info.Size
+	if partial {
+		readSize = end - start + 1
+	} else {
+		start = 0
+		end = info.Size - 1
+	}
+	contentType := info.ContentType
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	return &ObjectReadResult{
+		Reader:      obj,
+		Size:        readSize,
+		TotalSize:   info.Size,
+		ContentType: contentType,
+		Start:       start,
+		End:         end,
+		Partial:     partial,
+	}, nil
+}
+
+func parseHTTPRange(header string, size int64) (int64, int64, bool, error) {
+	header = strings.TrimSpace(header)
+	if header == "" {
+		return 0, size - 1, false, nil
+	}
+	if size <= 0 {
+		return 0, 0, false, fmt.Errorf("invalid object size")
+	}
+	if !strings.HasPrefix(header, "bytes=") {
+		return 0, size - 1, false, nil
+	}
+	spec := strings.TrimSpace(strings.TrimPrefix(header, "bytes="))
+	if strings.Contains(spec, ",") {
+		spec = strings.TrimSpace(strings.Split(spec, ",")[0])
+	}
+	parts := strings.SplitN(spec, "-", 2)
+	if len(parts) != 2 {
+		return 0, 0, false, fmt.Errorf("invalid range")
+	}
+
+	var start, end int64
+	var err error
+	if parts[0] == "" {
+		suffix, parseErr := strconv.ParseInt(parts[1], 10, 64)
+		if parseErr != nil || suffix <= 0 {
+			return 0, 0, false, fmt.Errorf("invalid suffix range")
+		}
+		if suffix > size {
+			suffix = size
+		}
+		start = size - suffix
+		end = size - 1
+		return start, end, true, nil
+	}
+
+	start, err = strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || start < 0 {
+		return 0, 0, false, fmt.Errorf("invalid range start")
+	}
+	if parts[1] == "" {
+		end = size - 1
+	} else {
+		end, err = strconv.ParseInt(parts[1], 10, 64)
+		if err != nil {
+			return 0, 0, false, fmt.Errorf("invalid range end")
+		}
+	}
+	if start >= size {
+		return 0, 0, false, fmt.Errorf("range start out of bounds")
+	}
+	if end >= size {
+		end = size - 1
+	}
+	if end < start {
+		return 0, 0, false, fmt.Errorf("invalid range order")
+	}
+	return start, end, true, nil
 }
 
 func buildMinioObjectURL(bucket, key string) string {
@@ -125,9 +288,6 @@ func PutObject(key string, reader io.Reader, size int64, contentType string) (st
 	if err != nil {
 		return "", "", err
 	}
-	url, err := ResolveObjectURL(key)
-	if err != nil {
-		return key, "", err
-	}
-	return key, url, nil
+	clientURL, _ := ResolveClientObjectURL(key)
+	return key, clientURL, nil
 }
