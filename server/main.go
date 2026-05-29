@@ -90,8 +90,8 @@ func main() {
 		zap.String("url", config.RabbitMQURL()),
 	)
 
-	if err := db.InitMySQL(); err != nil {
-		global.Log.Fatal("MySQL init failed", zap.Error(err))
+	if err := db.InitSQL(); err != nil {
+		global.Log.Fatal("SQL database init failed", zap.String("driver", config.DBDriver()), zap.Error(err))
 	}
 	if err := db.InitMongo(); err != nil {
 		global.Log.Fatal("MongoDB init failed", zap.Error(err))

@@ -18,6 +18,14 @@ func MysqlDSN() string {
 	return envOrDefault("MYSQL_DSN", "root:root@tcp(127.0.0.1:3306)/moochub?parseTime=true")
 }
 
+func DBDriver() string {
+	return strings.ToLower(envOrDefault("DB_DRIVER", "mysql"))
+}
+
+func PostgresDSN() string {
+	return envOrDefault("POSTGRES_DSN", "host=127.0.0.1 user=postgres password=root dbname=moochub port=5432 sslmode=disable TimeZone=Asia/Shanghai")
+}
+
 func MongoURI() string {
 	return envOrDefault("MONGODB_URI", "mongodb://localhost:27017")
 }

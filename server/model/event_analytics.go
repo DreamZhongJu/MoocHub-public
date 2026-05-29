@@ -3,6 +3,9 @@ package model
 import (
 	"MOOCHUB-server/db"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AnalyticsEventPayload struct {
@@ -35,6 +38,23 @@ type EventLog struct {
 
 func (EventLog) TableName() string {
 	return "event_logs"
+}
+
+type EventStatsHourly struct {
+	ID          uint64    `gorm:"column:id;primaryKey" json:"id"`
+	BucketHour  time.Time `gorm:"column:bucket_hour" json:"bucket_hour"`
+	EventType   string    `gorm:"column:event_type" json:"event_type"`
+	ContentType string    `gorm:"column:content_type" json:"content_type"`
+	ContentID   int64     `gorm:"column:content_id" json:"content_id"`
+	Scene       string    `gorm:"column:scene" json:"scene"`
+	PV          int64     `gorm:"column:pv" json:"pv"`
+	UV          int64     `gorm:"column:uv" json:"uv"`
+	CreatedAt   time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+func (EventStatsHourly) TableName() string {
+	return "event_stats_hourly"
 }
 
 func CreateEventLog(evt AnalyticsEventPayload) error {
@@ -72,13 +92,31 @@ func AddEventStatsHourly(evt AnalyticsEventPayload, pvDelta int64, uvDelta int64
 	}
 	bucketHour := occurredAt.Truncate(time.Hour)
 
-	return db.GetDB().Exec(`
-INSERT INTO event_stats_hourly (
-  bucket_hour, event_type, content_type, content_id, scene, pv, uv, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-ON DUPLICATE KEY UPDATE
-  pv = pv + VALUES(pv),
-  uv = uv + VALUES(uv),
-  updated_at = NOW()
-`, bucketHour, evt.EventType, evt.ContentType, evt.ContentID, evt.Scene, pvDelta, uvDelta).Error
+	now := time.Now()
+	stat := EventStatsHourly{
+		BucketHour:  bucketHour,
+		EventType:   evt.EventType,
+		ContentType: evt.ContentType,
+		ContentID:   evt.ContentID,
+		Scene:       evt.Scene,
+		PV:          pvDelta,
+		UV:          uvDelta,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	return db.GetDB().Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "bucket_hour"},
+			{Name: "event_type"},
+			{Name: "content_type"},
+			{Name: "content_id"},
+			{Name: "scene"},
+		},
+		DoUpdates: clause.Assignments(map[string]any{
+			"pv":         gorm.Expr("event_stats_hourly.pv + ?", pvDelta),
+			"uv":         gorm.Expr("event_stats_hourly.uv + ?", uvDelta),
+			"updated_at": now,
+		}),
+	}).Create(&stat).Error
 }

@@ -11,7 +11,7 @@ flutter run
 ```
 
 ## 环境配置
-- 客户端默认直接连接 `192.168.125.204:3000`，代码位置：
+- 客户端默认直接连接 `192.168.10.2:3000`，代码位置：
   - [Config.dart](/d:/Document/MyCodeProject/MoocHub/flutter_app/lib/config/Config.dart)
 - 如需改成你自己的后端地址，修改以下常量：
   - `defaultBackendIp`

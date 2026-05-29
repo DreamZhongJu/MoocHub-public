@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"MOOCHUB-server/model"
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -34,6 +35,13 @@ type sendChatMessageReq struct {
 type markChatReadReq struct {
 	ConversationID uint64 `json:"conversation_id"`
 	LastMessageID  uint64 `json:"last_message_id"`
+}
+
+type searchChatMessagesReq struct {
+	ConversationID uint64          `json:"conversation_id"`
+	Contains       json.RawMessage `json:"contains"`
+	Page           int             `json:"page"`
+	PageSize       int             `json:"page_size"`
 }
 
 func (cc ChatController) GetConversations(c *gin.Context) {
@@ -169,6 +177,63 @@ func (cc ChatController) GetMessages(c *gin.Context) {
 	ReturnSuccess(c, 200, "ok", gin.H{
 		"items":           items,
 		"conversation_id": conversationID,
+		"page":            page,
+		"size":            pageSize,
+		"total":           total,
+	}, total)
+}
+
+func (cc ChatController) SearchMessages(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	if userID <= 0 {
+		ReturnError(c, 401, "unauthorized")
+		return
+	}
+
+	var req searchChatMessagesReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ReturnError(c, 400, "invalid request")
+		return
+	}
+	if len(req.Contains) == 0 || !json.Valid(req.Contains) {
+		ReturnError(c, 400, "contains must be a valid JSON object")
+		return
+	}
+	var containsValue any
+	if err := json.Unmarshal(req.Contains, &containsValue); err != nil {
+		ReturnError(c, 400, "contains must be a valid JSON object")
+		return
+	}
+	if _, ok := containsValue.(map[string]any); !ok {
+		ReturnError(c, 400, "contains must be a JSON object")
+		return
+	}
+
+	page := req.Page
+	pageSize := req.PageSize
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	items, total, err := model.SearchChatMessagesByExtraJSON(
+		uint64(userID),
+		req.ConversationID,
+		string(req.Contains),
+		page,
+		pageSize,
+	)
+	if err != nil {
+		ReturnError(c, 500, "failed to search messages: "+err.Error())
+		return
+	}
+
+	ReturnSuccess(c, 200, "ok", gin.H{
+		"items":           items,
+		"conversation_id": req.ConversationID,
+		"contains":        containsValue,
 		"page":            page,
 		"size":            pageSize,
 		"total":           total,

@@ -51,7 +51,9 @@ go run main.go
 
 ## 环境变量
 > 默认配置写在 `server/config/db.go`，如需覆盖可使用系统环境变量。
+- `DB_DRIVER`：SQL 数据库驱动，`mysql` 或 `postgres`，默认 `mysql`
 - `MYSQL_DSN`：MySQL 连接
+- `POSTGRES_DSN`：PostgreSQL 连接（当 `DB_DRIVER=postgres` 时使用）
 - `MONGO_URI`：MongoDB 连接
 - `MONGO_DB`：MongoDB 数据库名
 - `MINIO_ENDPOINT`：MinIO 服务地址（如 `127.0.0.1:9000`）

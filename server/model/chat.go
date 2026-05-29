@@ -127,7 +127,7 @@ func IsConversationMember(conversationID, userID uint64) (bool, error) {
 	var count int64
 	err := db.GetDB().
 		Model(&ChatConversationMember{}).
-		Where("conversation_id = ? AND user_id = ? AND is_deleted = 0", conversationID, userID).
+		Where("conversation_id = ? AND user_id = ? AND is_deleted = ?", conversationID, userID, false).
 		Count(&count).Error
 	if err != nil {
 		return false, err
@@ -137,7 +137,7 @@ func IsConversationMember(conversationID, userID uint64) (bool, error) {
 
 func GetConversationByID(conversationID uint64) (*ChatConversation, error) {
 	var item ChatConversation
-	err := db.GetDB().Where("id = ? AND is_deleted = 0", conversationID).First(&item).Error
+	err := db.GetDB().Where("id = ? AND is_deleted = ?", conversationID, false).First(&item).Error
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func CreateOrGetPrivateConversation(userID, targetUserID uint64) (*ChatConversat
 	dbConn := db.GetDB()
 
 	var existing ChatConversation
-	if err := dbConn.Where("private_key = ? AND is_deleted = 0", key).First(&existing).Error; err == nil {
+	if err := dbConn.Where("private_key = ? AND is_deleted = ?", key, false).First(&existing).Error; err == nil {
 		if err := dbConn.Transaction(func(tx *gorm.DB) error {
 			if err := upsertConversationMemberTx(tx, existing.ID, userID, "member"); err != nil {
 				return err
@@ -335,7 +335,7 @@ func GetConversationMessages(conversationID, userID uint64, page, pageSize int) 
 
 	var total int64
 	if err := db.GetDB().Model(&ChatMessage{}).
-		Where("conversation_id = ? AND is_deleted = 0", conversationID).
+		Where("conversation_id = ? AND is_deleted = ?", conversationID, false).
 		Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -355,10 +355,75 @@ SELECT
 	m.created_at
 FROM chat_messages m
 LEFT JOIN users u ON u.id = m.sender_id
-WHERE m.conversation_id = ? AND m.is_deleted = 0
+WHERE m.conversation_id = ? AND m.is_deleted = FALSE
 ORDER BY m.id DESC
 LIMIT ? OFFSET ?`, conversationID, pageSize, offset).Scan(&rows).Error
 	if err != nil {
+		return nil, 0, err
+	}
+	return rows, total, nil
+}
+
+func SearchChatMessagesByExtraJSON(userID, conversationID uint64, containsJSON string, page, pageSize int) ([]ChatMessageItem, int64, error) {
+	if userID == 0 {
+		return nil, 0, errors.New("invalid user id")
+	}
+	if strings.TrimSpace(containsJSON) == "" {
+		return nil, 0, errors.New("contains json is required")
+	}
+
+	offset := (page - 1) * pageSize
+	countArgs := []any{userID, containsJSON}
+	countSQL := `
+SELECT COUNT(1)
+FROM chat_messages m
+JOIN chat_conversation_members cm
+  ON cm.conversation_id = m.conversation_id
+ AND cm.user_id = ?
+ AND cm.is_deleted = FALSE
+WHERE m.is_deleted = FALSE
+  AND m.extra_json @> CAST(? AS jsonb)`
+	if conversationID > 0 {
+		countSQL += " AND m.conversation_id = ?"
+		countArgs = append(countArgs, conversationID)
+	}
+
+	var total int64
+	if err := db.GetDB().Raw(countSQL, countArgs...).Scan(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	queryArgs := []any{userID, containsJSON}
+	querySQL := `
+SELECT
+	m.id,
+	m.conversation_id,
+	m.sender_id,
+	COALESCE(NULLIF(u.nickname, ''), NULLIF(u.username, ''), CONCAT('user_', m.sender_id)) AS sender_name,
+	COALESCE(u.avatar_url, '') AS sender_avatar,
+	m.msg_type,
+	m.content,
+	COALESCE(m.extra_json, '{}'::jsonb)::text AS extra_json,
+	m.created_at
+FROM chat_messages m
+JOIN chat_conversation_members cm
+  ON cm.conversation_id = m.conversation_id
+ AND cm.user_id = ?
+ AND cm.is_deleted = FALSE
+LEFT JOIN users u ON u.id = m.sender_id
+WHERE m.is_deleted = FALSE
+  AND m.extra_json @> CAST(? AS jsonb)`
+	if conversationID > 0 {
+		querySQL += " AND m.conversation_id = ?"
+		queryArgs = append(queryArgs, conversationID)
+	}
+	querySQL += `
+ORDER BY m.id DESC
+LIMIT ? OFFSET ?`
+	queryArgs = append(queryArgs, pageSize, offset)
+
+	rows := make([]ChatMessageItem, 0)
+	if err := db.GetDB().Raw(querySQL, queryArgs...).Scan(&rows).Error; err != nil {
 		return nil, 0, err
 	}
 	return rows, total, nil
@@ -371,7 +436,7 @@ func MarkConversationRead(conversationID, userID, lastMessageID uint64) error {
 
 	now := time.Now()
 	return db.GetDB().Model(&ChatConversationMember{}).
-		Where("conversation_id = ? AND user_id = ? AND is_deleted = 0", conversationID, userID).
+		Where("conversation_id = ? AND user_id = ? AND is_deleted = ?", conversationID, userID, false).
 		Updates(map[string]any{
 			"last_read_message_id": lastMessageID,
 			"last_read_at":         now,
@@ -388,8 +453,8 @@ func GetConversationList(userID uint64, page, pageSize int) ([]ConversationListI
 	if err := db.GetDB().Raw(`
 SELECT COUNT(1)
 FROM chat_conversation_members cm
-JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = 0
-WHERE cm.user_id = ? AND cm.is_deleted = 0
+JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = FALSE
+WHERE cm.user_id = ? AND cm.is_deleted = FALSE
 `, userID).Scan(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -414,9 +479,9 @@ SELECT
 	c.last_message_at,
 	COALESCE(SUM(CASE WHEN m.id > COALESCE(cm.last_read_message_id, 0) AND m.sender_id <> ? THEN 1 ELSE 0 END), 0) AS unread_count
 FROM chat_conversation_members cm
-JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = 0
-LEFT JOIN chat_messages m ON m.conversation_id = c.id AND m.is_deleted = 0
-WHERE cm.user_id = ? AND cm.is_deleted = 0
+JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = FALSE
+LEFT JOIN chat_messages m ON m.conversation_id = c.id AND m.is_deleted = FALSE
+WHERE cm.user_id = ? AND cm.is_deleted = FALSE
 GROUP BY c.id, c.type, c.name, c.avatar_url, c.last_message, c.last_message_at, cm.last_read_message_id
 ORDER BY COALESCE(c.last_message_at, c.created_at) DESC
 LIMIT ? OFFSET ?
@@ -465,7 +530,7 @@ SELECT
 	COALESCE(u.avatar_url, '') AS avatar_url
 FROM chat_conversation_members cm
 JOIN users u ON u.id = cm.user_id
-WHERE cm.conversation_id = ? AND cm.user_id <> ? AND cm.is_deleted = 0
+WHERE cm.conversation_id = ? AND cm.user_id <> ? AND cm.is_deleted = FALSE
 LIMIT 1
 `, conversationID, userID).Scan(&row).Error
 	if err != nil {
@@ -481,9 +546,9 @@ SELECT COALESCE(SUM(unread_count), 0) AS total FROM (
 	SELECT
 		COALESCE(SUM(CASE WHEN m.id > COALESCE(cm.last_read_message_id, 0) AND m.sender_id <> ? THEN 1 ELSE 0 END), 0) AS unread_count
 	FROM chat_conversation_members cm
-	JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = 0
-	LEFT JOIN chat_messages m ON m.conversation_id = c.id AND m.is_deleted = 0
-	WHERE cm.user_id = ? AND cm.is_deleted = 0
+	JOIN chat_conversations c ON c.id = cm.conversation_id AND c.is_deleted = FALSE
+	LEFT JOIN chat_messages m ON m.conversation_id = c.id AND m.is_deleted = FALSE
+	WHERE cm.user_id = ? AND cm.is_deleted = FALSE
 	GROUP BY cm.conversation_id, cm.last_read_message_id
 ) t
 `, userID, userID).Scan(&total).Error

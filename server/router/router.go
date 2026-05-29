@@ -114,6 +114,7 @@ func Router() *gin.Engine {
 			chat.POST("/groups", controllers.ChatController{}.CreateGroupConversation)
 			chat.POST("/groups/:id/members", controllers.ChatController{}.AddGroupMembers)
 			chat.GET("/messages", controllers.ChatController{}.GetMessages)
+			chat.POST("/messages/search", controllers.ChatController{}.SearchMessages)
 			chat.POST("/messages", writeLimiter, middleware.IdempotencyMiddleware(), controllers.ChatController{}.SendMessage)
 			chat.POST("/read", writeLimiter, middleware.IdempotencyMiddleware(), controllers.ChatController{}.MarkRead)
 			chat.GET("/unread_count", controllers.ChatController{}.GetUnreadCount)

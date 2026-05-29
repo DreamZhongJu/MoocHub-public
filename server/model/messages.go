@@ -129,7 +129,7 @@ func GetUnreadCount(userID uint, msgType string) (int64, error) {
 		}
 	}
 
-	q := db.GetDB().Model(&Message{}).Where("user_id = ? AND is_read = 0", userID)
+	q := db.GetDB().Model(&Message{}).Where("user_id = ? AND is_read = ?", userID, false)
 	if msgType != "" {
 		q = q.Where("type = ?", msgType)
 	}
@@ -158,7 +158,7 @@ func MarkReadByIDs(userID uint, ids []uint64) (int64, error) {
 
 	var unreadCount int64
 	if err := db.GetDB().Model(&Message{}).
-		Where("user_id = ? AND is_read = 0 AND id IN ?", userID, ids).
+		Where("user_id = ? AND is_read = ? AND id IN ?", userID, false, ids).
 		Count(&unreadCount).Error; err != nil {
 		return 0, err
 	}
@@ -188,7 +188,7 @@ func MarkReadByType(userID uint, msgType string) (int64, error) {
 
 	var unreadCount int64
 	if err := db.GetDB().Model(&Message{}).
-		Where("user_id = ? AND is_read = 0 AND type = ?", userID, msgType).
+		Where("user_id = ? AND is_read = ? AND type = ?", userID, false, msgType).
 		Count(&unreadCount).Error; err != nil {
 		return 0, err
 	}
@@ -214,7 +214,7 @@ func MarkReadByType(userID uint, msgType string) (int64, error) {
 func MarkReadAll(userID uint) (int64, error) {
 	var unreadCount int64
 	if err := db.GetDB().Model(&Message{}).
-		Where("user_id = ? AND is_read = 0", userID).
+		Where("user_id = ? AND is_read = ?", userID, false).
 		Count(&unreadCount).Error; err != nil {
 		return 0, err
 	}
